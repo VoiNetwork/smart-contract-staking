@@ -29,6 +29,8 @@ docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder
 
 ### simulate
 
+Generate plot and csv file for all lockup period options
+
 ![328694992-ce990421-eda1-4d85-8dd4-3202ab5d50c6](https://github.com/NautilusOSS/smart-contract-staking/assets/23183451/6c6cb3fe-ca44-41e5-882c-522e756ff065)
 
 ```
