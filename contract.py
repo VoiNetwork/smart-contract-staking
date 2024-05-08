@@ -154,7 +154,6 @@ class SmartContractStaking(ARC4Contract):
         ##########################################
         mab = self.calculate_mab()
         available_balance = self.get_available_balance()
-        # JM: You need to add the fee amount to the negative side OR set the fee of the itxn to 0 and enforce that the fee on the appl txn is 2
         assert available_balance - amount.native >= mab, "mab available"
         if amount > 0:
             itxn.Payment(
@@ -203,7 +202,6 @@ class SmartContractStaking(ARC4Contract):
         assert self.calculate_mab() == 0, "mab is zero"
         ###########################################
         oca = Txn.on_completion
-        # JM: We should not "allow" it to be delete; we should REQUIRE it to be "delete"
         if oca == OnCompleteAction.DeleteApplication:
             itxn.Payment(
                 receiver=self.owner,
@@ -253,9 +251,6 @@ class SmartContractStaking(ARC4Contract):
     ##############################################
     @subroutine
     def calculate_mab(self) -> UInt64:
-        # JM: You should make a normal Python script to run this function (with `now` as a parameter) 
-        # with a bunch of different values to produce a CSV to produce a graph so the Foundation can 
-        # look at it and ensure that it matches their expectations
         now = Global.latest_timestamp
         y = TemplateVar[UInt64]("VESTING_DELAY") # vesting delay
         seconds_in_period = TemplateVar[UInt64]("PERIOD_SECONDS") 
