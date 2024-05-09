@@ -117,7 +117,8 @@ class SmartContractStaking(ARC4Contract):
         ###########################################
         assert Txn.sender == self.owner, "must be owner" 
         ###########################################
-        assert self.require_payment(self.owner) == UInt64(1000), "payment amout accurate"
+        key_reg_fee = Global.min_txn_fee
+        assert self.require_payment(self.owner) == key_reg_fee, "payment amout accurate"
         ###########################################
         itxn.KeyRegistration(
             vote_key=vote_k,
@@ -126,7 +127,7 @@ class SmartContractStaking(ARC4Contract):
             vote_last=vote_lst.native,
             vote_key_dilution=vote_kd.native,
             state_proof_key=sp_key,
-            fee=1000
+            fee=key_reg_fee
         ).submit()
     ##############################################
     # function: withdraw
