@@ -174,8 +174,6 @@ class SmartContractStaking(ARC4Contract):
     ##############################################
     @arc4.abimethod
     def transfer(self, new_owner: arc4.Address) -> None:
-        ###########################################
-        assert self.funding > 0, "funding initialized"
         ##########################################
         assert Txn.sender == self.owner, "must be owner" 
         ###########################################
