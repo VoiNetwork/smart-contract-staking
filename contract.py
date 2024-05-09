@@ -14,6 +14,71 @@ from algopy import (
     op,
     subroutine,
 )
+from contract_mab import calculate_mab_pure
+
+##############################################
+# function: calculate_mab_pure (internal)
+# arguments: 
+# - now, timestamp
+# - vesting_delay, how many periods in vesting
+# - period_seconds, how many seconds in period
+# - lockup delay, how many period in lockup
+# - period, how many periods
+# - funding, when funded
+# - total, how much funded
+# purpose: calculate minimum allowable balance
+# returns' minimum allowable balance
+##############################################
+# @subroutine
+# def calculate_mab_pure(
+#     now: UInt64,
+#     vesting_delay: UInt64,
+#     period_seconds: UInt64,
+#     lockup_delay: UInt64,
+#     period: UInt64,
+#     funding: UInt64,
+#     total: UInt64,
+# ) -> UInt64:
+#     lockup_periods = lockup_delay * period
+#     lockup_seconds = lockup_periods * period_seconds
+#     vesting_seconds = vesting_delay * period_seconds
+#     locked_up = now < funding + lockup_seconds
+#     fully_vested = now >= funding + lockup_seconds + vesting_seconds
+#     if locked_up:
+#         return total
+#     elif fully_vested:
+#         return UInt64(0)
+#     else:
+#         elapsed_periods = (now - (funding + lockup_seconds)) // period_seconds
+#         return (total * (vesting_delay - elapsed_periods)) // elapsed_periods
+    
+##############################################
+# function: require_payment (internal)
+# arguments: None
+# purpose: check payment
+# pre-conditions: None
+# post-conditions: None
+##############################################
+@subroutine
+def require_payment(who: Account) -> UInt64:
+    ref_group_index = Txn.group_index
+    assert ref_group_index > 0, "group index greater than zero"
+    payment_group_index = ref_group_index - 1
+    assert gtxn.PaymentTransaction(payment_group_index).sender == who, "payment sender accurate"
+    assert gtxn.PaymentTransaction(payment_group_index).receiver == Global.current_application_address, "payment receiver accurate"
+    return gtxn.PaymentTransaction(payment_group_index).amount
+
+##############################################
+# function: get_available_balance (internal)
+# purpose: get available balance
+# returns: app balance available for spending
+##############################################
+@subroutine
+def get_available_balance() -> UInt64:
+    balance = op.balance(Global.current_application_address)
+    min_balance = op.Global.min_balance
+    available_balance = balance - min_balance
+    return available_balance
 
 class SmartContractStaking(ARC4Contract):
     ##############################################
@@ -85,7 +150,7 @@ class SmartContractStaking(ARC4Contract):
         ##########################################
         assert Txn.sender == Global.creator_address, "must be creator" 
         ##########################################
-        payment_amount = self.require_payment(Global.creator_address)
+        payment_amount = require_payment(Global.creator_address)
         assert payment_amount > UInt64(0), "payment amount accurate"
         ##########################################
         assert funding > 0, "funding must  be greater than zero"
@@ -118,7 +183,7 @@ class SmartContractStaking(ARC4Contract):
         assert Txn.sender == self.owner, "must be owner" 
         ###########################################
         key_reg_fee = Global.min_txn_fee
-        assert self.require_payment(self.owner) == key_reg_fee, "payment amout accurate"
+        assert require_payment(self.owner) == key_reg_fee, "payment amout accurate"
         ###########################################
         itxn.KeyRegistration(
             vote_key=vote_k,
@@ -154,7 +219,7 @@ class SmartContractStaking(ARC4Contract):
         assert Txn.sender == self.owner, "must be owner" 
         ##########################################
         mab = self.calculate_mab()
-        available_balance = self.get_available_balance()
+        available_balance = get_available_balance()
         assert available_balance - amount.native >= mab, "mab available"
         if amount > 0:
             itxn.Payment(
@@ -209,32 +274,6 @@ class SmartContractStaking(ARC4Contract):
         else:
             op.err() 
     ##############################################
-    # function: get_available_balance (internal)
-    # purpose: get available balance
-    # returns: app balance available for spending
-    ##############################################
-    @subroutine
-    def get_available_balance(self) -> UInt64:
-        balance = op.balance(Global.current_application_address)
-        min_balance = op.Global.min_balance
-        available_balance = balance - min_balance
-        return available_balance
-    ##############################################
-    # function: require_payment (internal)
-    # arguments: None
-    # purpose: check payment
-    # pre-conditions: None
-    # post-conditions: None
-    ##############################################
-    @subroutine
-    def require_payment(self, who: Account) -> UInt64:
-        ref_group_index = Txn.group_index
-        assert ref_group_index > 0, "group index greater than zero"
-        payment_group_index = ref_group_index - 1
-        assert gtxn.PaymentTransaction(payment_group_index).sender == who, "payment sender accurate"
-        assert gtxn.PaymentTransaction(payment_group_index).receiver == Global.current_application_address, "payment receiver accurate"
-        return gtxn.PaymentTransaction(payment_group_index).amount
-    ##############################################
     # function: calculate_mab (internal)
     # arguments: None
     # purpose: calcualte minimum allowable balance
@@ -250,20 +289,18 @@ class SmartContractStaking(ARC4Contract):
     ##############################################
     @subroutine
     def calculate_mab(self) -> UInt64:
-        now = Global.latest_timestamp
-        y = TemplateVar[UInt64]("VESTING_DELAY") # vesting delay
-        seconds_in_period = TemplateVar[UInt64]("PERIOD_SECONDS") 
-        p = TemplateVar[UInt64]("LOCKUP_DELAY") * self.period # lockup period
-        locked_up = now < self.funding + p * seconds_in_period
-        fully_vested = now >= self.funding + (y + p) * seconds_in_period
-        lockup_seconds = p * seconds_in_period
-        # if locked up then total
-        # elif fully vested then zero
-        # else calculate mab using elapsed periods
-        if locked_up: #  if locked up then total
-            return self.total 
-        elif fully_vested: #  elif fully vested then zero
-            return UInt64(0) 
-        else: #  else calculate mab using elapsed periods
-            m =  (now - (self.funding + lockup_seconds)) // seconds_in_period # elapsed period after lockup
-            return (self.total * (y - m)) // y
+        now: UInt64 = Global.latest_timestamp
+        vesting_delay: UInt64 = TemplateVar[UInt64]("VESTING_DELAY") # vesting delay
+        period_seconds: UInt64 = TemplateVar[UInt64]("PERIOD_SECONDS") 
+        lockup_delay: UInt64 = TemplateVar[UInt64]("LOCKUP_DELAY") * self.period # lockup period
+        zero: UInt64 = UInt64(0)
+        mab: UInt64 = calculate_mab_pure(
+            now,
+            vesting_delay,
+            period_seconds,
+            lockup_delay,
+            self.period,
+            self.funding,
+            self.total,
+        )
+        return mab

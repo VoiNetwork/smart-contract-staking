@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import csv
 from datetime import datetime, timedelta
+from simulate_mab import calculate_mab_pure
 
 def get_apr(period):
     if period >= 0 and period <= 5:
@@ -17,41 +18,23 @@ def calculate_accumulated(principal, apr, time):
 def convert_point_to_tokens(points):
     return points * 3.75 // 100
 
-# def calculate_mab(self) -> UInt64:
-#     now = Global.latest_timestamp
-#     y = TemplateVar[UInt64]("VESTING_DELAY") # vesting delay
-#     seconds_in_period = TemplateVar[UInt64]("PERIOD_SECONDS") 
-#     p = TemplateVar[UInt64]("LOCKUP_DELAY") * self.period # lockup period
-#     locked_up = now < self.funding + p * seconds_in_period
-#     fully_vested = now >= self.funding + (y + p) * seconds_in_period
-#     lockup_seconds = p * seconds_in_period
-#     # if locked up then total
-#     # elif fully vested then zero
-#     # else calculate mab using elapsed periods
-#     if locked_up: #  if locked up then total
-#         return self.total 
-#     elif fully_vested: #  elif fully vested then zero
-#         return UInt64(0) 
-#     else: #  else calculate mab using elapsed periods
-#         m =  (now - (self.funding + lockup_seconds)) // seconds_in_period # elapsed period after lockup
-#         return (self.total * (y - m)) // y
-
-def calculate_mab_util(now, y, ps, lockup_delay, period, funding, total):
-    p = lockup_delay * period
-    locked_up = now < funding + p * ps
-    fully_vested = now >= funding + (p + y) * ps
-    lockup_seconds = p * ps
-    if locked_up:
-        return total
-    elif fully_vested:
-        return 0
-    else:
-        m = (now - (funding + lockup_seconds)) // ps
-        return (total * (y - m)) // y
-    
-def calculate_mab(now, y, ps, lockup_delay, funding, total):
-    return [calculate_mab_util(now, y, ps, lockup_delay, i, funding,
-        calculate_accumulated(total, get_apr(i), i)) for i in [0,1,2,3,4,5]]
+def calculate_mab(
+    now:int, 
+    vesting_delay:int, 
+    period_seconds:int, 
+    lockup_delay:int, 
+    funding:int, 
+    total:int
+):
+    return [calculate_mab_pure(
+        now, 
+        vesting_delay, 
+        period_seconds, 
+        lockup_delay, 
+        period, 
+        funding,
+        calculate_accumulated(total, get_apr(period), period)
+    ) for period in [0,1,2,3,4,5]]
 
 ###################################################
 
