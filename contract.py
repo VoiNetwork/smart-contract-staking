@@ -28,6 +28,7 @@ class SmartContractStaking(ARC4Contract):
     ##############################################
     def __init__(self) -> None:
         self.owner = Account()      # zero address
+        self.funder = Account()     # zero address
         self.period = UInt64()      # 0
         self.funding = UInt64()     # 0
         self.total = UInt64()       # 0
@@ -39,13 +40,15 @@ class SmartContractStaking(ARC4Contract):
     # post-conditions: owner set
     ##############################################
     @arc4.abimethod
-    def setup(self, owner: arc4.Address) -> None:
+    def setup(self, owner: arc4.Address, funder: arc4.Address) -> None:
         ##########################################
         assert self.owner == Global.zero_address, "owner not initialized"
+        assert self.funder == Global.zero_address, "funder not initialized"
         ##########################################
         assert Txn.sender == Global.creator_address, "must be creator" 
         ##########################################
         self.owner = owner.native
+        self.funder = funder.native
     ##############################################
     # function: configure
     # arguments:
@@ -84,11 +87,12 @@ class SmartContractStaking(ARC4Contract):
     def fill(self, funding: arc4.UInt64) -> None:
         ##########################################
         assert self.owner != Global.zero_address, "owner initialized"
+        assert self.funder != Global.zero_address, "funder initialized"
         assert self.funding == 0, "funding not initialized"
         ##########################################
-        assert Txn.sender == Global.creator_address, "must be creator" 
+        assert Txn.sender == self.funder, "must be funder" 
         ##########################################
-        payment_amount = require_payment(Global.creator_address)
+        payment_amount = require_payment(self.funder)
         assert payment_amount > UInt64(0), "payment amount accurate"
         ##########################################
         assert funding > 0, "funding must  be greater than zero"
