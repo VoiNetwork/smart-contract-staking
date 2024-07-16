@@ -130,7 +130,7 @@ do {
 do {
   break;
   ci.setPaymentAmount(1e6)
-  const fillR = await ci.fill(1e6, currentTimestamp);
+  const fillR = await ci.fill( currentTimestamp);
   console.log(fillR);
   const res = await signSendAndConfirm(fillR.txns, key)
   console.log(res)
