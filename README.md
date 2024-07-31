@@ -7,6 +7,7 @@ Implementation of smart contract for staking solution described in document [Sma
 - algokit >= version 2.0.3
 - python >= 3.12.3
 - node >= v20.12.2
+- puyapy >= 2.2.0
 
 ## commands
 
@@ -15,6 +16,11 @@ Implementation of smart contract for staking solution described in document [Sma
 algokit compile py contract.py
 algokit generate client SmartContractStaking.arc32.json --language typescript --output SmartContractStakingClient.ts
 algokit generate client SmartContractStaking.arc32.json --language python --output SmartContractStakingClient.py
+```
+
+### build and run script
+```shell
+(docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder; cp -v artifacts/SmartContractStakingClient.ts ./scripts/; (cd scripts/ && npx tsc && node deploy.js))
 ```
 
 ### build all using docker

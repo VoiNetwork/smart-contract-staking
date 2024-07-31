@@ -18,7 +18,7 @@ from utils import (
     get_available_balance
 )
 
-class SmartContractStaking(ARC4Contract):
+class Upgradeable(ARC4Contract):
     ##############################################
     # function: __init__ (builtin)
     # arguments: None
@@ -27,11 +27,54 @@ class SmartContractStaking(ARC4Contract):
     # post-conditions: initial state set
     ##############################################
     def __init__(self) -> None:
-        self.owner = Account()      # zero address
-        self.funder = Account()     # zero address
-        self.period = UInt64()      # 0
-        self.funding = UInt64()     # 0
-        self.total = UInt64()       # 0
+        # hot state
+        self.owner = Account()             # zero address
+        self.contract_version = UInt64()   # 0
+        self.deployment_version = UInt64() # 0
+        # TODO update after debate
+        self.updatable = bool(1)           # 1 (Default unlocked)
+    ##############################################
+    @arc4.abimethod
+    def approve_update(self, approval: arc4.Bool) -> None:
+        assert Txn.sender == self.owner, "must be owner"
+        self.updatable = approval.native
+    ##############################################
+    @arc4.abimethod
+    def set_version(self, contract_version: arc4.UInt64, deployment_version: arc4.UInt64) -> None:
+        assert Txn.sender == Global.creator_address, "must be creator"
+        self.contract_version = contract_version.native
+        self.deployment_version = deployment_version.native
+    ##############################################
+    @arc4.baremethod(allow_actions=["UpdateApplication"])
+    def on_update(self) -> None:
+        ##########################################
+        # WARNING: This app can be updated by the creator
+        ##########################################
+        assert Txn.sender == Global.creator_address, "must be creator"
+        assert self.updatable == UInt64(1), "not approved"
+        ##########################################
+
+class SmartContractStaking(Upgradeable):
+    ##############################################
+    # function: __init__ (builtin)
+    # arguments: None
+    # purpose: construct initial state
+    # pre-conditions: None
+    # post-conditions: initial state set
+    ##############################################
+    def __init__(self) -> None:
+        super().__init__()
+        # hot state
+        self.owner = Account()          # zero address
+        self.funder = Account()         # zero address
+        self.period = UInt64()          # 0
+        self.funding = UInt64()         # 0
+        self.total = UInt64()           # 0
+        # cold state
+        self.period_seconds = TemplateVar[UInt64]("PERIOD_SECONDS") # ex) 2592000
+        self.lockup_delay = TemplateVar[UInt64]("LOCKUP_DELAY") # ex) 12
+        self.vesting_delay = TemplateVar[UInt64]("VESTING_DELAY") # ex) 12
+        self.period_limit = TemplateVar[UInt64]("PERIOD_LIMIT") # ex) 5
     ##############################################
     # function: setup
     # arguments:
@@ -235,7 +278,6 @@ class SmartContractStaking(ARC4Contract):
         vesting_delay: UInt64 = TemplateVar[UInt64]("VESTING_DELAY") # vesting delay
         period_seconds: UInt64 = TemplateVar[UInt64]("PERIOD_SECONDS") 
         lockup_delay: UInt64 = TemplateVar[UInt64]("LOCKUP_DELAY") * self.period # lockup period
-        zero: UInt64 = UInt64(0)
         mab: UInt64 = calculate_mab_pure(
             now,
             vesting_delay,
