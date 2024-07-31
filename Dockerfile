@@ -14,4 +14,7 @@ RUN python3 -m pip install --user pipx==1.5.0 && \
 CMD /root/.local/bin/algokit compile --version 2.1.2 py /src/contract.py --out-dir /artifacts && \
     /root/.local/bin/algokit generate client /artifacts/SmartContractStaking.arc32.json --language typescript --output /artifacts/SmartContractStakingClient.ts && \
     /root/.local/bin/algokit generate client /artifacts/SmartContractStaking.arc32.json --language python --output /artifacts/SmartContractStakingClient.py && \
-    jq '.contract' /artifacts/SmartContractStaking.arc32.json > /artifacts/contract.json
+    jq '.contract' /artifacts/SmartContractStaking.arc32.json > /artifacts/contract.json && \
+    /root/.local/bin/algokit generate client /artifacts/Messenger.arc32.json --language typescript --output /artifacts/MessengerClient.ts && \
+    /root/.local/bin/algokit generate client /artifacts/Messenger.arc32.json --language python --output /artifacts/MessengerClient.py && \
+    jq '.contract' /artifacts/Messenger.arc32.json > /artifacts/messenger.contract.json

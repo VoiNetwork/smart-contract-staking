@@ -1,7 +1,11 @@
 import {
   SmartContractStakingClient,
-  APP_SPEC,
+  APP_SPEC as SmartContractStakingSpec,
 } from "./SmartContractStakingClient.js";
+import {
+  MessengerClient,
+  APP_SPEC as MessengerSpec,
+} from "./MessengerClient.js";
 
 import algosdk from "algosdk";
 
@@ -63,29 +67,147 @@ const secondsInHour = 3600;
 const secondsInMonth = 31557600;
 const periodSeconds = secondsCustom;
 
+const deployWhat: string = "messenger";
+
 // deploy contract with deploy time params
 do {
   break;
-  const appClient = new SmartContractStakingClient(
-    {
-      resolveBy: "creatorAndName",
-      findExistingUsing: indexerClient,
-      creatorAddress: deployer.addr,
-      name: "202",
-      sender: deployer,
-    },
-    algodClient
-  );
-  const app = await appClient.deploy({
-    deployTimeParams: {
-      PERIOD_SECONDS: periodSeconds,
-      PERIOD_LIMIT: 5,
-      VESTING_DELAY: 12,
-      LOCKUP_DELAY: 12,
-    },
-    onUpdate: "update",
-    onSchemaBreak: "fail",
-  });
+  switch (deployWhat) {
+    case "messenger": {
+      const appClient = new MessengerClient(
+        {
+          resolveBy: "creatorAndName",
+          findExistingUsing: indexerClient,
+          creatorAddress: deployer.addr,
+          name: "m3",
+          sender: deployer,
+        },
+        algodClient
+      );
+      const app = await appClient.deploy({
+        deployTimeParams: {},
+        onUpdate: "update",
+        onSchemaBreak: "fail",
+      });
+      break;
+    }
+    case "staking": {
+      const appClient = new SmartContractStakingClient(
+        {
+          resolveBy: "creatorAndName",
+          findExistingUsing: indexerClient,
+          creatorAddress: deployer.addr,
+          name: "202",
+          sender: deployer,
+        },
+        algodClient
+      );
+      const app = await appClient.deploy({
+        deployTimeParams: {
+          PERIOD_SECONDS: periodSeconds,
+          PERIOD_LIMIT: 5,
+          VESTING_DELAY: 12,
+          LOCKUP_DELAY: 12,
+        },
+        onUpdate: "update",
+        onSchemaBreak: "fail",
+      });
+      break;
+    }
+  }
+} while (0);
+
+do {
+  //break;
+  const messengerCtcInfo = 72977126;
+  const spec = {
+    name: "",
+    desc: "",
+    methods: MessengerSpec.contract.methods,
+    events: [
+      {
+        name: "PartKeyInfo",
+        args: [
+          {
+            type: "address",
+            name: "who",
+          },
+          {
+            type: "address",
+            name: "adddress",
+          },
+          {
+            type: "byte[32]",
+            name: "vote_k",
+          },
+          {
+            type: "byte[32]",
+            name: "sel_k",
+          },
+          {
+            type: "uint64",
+            name: "vote_fst",
+          },
+          {
+            type: "uint64",
+            name: "vote_lst",
+          },
+          {
+            type: "uint64",
+            name: "vote_kd",
+          },
+          {
+            type: "byte[64]",
+            name: "sp_key",
+          },
+        ],
+      },
+    ],
+  };
+  const makeCi = (ctcInfo: number, addr: string) => {
+    return new CONTRACT(ctcInfo, algodClient, indexerClient, spec, {
+      addr,
+      sk: new Uint8Array(0),
+    });
+  };
+  // broadcast message
+  do {
+    break;
+    const ci = makeCi(messengerCtcInfo, addr);
+    const partkey_broadcastR = await ci.partkey_broastcast(
+      addr2,
+      new Uint8Array(
+        Buffer.from("rqzFOfwFPvMCkVxk/NKgj8idbwrsEGwxDbQwmHwtACE=", "base64")
+      ),
+      new Uint8Array(
+        Buffer.from("oxigRtYVOHpCD/qldT814sPYeQGzgUfjBOpbD3NHv0Y=", "base64")
+      ),
+      6558699,
+      9558699,
+      1733,
+      new Uint8Array(
+        Buffer.from(
+          "FxHMlnefM+QUzFEi9jF4moujCSs9iFYPyUX0+yvJgoMmXxTZfFd5Wus2InMW/FAP+mXSeZqBrezUdx88q0VTpw==",
+          "base64"
+        )
+      )
+    );
+    await signSendAndConfirm(partkey_broadcastR.txns, sk);
+  } while (0);
+  // get events
+  do {
+    break;
+    // get current round
+    const lastRound = (await algodClient.status().do())["last-round"];
+    console.log(lastRound);
+    const ci = makeCi(messengerCtcInfo, addr);
+    const PartKeyInfoEvents = (
+      await ci.getEvents({
+        minRound: Math.min(0, lastRound - 1e6),
+      })
+    ).find((el: any) => el.name === "PartKeyInfo");
+    console.log(PartKeyInfoEvents);
+  } while (0);
 } while (0);
 
 process.exit(0);
@@ -97,7 +219,7 @@ const ctcInfo = 43680506;
 const spec = {
   name: "",
   desc: "",
-  methods: APP_SPEC.contract.methods,
+  methods: SmartContractStakingSpec.contract.methods,
   events: [],
 };
 
