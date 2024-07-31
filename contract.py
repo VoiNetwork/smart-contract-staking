@@ -34,16 +34,44 @@ class Upgradeable(ARC4Contract):
         # TODO update after debate
         self.updatable = bool(1)           # 1 (Default unlocked)
     ##############################################
+    # function: approve_update
+    # arguments:
+    # - approval, approval status
+    # purpose: approve update
+    # pre-conditions
+    # - only callable by owner
+    # post-conditions:
+    # - updatable set to approval
+    ##############################################
     @arc4.abimethod
     def approve_update(self, approval: arc4.Bool) -> None:
         assert Txn.sender == self.owner, "must be owner"
         self.updatable = approval.native
+    ##############################################
+    # function: set_version
+    # arguments:
+    # - contract_version, contract version
+    # - deployment_version, deployment version
+    # purpose: set version
+    # pre-conditions
+    # - only callable by creator
+    # post-conditions:
+    # - contract_version and deployment_version set
     ##############################################
     @arc4.abimethod
     def set_version(self, contract_version: arc4.UInt64, deployment_version: arc4.UInt64) -> None:
         assert Txn.sender == Global.creator_address, "must be creator"
         self.contract_version = contract_version.native
         self.deployment_version = deployment_version.native
+    ##############################################
+    # function: on_update
+    # arguments: None
+    # purpose: on update
+    # pre-conditions
+    # - only callable by creator
+    # - updatable must be true
+    # post-conditions:
+    # - None
     ##############################################
     @arc4.baremethod(allow_actions=["UpdateApplication"])
     def on_update(self) -> None:
