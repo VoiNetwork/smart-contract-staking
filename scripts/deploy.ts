@@ -16,13 +16,16 @@ import moment from "moment";
 import * as dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
-const { MN, MN2 } = process.env;
+const { MN, MN2, NODE_ADDR } = process.env;
 
 const mnemonic = MN || "";
 const mnemonic2 = MN2 || "";
 
 const { addr, sk } = algosdk.mnemonicToSecretKey(mnemonic);
 const { addr: addr2, sk: sk2 } = algosdk.mnemonicToSecretKey(mnemonic2);
+const addr3 = NODE_ADDR || "";
+
+console.log({ addr, addr2, addr3 });
 
 const address = addr;
 const key = sk;
@@ -117,8 +120,9 @@ do {
   }
 } while (0);
 
+// enter messenger
 do {
-  //break;
+  break;
   const messengerCtcInfo = 72977126;
   const spec = {
     name: "",
@@ -199,11 +203,11 @@ do {
     break;
     // get current round
     const lastRound = (await algodClient.status().do())["last-round"];
-    console.log(lastRound);
     const ci = makeCi(messengerCtcInfo, addr);
     const PartKeyInfoEvents = (
       await ci.getEvents({
         minRound: Math.min(0, lastRound - 1e6),
+        sender: addr3,
       })
     ).find((el: any) => el.name === "PartKeyInfo");
     console.log(PartKeyInfoEvents);
@@ -229,6 +233,8 @@ const makeCi = (ctcInfo: number, addr: string) => {
     sk: new Uint8Array(0),
   });
 };
+
+// enter staking
 
 const ci = makeCi(ctcInfo, addr);
 
