@@ -20,7 +20,7 @@ algokit generate client SmartContractStaking.arc32.json --language python --outp
 
 ### build and run script
 ```shell
-(docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder; cp -v artifacts/SmartContractStakingClient.ts ./scripts/; (cd scripts/ && npx tsc && node deploy.js))
+(docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder && cp -v artifacts/SmartContractStakingClient.ts ./scripts/ && cp -v artifacts/MessengerClient.ts ./scripts/ && (cd scripts/ && npx tsc && node deploy.js))
 ```
 
 ### build all using docker

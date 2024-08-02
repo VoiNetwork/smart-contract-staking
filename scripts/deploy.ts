@@ -70,7 +70,7 @@ const secondsInHour = 3600;
 const secondsInMonth = 31557600;
 const periodSeconds = secondsCustom;
 
-const deployWhat: string = "messenger";
+const deployWhat: string = "staking";
 
 // deploy contract with deploy time params
 do {
@@ -82,7 +82,7 @@ do {
           resolveBy: "creatorAndName",
           findExistingUsing: indexerClient,
           creatorAddress: deployer.addr,
-          name: "m3",
+          name: "m6",
           sender: deployer,
         },
         algodClient
@@ -100,13 +100,14 @@ do {
           resolveBy: "creatorAndName",
           findExistingUsing: indexerClient,
           creatorAddress: deployer.addr,
-          name: "202",
+          name: "308",
           sender: deployer,
         },
         algodClient
       );
       const app = await appClient.deploy({
         deployTimeParams: {
+          MESSENGER_ID: 73060985,
           PERIOD_SECONDS: periodSeconds,
           PERIOD_LIMIT: 5,
           VESTING_DELAY: 12,

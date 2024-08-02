@@ -31,6 +31,40 @@ class PartKeyInfo(arc4.Struct):
     vote_key_dilution: arc4.UInt64
     state_proof_key: Bytes64
 
+
+##################################################
+# Ownable
+#   allows contract to be owned
+##################################################
+class Ownable(ARC4Contract):
+    ##############################################
+    # function: __init__ (builtin)
+    # arguments: None
+    # purpose: construct initial state
+    # pre-conditions: None
+    # post-conditions: initial state set
+    ##############################################
+    def __init__(self) -> None:
+        self.owner = Account()             # zero address
+    ##############################################
+    # function: transfer
+    # arguments:
+    # - new_owner, new owner
+    # purpose: change owner
+    # pre-conditions
+    # - only callable by the owner
+    # post-conditions: 
+    # - new owner asigned
+    ##############################################
+    @arc4.abimethod
+    def transfer(self, new_owner: arc4.Address) -> None:
+        assert Txn.sender == self.owner, "must be owner" 
+        self.owner = new_owner.native
+
+##################################################
+# Upgradeable
+#   allows contract to be updated
+##################################################
 class Upgradeable(ARC4Contract):
     ##############################################
     # function: __init__ (builtin)
@@ -40,26 +74,9 @@ class Upgradeable(ARC4Contract):
     # post-conditions: initial state set
     ##############################################
     def __init__(self) -> None:
-        # hot state
-        self.owner = Account()             # zero address
         self.contract_version = UInt64()   # 0
         self.deployment_version = UInt64() # 0
-        # TODO update after debate
         self.updatable = bool(1)           # 1 (Default unlocked)
-    ##############################################
-    # function: approve_update
-    # arguments:
-    # - approval, approval status
-    # purpose: approve update
-    # pre-conditions
-    # - only callable by owner
-    # post-conditions:
-    # - updatable set to approval
-    ##############################################
-    @arc4.abimethod
-    def approve_update(self, approval: arc4.Bool) -> None:
-        assert Txn.sender == self.owner, "must be owner"
-        self.updatable = approval.native
     ##############################################
     # function: set_version
     # arguments:
@@ -95,6 +112,39 @@ class Upgradeable(ARC4Contract):
         assert self.updatable == UInt64(1), "not approved"
         ##########################################
 
+
+##################################################
+# OwnedUpgradeable
+#  combines owned and upgradeable and adds method 
+#  to approve update as owner
+##################################################
+class OwnedUpgradeable(Upgradeable, Ownable):
+    def __init__(self) -> None:
+        # upgradeable state
+        self.contract_version = UInt64()   # 0
+        self.deployment_version = UInt64() # 0
+        self.updatable = bool(1)           # 1 (Default unlocked)
+        # ownable state
+        self.owner = Account()             # zero address
+    ##############################################
+    # function: approve_update
+    # arguments:
+    # - approval, approval status
+    # purpose: approve update
+    # pre-conditions
+    # - only callable by owner
+    # post-conditions:
+    # - updatable set to approval
+    ##############################################
+    @arc4.abimethod
+    def approve_update(self, approval: arc4.Bool) -> None:
+        assert Txn.sender == self.owner, "must be owner"
+        self.updatable = approval.native
+
+##################################################
+# Messenger
+#   emits events
+##################################################
 class Messenger(Upgradeable):
     def __init__(self) -> None:
         super().__init__()
@@ -105,7 +155,11 @@ class Messenger(Upgradeable):
         arc4.emit(PartKeyInfo(arc4.Address(Txn.sender), address, vote_k, sel_k,
             vote_fst, vote_lst, vote_kd, sp_key))
 
-class SmartContractStaking(Upgradeable):
+##################################################
+# SmartContractStaking
+#   facilitates airdrop staking
+##################################################
+class SmartContractStaking(OwnedUpgradeable):
     ##############################################
     # function: __init__ (builtin)
     # arguments: None
@@ -116,12 +170,12 @@ class SmartContractStaking(Upgradeable):
     def __init__(self) -> None:
         super().__init__()
         # hot state
-        self.owner = Account()          # zero address
-        self.funder = Account()         # zero address
-        self.period = UInt64()          # 0
-        self.funding = UInt64()         # 0
-        self.total = UInt64()           # 0
+        self.funder = Account()            # zero address
+        self.period = UInt64()             # 0
+        self.funding = UInt64()            # 0
+        self.total = UInt64()              # 0
         # cold state
+        self.messenger_id = TemplateVar[UInt64]("MESSENGER_ID") # ex) 0
         self.period_seconds = TemplateVar[UInt64]("PERIOD_SECONDS") # ex) 2592000
         self.lockup_delay = TemplateVar[UInt64]("LOCKUP_DELAY") # ex) 12
         self.vesting_delay = TemplateVar[UInt64]("VESTING_DELAY") # ex) 12
@@ -264,22 +318,6 @@ class SmartContractStaking(Upgradeable):
                 fee=0
             ).submit()
         return mab
-    ##############################################
-    # function: transfer
-    # arguments:
-    # - new_owner, new owner
-    # purpose: change owner
-    # pre-conditions
-    # - only callable by the owner
-    # post-conditions: 
-    # - new owner asigned
-    ##############################################
-    @arc4.abimethod
-    def transfer(self, new_owner: arc4.Address) -> None:
-        ##########################################
-        assert Txn.sender == self.owner, "must be owner" 
-        ###########################################
-        self.owner = new_owner.native
     ##############################################
     # function: close
     # purpose: deletes contract
