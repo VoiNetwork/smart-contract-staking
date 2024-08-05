@@ -1,9 +1,17 @@
 import { BaseClient, APP_SPEC as BaseSpec } from "./BaseClient.js";
+import { AirdropClient, APP_SPEC as AirdropSpec } from "./AirdropClient.js";
+import {
+  AirdropFactoryClient,
+  APP_SPEC as AirdropFactorySpec,
+} from "./AirdropFactoryClient.js";
+import {
+  BaseFactoryClient,
+  APP_SPEC as BaseFactorySpec,
+} from "./BaseFactoryClient.js";
 import {
   MessengerClient,
   APP_SPEC as MessengerSpec,
 } from "./MessengerClient.js";
-import { FactoryClient, APP_SPEC as FactorySpec } from "./FactoryClient.js";
 
 import algosdk from "algosdk";
 
@@ -69,14 +77,14 @@ const secondsInHour = 3600;
 const secondsInMonth = 31557600;
 const periodSeconds = secondsCustom;
 
-const deployWhat: string = "factory";
+const deployWhat: string = "airdrop-factory";
 
 // deploy
 do {
-  break;
+  //break;
   switch (deployWhat) {
-    case "factory": {
-      const appClient = new FactoryClient(
+    case "airdrop-factory": {
+      const appClient = new AirdropFactoryClient(
         {
           resolveBy: "creatorAndName",
           findExistingUsing: indexerClient,
@@ -234,12 +242,12 @@ do {
 } while (0); // end messenger
 // enter factory
 do {
-  break;
+  //break;
   const ctcInfo = 73765773;
   const spec = {
     name: "",
     desc: "",
-    methods: FactorySpec.contract.methods,
+    methods: AirdropFactorySpec.contract.methods,
     events: [],
   };
   const makeCi = (ctcInfo: number, addr: string) => {
@@ -261,13 +269,12 @@ do {
   } while (0); // end update
   // create
   do {
-    break;
+    //break;
     const paymentAmount = 642000; // MBR increase for new contract
     ci.setPaymentAmount(paymentAmount);
     ci.setFee(3000);
     const createR = await ci.create(
-      //"NL3HRVWN37WUIWGE7LXF2JBOOY36UOI4ARGERNPWK3RKEV4ISV272O2WRM",
-      addr2,
+      "NL3HRVWN37WUIWGE7LXF2JBOOY36UOI4ARGERNPWK3RKEV4ISV272O2WRM",
       addr
     );
     console.log(createR, addr2);

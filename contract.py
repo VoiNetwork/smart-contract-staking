@@ -252,8 +252,8 @@ class BaseBridge(Stakeable, Upgradeable, Ownable):
         self.updatable = approval.native
 
 ##################################################
-# SmartContractStaking
-#   facilitates airdrop staking
+# Base
+#   smart contract staking
 ##################################################
 class Base(BaseBridge):
     ##############################################
@@ -265,8 +265,110 @@ class Base(BaseBridge):
     ##############################################
     def __init__(self) -> None:
         super().__init__()
+        self.parent_id = UInt64()                               # 0
+        self.messenger_id = TemplateVar[UInt64]("MESSENGER_ID") # ex) 0
+    ##############################################
+    # function: on_create
+    # arguments: None
+    # purpose: on create
+    # pre-conditions
+    # - only callable by CreateApplication
+    # post-conditions:
+    # - indexer_id set to caller_application_id
+    ##############################################
+    @arc4.baremethod(create="require")
+    def on_create(self) -> None:
+        caller_id = Global.caller_application_id
+        assert caller_id > 0, "must be created by factory"
+        self.parent_id = caller_id
+    ##############################################
+    # function: setup
+    # arguments:
+    # - owner, who is the beneficiary
+    # - delegate, who is the delegate
+    # purpose: set owner and delegate
+    # post-conditions: owner and delegate set
+    ##############################################
+    @arc4.abimethod
+    def setup(self, owner: arc4.Address, delegate: arc4.Address) -> None:
+        ##########################################
+        assert self.owner == Global.zero_address, "owner not initialized"
+        ##########################################
+        assert Txn.sender == Global.creator_address, "must be creator" 
+        ##########################################
+        self.owner = owner.native
+        self.delegate = delegate.native
+    ##############################################
+    # function: withdraw
+    # arguments:
+    # - amount
+    # returns: available balance
+    # purpose: extract funds from contract
+    # pre-conditions
+    # - only callable by owner
+    # post-conditions: 
+    # - transfer amount from the contract account
+    #   to owner
+    # notes: costs 2 fees
+    ##############################################
+    @arc4.abimethod
+    def withdraw(self, amount: arc4.UInt64) -> UInt64:
+        ##########################################
+        assert Txn.sender == self.owner, "must be owner" 
+        ##########################################
+        available_balance = get_available_balance()
+        remaining_balance = available_balance - amount.native
+        assert remaining_balance >= 0, "balance available"
+        if amount > 0:
+            itxn.Payment(
+                amount=amount.native,
+                receiver=Txn.sender,
+                fee=0
+            ).submit()
+        return available_balance
+    ##############################################
+    # function: close
+    # purpose: deletes contract
+    # pre-conditions:
+    # - must be owner 
+    # post-conditions:
+    # - contract is deleted
+    # - account closed out to owner if it has a balance
+    # notes:
+    # - should be alled with onCompletion
+    #   deleteApplication
+    ##############################################
+    @arc4.abimethod(allow_actions=[
+        OnCompleteAction.DeleteApplication
+    ])
+    def close(self) -> None:
+        ###########################################
+        assert Txn.sender == self.owner, "must be owner"
+        ###########################################
+        oca = Txn.on_completion
+        if oca == OnCompleteAction.DeleteApplication:
+            itxn.Payment(
+                receiver=self.owner,
+                close_remainder_to=self.owner
+            ).submit()
+        else:
+            op.err() 
+
+##################################################
+# Airdrop
+#   facilitates airdrop staking
+##################################################
+class Airdrop(BaseBridge):
+    ##############################################
+    # function: __init__ (builtin)
+    # arguments: None
+    # purpose: construct initial state
+    # pre-conditions: None
+    # post-conditions: initial state set
+    ##############################################
+    def __init__(self) -> None:
+        super().__init__()
         # hot state
-        self.delegate = Account()          # zero address
         self.funder = Account()            # zero address
         self.period = UInt64()             # 0
         self.funding = UInt64()            # 0
@@ -463,7 +565,29 @@ class FactoryBridge(Ownable, Upgradeable):
         self.deployment_version = UInt64()              # 0
         self.updatable = bool(1)                        # 1 (Default unlocked)
 
-class Factory(FactoryBridge):
+class BaseFactory(FactoryBridge):
+    def __init__(self) -> None:
+        super().__init__()
+    ##############################################
+    # @arc4.abimethod
+    # def update(self) -> None:
+    #      pass
+    ##############################################
+    # @arc4.abimethod
+    # def remote_update(self, app_id: arc4.UInt64) -> None:
+    #     pass
+    ##############################################
+    # @arc4.abimethod
+    # def remote_delete(self, app_id: arc4.UInt64) -> None:
+    #     pass
+    ##############################################
+    @arc4.abimethod
+    def create(self, owner: arc4.Address, delegate: arc4.Address) -> UInt64:
+        base_app = arc4.arc4_create(Base).created_app
+        arc4.abi_call(Base.setup, owner, delegate, app_id=base_app)
+        return base_app.id
+
+class AirdropFactory(FactoryBridge):
     def __init__(self) -> None:
         super().__init__()
     ##############################################
@@ -481,7 +605,7 @@ class Factory(FactoryBridge):
     ##############################################
     @arc4.abimethod
     def create(self, owner: arc4.Address, funder: arc4.Address) -> UInt64:
-        base_app = arc4.arc4_create(Base).created_app
-        arc4.abi_call(Base.setup, owner, funder, app_id=base_app)
+        base_app = arc4.arc4_create(Airdrop).created_app
+        arc4.abi_call(Airdrop.setup, owner, funder, app_id=base_app)
         return base_app.id
     ##############################################

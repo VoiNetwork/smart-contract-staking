@@ -25,9 +25,15 @@ CMD /root/.local/bin/algokit compile py \
     /root/.local/bin/algokit generate client /artifacts/Base.arc32.json --language typescript --output /artifacts/BaseClient.ts && \
     /root/.local/bin/algokit generate client /artifacts/Base.arc32.json --language python --output /artifacts/BaseClient.py && \
     jq '.contract' /artifacts/Base.arc32.json > /artifacts/base.contract.json && \
-    /root/.local/bin/algokit generate client /artifacts/Factory.arc32.json --language typescript --output /artifacts/FactoryClient.ts && \
-    /root/.local/bin/algokit generate client /artifacts/Factory.arc32.json --language python --output /artifacts/FactoryClient.py && \
-    jq '.contract' /artifacts/SmartContractStaking.arc32.json > /artifacts/factory.contract.json && \
+    /root/.local/bin/algokit generate client /artifacts/Airdrop.arc32.json --language typescript --output /artifacts/AirdropClient.ts && \
+    /root/.local/bin/algokit generate client /artifacts/Airdrop.arc32.json --language python --output /artifacts/AirdropClient.py && \
+    jq '.contract' /artifacts/Airdrop.arc32.json > /artifacts/airdrop.contract.json && \
+    /root/.local/bin/algokit generate client /artifacts/BaseFactory.arc32.json --language typescript --output /artifacts/BaseFactoryClient.ts && \
+    /root/.local/bin/algokit generate client /artifacts/BaseFactory.arc32.json --language python --output /artifacts/BaseFactoryClient.py && \
+    jq '.contract' /artifacts/BaseFactory.arc32.json > /artifacts/factory.base.contract.json && \
+    /root/.local/bin/algokit generate client /artifacts/AirdropFactory.arc32.json --language typescript --output /artifacts/AirdropFactoryClient.ts && \
+    /root/.local/bin/algokit generate client /artifacts/AirdropFactory.arc32.json --language python --output /artifacts/AirdropFactoryClient.py && \
+    jq '.contract' /artifacts/AirdropFactory.arc32.json > /artifacts/factory.airdrop.contract.json && \
     /root/.local/bin/algokit generate client /artifacts/Messenger.arc32.json --language typescript --output /artifacts/MessengerClient.ts && \
     /root/.local/bin/algokit generate client /artifacts/Messenger.arc32.json --language python --output /artifacts/MessengerClient.py && \
     jq '.contract' /artifacts/Messenger.arc32.json > /artifacts/messenger.contract.json
