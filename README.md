@@ -13,14 +13,14 @@ Implementation of smart contract for staking solution described in document [Sma
 
 ### build all using algokit
 ```shell
-algokit compile py contract.py
+algokit compile py contract.py --output-teal
 algokit generate client SmartContractStaking.arc32.json --language typescript --output SmartContractStakingClient.ts
 algokit generate client SmartContractStaking.arc32.json --language python --output SmartContractStakingClient.py
 ```
 
 ### build and run script
 ```shell
-(docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder && cp -v artifacts/SmartContractStakingClient.ts ./scripts/ && cp -v artifacts/MessengerClient.ts ./scripts/ && (cd scripts/ && npx tsc && node deploy.js))
+(docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder && cp -v artifacts/BaseClient.ts ./scripts/ && cp -v artifacts/MessengerClient.ts ./scripts/ &&  cp -v artifacts/FactoryClient.ts ./scripts/ && (cd scripts/ && npx tsc && node deploy.js))
 ```
 
 ### build all using docker

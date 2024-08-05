@@ -10,7 +10,7 @@ from algopy import (
     arc4,
     itxn,
     op,
-    subroutine,
+    subroutine
 )
 from contract_mab import calculate_mab_pure
 from utils import (
@@ -22,7 +22,6 @@ Bytes32: typing.TypeAlias = arc4.StaticArray[arc4.Byte, typing.Literal[32]]
 Bytes64: typing.TypeAlias = arc4.StaticArray[arc4.Byte, typing.Literal[64]]
 
 class PartKeyInfo(arc4.Struct):
-    who: arc4.Address
     address: arc4.Address
     vote_key: Bytes32
     selection_key: Bytes32
@@ -31,6 +30,9 @@ class PartKeyInfo(arc4.Struct):
     vote_key_dilution: arc4.UInt64
     state_proof_key: Bytes64
 
+class MessagePartKeyInfo(arc4.Struct):
+    who: arc4.Address
+    partkey: PartKeyInfo
 
 ##################################################
 # Ownable
@@ -60,6 +62,98 @@ class Ownable(ARC4Contract):
     def transfer(self, new_owner: arc4.Address) -> None:
         assert Txn.sender == self.owner, "must be owner" 
         self.owner = new_owner.native
+
+##################################################
+# Stakeable
+#   allows contract to participate in consensus,
+#   stake
+##################################################
+class Stakeable(Ownable):
+    def __init__(self) -> None:
+        self.delegate = Account()          # zero address
+        self.stakeable = bool(1)         # 1 (Default unlocked)
+    #############################################
+    # function: set_delegate
+    # arguments:
+    # - delegate, who is the delegate
+    # purpose: set delegate
+    # pre-conditions
+    # - only callable by owner
+    # post-conditions: delegate set
+    ##############################################
+    @arc4.abimethod
+    def set_delegate(self, delegate: arc4.Address) -> None:
+        assert Txn.sender == self.owner, "must be owner"
+        self.delegate = delegate.native
+    ##############################################
+    # function: participate
+    # arguments:
+    # - key registration params
+    # purpose: allow contract to particpate
+    # pre-conditions
+    # - must be callable by owner only
+    # - must be combined with transaction transfering
+    #   one fee into the contract account
+    # post-conditions: 
+    # - contract generates itnx for keyreg
+    # notes:
+    # - fee payment is to prevent potential draining
+    #   into fees, even though it is not likely that
+    #   a user may attempt to drain their funds
+    # - MAB is not relevant due to the fee payment
+    #   added
+    ##############################################
+    @arc4.abimethod
+    def participate(self, vote_k: Bytes32, sel_k: Bytes32, vote_fst: arc4.UInt64,
+        vote_lst: arc4.UInt64, vote_kd: arc4.UInt64, sp_key: Bytes64) -> None: 
+        ###########################################
+        assert Txn.sender == self.owner or Txn.sender == self.delegate, "must be owner or delegate" 
+        ###########################################
+        key_reg_fee = Global.min_txn_fee
+        assert require_payment(Txn.sender) == key_reg_fee, "payment amout accurate"
+        ###########################################
+        itxn.KeyRegistration(
+            vote_key=vote_k.bytes,
+            selection_key=sel_k.bytes,
+            vote_first=vote_fst.native,
+            vote_last=vote_lst.native,
+            vote_key_dilution=vote_kd.native,
+            state_proof_key=sp_key.bytes,
+            fee=key_reg_fee
+        ).submit()
+
+##################################################
+# Deleteable
+#   allows contract to be deleted
+##################################################
+class Deleteable(ARC4Contract):
+    ##############################################
+    # function: __init__ (builtin)
+    # arguments: None
+    # purpose: construct initial state
+    # pre-conditions: None
+    # post-conditions: initial state set
+    ##############################################
+    def __init__(self) -> None:
+        self.deletable = bool(1) # 1 (Default unlocked)
+    ##############################################
+    # function: on_delete
+    # arguments: None
+    # purpose: on delete
+    # pre-conditions
+    # - only callable by creator
+    # - deletable must be true
+    # post-conditions:
+    # - None
+    ##############################################
+    @arc4.baremethod(allow_actions=["DeleteApplication"])
+    def on_delete(self) -> None:
+        ##########################################
+        # WARNING: This app can be deleted by the creator (Development)
+        ##########################################
+        assert Txn.sender == Global.creator_address, "must be creator"
+        assert self.deletable == UInt64(1), "not approved"
+        ##########################################
 
 ##################################################
 # Upgradeable
@@ -112,14 +206,30 @@ class Upgradeable(ARC4Contract):
         assert self.updatable == UInt64(1), "not approved"
         ##########################################
 
+##################################################
+# Messenger
+#   emits events
+##################################################
+class Messenger(Upgradeable):
+    def __init__(self) -> None:
+        super().__init__()
+    @arc4.abimethod
+    def partkey_broastcast(self, address: arc4.Address, vote_k: Bytes32, sel_k: Bytes32,
+        vote_fst: arc4.UInt64, vote_lst: arc4.UInt64, vote_kd: arc4.UInt64, 
+        sp_key: Bytes64) -> None: 
+        arc4.emit(MessagePartKeyInfo(arc4.Address(Txn.sender), PartKeyInfo(address, 
+            vote_k, sel_k, vote_fst, vote_lst, vote_kd, sp_key)))
 
 ##################################################
 # OwnedUpgradeable
 #  combines owned and upgradeable and adds method 
 #  to approve update as owner
 ##################################################
-class OwnedUpgradeable(Upgradeable, Ownable):
+class BaseBridge(Stakeable, Upgradeable, Ownable):
     def __init__(self) -> None:
+        # stakeable state
+        self.delegate = Account()          # zero address
+        self.stakeable = bool(1)         # 1 (Default unlocked)
         # upgradeable state
         self.contract_version = UInt64()   # 0
         self.deployment_version = UInt64() # 0
@@ -142,24 +252,10 @@ class OwnedUpgradeable(Upgradeable, Ownable):
         self.updatable = approval.native
 
 ##################################################
-# Messenger
-#   emits events
-##################################################
-class Messenger(Upgradeable):
-    def __init__(self) -> None:
-        super().__init__()
-    @arc4.abimethod
-    def partkey_broastcast(self, address: arc4.Address, vote_k: Bytes32, sel_k: Bytes32,
-        vote_fst: arc4.UInt64, vote_lst: arc4.UInt64, vote_kd: arc4.UInt64, 
-        sp_key: Bytes64) -> None: 
-        arc4.emit(PartKeyInfo(arc4.Address(Txn.sender), address, vote_k, sel_k,
-            vote_fst, vote_lst, vote_kd, sp_key))
-
-##################################################
 # SmartContractStaking
 #   facilitates airdrop staking
 ##################################################
-class SmartContractStaking(OwnedUpgradeable):
+class Base(BaseBridge):
     ##############################################
     # function: __init__ (builtin)
     # arguments: None
@@ -170,17 +266,33 @@ class SmartContractStaking(OwnedUpgradeable):
     def __init__(self) -> None:
         super().__init__()
         # hot state
+        self.delegate = Account()          # zero address
         self.funder = Account()            # zero address
         self.period = UInt64()             # 0
         self.funding = UInt64()            # 0
         self.total = UInt64()              # 0
         # cold state
+        self.parent_id = UInt64()          # 0
         self.messenger_id = TemplateVar[UInt64]("MESSENGER_ID") # ex) 0
         self.period_seconds = TemplateVar[UInt64]("PERIOD_SECONDS") # ex) 2592000
         self.lockup_delay = TemplateVar[UInt64]("LOCKUP_DELAY") # ex) 12
         self.vesting_delay = TemplateVar[UInt64]("VESTING_DELAY") # ex) 12
         self.period_limit = TemplateVar[UInt64]("PERIOD_LIMIT") # ex) 5
     ##############################################
+    # function: on_create
+    # arguments: None
+    # purpose: on create
+    # pre-conditions
+    # - only callable by CreateApplication
+    # post-conditions:
+    # - indexer_id set to caller_application_id
+    ##############################################
+    @arc4.baremethod(create="require")
+    def on_create(self) -> None:
+        caller_id = Global.caller_application_id
+        assert caller_id > 0, "must be created by factory"
+        self.parent_id = caller_id
+    #############################################
     # function: setup
     # arguments:
     # - owner, who is the beneficiary
@@ -247,43 +359,6 @@ class SmartContractStaking(OwnedUpgradeable):
         ##########################################
         self.total = payment_amount
         self.funding = funding.native
-    ##############################################
-    # function: participate
-    # arguments:
-    # - key registration params
-    # purpose: allow contract to particpate
-    # pre-conditions
-    # - must be callable by owner only
-    # - must be combined with transaction transfering
-    #   one fee into the contract account
-    # post-conditions: 
-    # - contract generates itnx for keyreg
-    # notes:
-    # - fee payment is to prevent potential draining
-    #   into fees, even though it is not likely that
-    #   a user may attempt to drain their funds
-    # - MAB is not relevant due to the fee payment
-    #   added
-    ##############################################
-    @arc4.abimethod
-    def participate(self, vote_k: Bytes32, sel_k: Bytes32, vote_fst: arc4.UInt64, vote_lst: arc4.UInt64, vote_kd: arc4.UInt64, sp_key: Bytes64) -> None: 
-        ###########################################
-        assert self.funding > 0, "funding initialized"
-        ###########################################
-        assert Txn.sender == self.owner, "must be owner" 
-        ###########################################
-        key_reg_fee = Global.min_txn_fee
-        assert require_payment(self.owner) == key_reg_fee, "payment amout accurate"
-        ###########################################
-        itxn.KeyRegistration(
-            vote_key=vote_k.bytes,
-            selection_key=sel_k.bytes,
-            vote_first=vote_fst.native,
-            vote_last=vote_lst.native,
-            vote_key_dilution=vote_kd.native,
-            state_proof_key=sp_key.bytes,
-            fee=key_reg_fee
-        ).submit()
     ##############################################
     # function: withdraw
     # arguments:
@@ -377,3 +452,36 @@ class SmartContractStaking(OwnedUpgradeable):
             self.total,
         )
         return mab
+    ##############################################
+
+class FactoryBridge(Ownable, Upgradeable):
+    def __init__(self) -> None:
+        # ownable state
+        self.owner = Account()                          # zero address
+        # upgradeable state
+        self.contract_version = UInt64()                # 0
+        self.deployment_version = UInt64()              # 0
+        self.updatable = bool(1)                        # 1 (Default unlocked)
+
+class Factory(FactoryBridge):
+    def __init__(self) -> None:
+        super().__init__()
+    ##############################################
+    # @arc4.abimethod
+    # def update(self) -> None:
+    #      pass
+    ##############################################
+    # @arc4.abimethod
+    # def remote_update(self, app_id: arc4.UInt64) -> None:
+    #     pass
+    ##############################################
+    # @arc4.abimethod
+    # def remote_delete(self, app_id: arc4.UInt64) -> None:
+    #     pass
+    ##############################################
+    @arc4.abimethod
+    def create(self, owner: arc4.Address, funder: arc4.Address) -> UInt64:
+        base_app = arc4.arc4_create(Base).created_app
+        arc4.abi_call(Base.setup, owner, funder, app_id=base_app)
+        return base_app.id
+    ##############################################
