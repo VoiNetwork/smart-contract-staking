@@ -5,5 +5,5 @@
 ```
 npm i
 # update .env file
-npx tsc && node deployStaking.js
+npx tsc && node deploy.js
 ```
