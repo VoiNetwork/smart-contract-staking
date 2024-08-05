@@ -81,7 +81,7 @@ const deployWhat: string = "airdrop-factory";
 
 // deploy
 do {
-  //break;
+  break;
   switch (deployWhat) {
     case "airdrop-factory": {
       const appClient = new AirdropFactoryClient(
@@ -242,7 +242,7 @@ do {
 } while (0); // end messenger
 // enter factory
 do {
-  //break;
+  break;
   const ctcInfo = 73765773;
   const spec = {
     name: "",
