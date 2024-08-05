@@ -1,3 +1,5 @@
+import fs from "fs";
+import csv from "csv-parser";
 import { BaseClient, APP_SPEC as BaseSpec } from "./BaseClient.js";
 import { AirdropClient, APP_SPEC as AirdropSpec } from "./AirdropClient.js";
 import {
@@ -83,6 +85,24 @@ const deployWhat: string = "airdrop-factory";
 do {
   break;
   switch (deployWhat) {
+    case "base-factory": {
+      const appClient = new BaseFactoryClient(
+        {
+          resolveBy: "creatorAndName",
+          findExistingUsing: indexerClient,
+          creatorAddress: deployer.addr,
+          name: "f1",
+          sender: deployer,
+        },
+        algodClient
+      );
+      const app = await appClient.deploy({
+        deployTimeParams: {},
+        onUpdate: "update",
+        onSchemaBreak: "fail",
+      });
+      break;
+    }
     case "airdrop-factory": {
       const appClient = new AirdropFactoryClient(
         {
@@ -240,7 +260,52 @@ do {
     console.log(PartKeyInfoEvents);
   } while (0); // end get events
 } while (0); // end messenger
-// enter factory
+// enter base factory
+do {
+  break;
+  const ctcInfo = 73855743;
+  const spec = {
+    name: "",
+    desc: "",
+    methods: BaseFactorySpec.contract.methods,
+    events: [],
+  };
+  const makeCi = (ctcInfo: number, addr: string) => {
+    return new CONTRACT(ctcInfo, algodClient, indexerClient, spec, {
+      addr,
+      sk: new Uint8Array(0),
+    });
+  };
+  const ci = makeCi(ctcInfo, addr);
+  // update
+  do {
+    break;
+    //const BoxPayment = 105700;
+    //ci.setPaymentAmount(BoxPayment);
+    const updateR = await ci.update();
+    console.log(updateR);
+    const res = await signSendAndConfirm(updateR.txns, sk);
+    console.log(res);
+  } while (0); // end update
+  // create
+  do {
+    break;
+    const paymentAmount = 642000; // MBR increase for new contract
+    ci.setPaymentAmount(paymentAmount);
+    ci.setFee(3000);
+    const owner = addr2;
+    const delegate = addr;
+    const createR = await ci.create(owner, delegate);
+    console.log(createR, owner, delegate);
+    if (!createR.success) {
+      console.log("create failed");
+      break;
+    }
+    const res = await signSendAndConfirm(createR.txns, sk);
+    console.log(res);
+  } while (0); // end create
+} while (0); // end factory
+// enter airdrop factory
 do {
   break;
   const ctcInfo = 73765773;
@@ -267,16 +332,61 @@ do {
     const res = await signSendAndConfirm(updateR.txns, sk);
     console.log(res);
   } while (0); // end update
+  // create batch
+  do {
+    break;
+    // read from csv
+    interface AirdropI {
+      owner: string;
+      funder: string;
+      deadline: number;
+      initial: string;
+    }
+    const results: AirdropI[] = [];
+    fs.createReadStream("airdrop.csv")
+      .pipe(csv())
+      .on("data", (data) =>
+        results.push({
+          owner: data.owner,
+          funder: data.funder,
+          deadline: Number(data.deadline),
+          initial: data.initial,
+        })
+      )
+      .on("end", async () => {
+        for (const airdrop of results) {
+          const { owner, funder, deadline, initial } = airdrop;
+          console.log(owner, funder, deadline, initial);
+          const paymentAmount = 642000; // MBR increase for new contract
+          ci.setPaymentAmount(paymentAmount);
+          ci.setFee(3000);
+          const initialBi = BigInt(initial);
+          const createR = await ci.create(
+            owner,
+            funder,
+            deadline,
+            initialBi
+          );
+          if (!createR.success) {
+            console.log("create failed");
+            break;
+          }
+          const res = await signSendAndConfirm(createR.txns, sk);
+          console.log(res);
+        }
+      });
+  } while (0); // end create batch
   // create
   do {
-    //break;
+    break;
     const paymentAmount = 642000; // MBR increase for new contract
     ci.setPaymentAmount(paymentAmount);
     ci.setFee(3000);
-    const createR = await ci.create(
-      "NL3HRVWN37WUIWGE7LXF2JBOOY36UOI4ARGERNPWK3RKEV4ISV272O2WRM",
-      addr
-    );
+    const owner = "VVNPL3MM2XWE6XGVP6ILCQ5A6B5UFKAZMSKVLXMV5DQP75ODVZM3XCHGDA";
+    const funder = addr;
+    const deadline = 1722937600; // future time
+    const initial = 1e6 * 1000; // 1000 VOI
+    const createR = await ci.create(owner, funder, deadline, initial);
     console.log(createR, addr2);
     if (!createR.success) {
       console.log("create failed");
@@ -286,16 +396,16 @@ do {
     console.log(res);
   } while (0); // end create
 } while (0); // end factory
-// enter staking
+// enter airdrop
 do {
   break;
   // create instance of existing contract
-  const ctcInfo = 73774200;
+  const ctcInfo = 75669325;
 
   const spec = {
     name: "",
     desc: "",
-    methods: BaseSpec.contract.methods,
+    methods: AirdropSpec.contract.methods,
     events: [],
   };
 
@@ -313,7 +423,7 @@ do {
   const ci3 = makeCi(ctcInfo, addr3);
 
   const currentTimestamp = moment().unix();
-
+  // not in use, setup must be factory
   // creator setup owner and funder
   // do {
   //   break;
@@ -329,9 +439,10 @@ do {
   // owner configure lockup period
   do {
     break;
-    const configureR = await ci2.configure(1);
+    const period = 5;
+    const configureR = await ci3.configure(period);
     console.log(configureR);
-    const res = await signSendAndConfirm(configureR.txns, sk2);
+    const res = await signSendAndConfirm(configureR.txns, sk3);
     console.log(res);
   } while (0); // end configure
   // funder fills contract

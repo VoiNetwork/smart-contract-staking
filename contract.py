@@ -100,8 +100,8 @@ class Stakeable(Ownable):
     # - fee payment is to prevent potential draining
     #   into fees, even though it is not likely that
     #   a user may attempt to drain their funds
-    # - MAB is not relevant due to the fee payment
-    #   added
+    # - min balance is not relevant due to the fee
+    #   payment added
     ##############################################
     @arc4.abimethod
     def participate(self, vote_k: Bytes32, sel_k: Bytes32, vote_fst: arc4.UInt64,
@@ -373,13 +373,15 @@ class Airdrop(BaseBridge):
         self.period = UInt64()             # 0
         self.funding = UInt64()            # 0
         self.total = UInt64()              # 0
+        self.initial = UInt64()            # 0
+        self.deadline = UInt64()           # 0
         # cold state
-        self.parent_id = UInt64()          # 0
-        self.messenger_id = TemplateVar[UInt64]("MESSENGER_ID") # ex) 0
+        self.parent_id = UInt64()                                   # 0
+        self.messenger_id = TemplateVar[UInt64]("MESSENGER_ID")     # ex) 0
         self.period_seconds = TemplateVar[UInt64]("PERIOD_SECONDS") # ex) 2592000
-        self.lockup_delay = TemplateVar[UInt64]("LOCKUP_DELAY") # ex) 12
-        self.vesting_delay = TemplateVar[UInt64]("VESTING_DELAY") # ex) 12
-        self.period_limit = TemplateVar[UInt64]("PERIOD_LIMIT") # ex) 5
+        self.lockup_delay = TemplateVar[UInt64]("LOCKUP_DELAY")     # ex) 12
+        self.vesting_delay = TemplateVar[UInt64]("VESTING_DELAY")   # ex) 12
+        self.period_limit = TemplateVar[UInt64]("PERIOD_LIMIT")     # ex) 5
     ##############################################
     # function: on_create
     # arguments: None
@@ -402,7 +404,8 @@ class Airdrop(BaseBridge):
     # post-conditions: owner set
     ##############################################
     @arc4.abimethod
-    def setup(self, owner: arc4.Address, funder: arc4.Address) -> None:
+    def setup(self, owner: arc4.Address, funder: arc4.Address, deadline: arc4.UInt64,
+        initial: arc4.UInt64) -> None:
         ##########################################
         assert self.owner == Global.zero_address, "owner not initialized"
         assert self.funder == Global.zero_address, "funder not initialized"
@@ -411,6 +414,8 @@ class Airdrop(BaseBridge):
         ##########################################
         self.owner = owner.native
         self.funder = funder.native
+        self.deadline = deadline.native
+        self.initial = initial.native
     ##############################################
     # function: configure
     # arguments:
@@ -430,6 +435,8 @@ class Airdrop(BaseBridge):
         ##########################################
         assert period <= TemplateVar[UInt64]("PERIOD_LIMIT") 
         ##########################################
+        assert self.deadline > Global.latest_timestamp, "deadline not passed"
+        ##########################################
         self.period = period.native
     ##############################################
     # function: fill
@@ -439,7 +446,7 @@ class Airdrop(BaseBridge):
     # pre-conditions
     # - period must be set
     # - funding and total must be uninitialized
-    # - must be combined with pyament transaction
+    # - must be combined with payment transaction
     #   for total amount
     # - must be only callable by funder 
     # post-conditions: 
@@ -465,7 +472,7 @@ class Airdrop(BaseBridge):
     # function: withdraw
     # arguments:
     # - amount
-    # returns: mab
+    # returns: min balance
     # purpose: extract funds from contract
     # pre-conditions
     # - only callable by owner
@@ -485,21 +492,21 @@ class Airdrop(BaseBridge):
         ##########################################
         assert Txn.sender == self.owner, "must be owner" 
         ##########################################
-        mab = self.calculate_mab()
+        min_balance = self.calculate_min_balance()
         available_balance = get_available_balance()
-        assert available_balance - amount.native >= mab, "mab available"
+        assert available_balance - amount.native >= min_balance, "balance available"
         if amount > 0:
             itxn.Payment(
                 amount=amount.native,
                 receiver=Txn.sender,
                 fee=0
             ).submit()
-        return mab
+        return min_balance
     ##############################################
     # function: close
     # purpose: deletes contract
     # pre-conditions:
-    # - mab is 0
+    # - min balance is 0
     # post-conditions:
     # - contract is deleted
     # - account closed out to owner if it has a balance
@@ -514,7 +521,7 @@ class Airdrop(BaseBridge):
         ###########################################
         assert self.funding > 0, "funding initialized"
         ###########################################
-        assert self.calculate_mab() == 0, "mab is zero"
+        assert self.calculate_min_balance() == 0, "min balance not zero"
         ###########################################
         oca = Txn.on_completion
         if oca == OnCompleteAction.DeleteApplication:
@@ -525,9 +532,9 @@ class Airdrop(BaseBridge):
         else:
             op.err() 
     ##############################################
-    # function: calculate_mab (internal)
+    # function: min_balance (internal)
     # arguments: None
-    # purpose: calcualte minimum allowable balance
+    # purpose: calcualte minimum balance
     # pre-conditions: None
     # post-conditions: None
     # notes:
@@ -535,16 +542,16 @@ class Airdrop(BaseBridge):
     #       total = total amount intially funded (airdrop + lockup bonus)
     #       y = vesting delay in months
     #       p = 1 / (self.period x 12) or 1 / (period)
-    # - mimumum allowable balance =
+    # - mimumum balance =
     #     total x min(1, p x max(0, (period - (now() - funding + y x seconds-in-month)) / seconds-in-month))
     ##############################################
     @subroutine
-    def calculate_mab(self) -> UInt64:
+    def calculate_min_balance(self) -> UInt64:
         now: UInt64 = Global.latest_timestamp
         vesting_delay: UInt64 = TemplateVar[UInt64]("VESTING_DELAY") # vesting delay
         period_seconds: UInt64 = TemplateVar[UInt64]("PERIOD_SECONDS") 
         lockup_delay: UInt64 = TemplateVar[UInt64]("LOCKUP_DELAY") * self.period # lockup period
-        mab: UInt64 = calculate_mab_pure(
+        min_balance: UInt64 = calculate_mab_pure(
             now,
             vesting_delay,
             period_seconds,
@@ -553,7 +560,7 @@ class Airdrop(BaseBridge):
             self.funding,
             self.total,
         )
-        return mab
+        return min_balance
     ##############################################
 
 class FactoryBridge(Ownable, Upgradeable):
@@ -604,8 +611,9 @@ class AirdropFactory(FactoryBridge):
     #     pass
     ##############################################
     @arc4.abimethod
-    def create(self, owner: arc4.Address, funder: arc4.Address) -> UInt64:
+    def create(self, owner: arc4.Address, funder: arc4.Address, deadline: arc4.UInt64,
+        initial: arc4.UInt64) -> UInt64:
         base_app = arc4.arc4_create(Airdrop).created_app
-        arc4.abi_call(Airdrop.setup, owner, funder, app_id=base_app)
+        arc4.abi_call(Airdrop.setup, owner, funder, deadline, initial, app_id=base_app)
         return base_app.id
     ##############################################
