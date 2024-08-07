@@ -151,15 +151,7 @@ do {
         algodClient
       );
       const app = await appClient.deploy({
-        deployTimeParams: {
-          /*
-          MESSENGER_ID: 73060985,
-          PERIOD_SECONDS: periodSeconds,
-          PERIOD_LIMIT: 5,
-          VESTING_DELAY: 12,
-          LOCKUP_DELAY: 12,
-          */
-        },
+        deployTimeParams: {},
         onUpdate: "update",
         onSchemaBreak: "fail",
       });
@@ -361,12 +353,7 @@ do {
           ci.setPaymentAmount(paymentAmount);
           ci.setFee(3000);
           const initialBi = BigInt(initial);
-          const createR = await ci.create(
-            owner,
-            funder,
-            deadline,
-            initialBi
-          );
+          const createR = await ci.create(owner, funder, deadline, initialBi);
           if (!createR.success) {
             console.log("create failed");
             break;
@@ -382,10 +369,10 @@ do {
     const paymentAmount = 642000; // MBR increase for new contract
     ci.setPaymentAmount(paymentAmount);
     ci.setFee(3000);
-    const owner = "VVNPL3MM2XWE6XGVP6ILCQ5A6B5UFKAZMSKVLXMV5DQP75ODVZM3XCHGDA";
+    const owner = addr2;
     const funder = addr;
     const deadline = 1722937600; // future time
-    const initial = 1e6 * 1000; // 1000 VOI
+    const initial = 1e6 * 1; // 1 VOI
     const createR = await ci.create(owner, funder, deadline, initial);
     console.log(createR, addr2);
     if (!createR.success) {
@@ -400,7 +387,7 @@ do {
 do {
   break;
   // create instance of existing contract
-  const ctcInfo = 75669325;
+  const ctcInfo = 75701483;
 
   const spec = {
     name: "",
@@ -448,6 +435,7 @@ do {
   // funder fills contract
   do {
     break;
+    // payment amount is gte global initial
     ci.setPaymentAmount(1e6);
     const fillR = await ci.fill(currentTimestamp);
     console.log(fillR);
@@ -459,8 +447,8 @@ do {
     break;
     console.log("participate online");
     // send 100000
-    ci3.setPaymentAmount(1000);
-    const participateR = await ci3.participate(
+    ci2.setPaymentAmount(1000);
+    const participateR = await ci2.participate(
       new Uint8Array(
         Buffer.from("rqzFOfwFPvMCkVxk/NKgj8idbwrsEGwxDbQwmHwtACE=", "base64")
       ),
@@ -478,14 +466,14 @@ do {
       )
     );
     console.log(participateR);
-    const res = await signSendAndConfirm(participateR.txns, sk3);
+    const res = await signSendAndConfirm(participateR.txns, sk2);
     console.log(res);
   } while (0); // end participation (participation)
   // owner or delegate participates (non-participation)
   do {
     break;
     console.log("participate offline");
-    ci2.setPaymentAmount(11000);
+    ci2.setPaymentAmount(1000);
     const participateR = await ci2.participate(
       new Uint8Array(32),
       new Uint8Array(32),
@@ -523,7 +511,7 @@ do {
   do {
     break;
     ci2.setFee(2000);
-    const withdrawR = await ci2.withdraw(1e6);
+    const withdrawR = await ci2.withdraw(1);
     if (!withdrawR.success) {
       console.log(withdrawR);
       break;
@@ -536,11 +524,11 @@ do {
   // anybody close
   do {
     break;
-    ci2.setFee(2000);
-    ci2.setOnComplete(5); // deleteApplicationOC
-    const closeR = await ci2.close();
+    ci3.setFee(3000);
+    ci3.setOnComplete(5); // deleteApplicationOC
+    const closeR = await ci3.close();
     console.log(closeR);
-    const res = await signSendAndConfirm(closeR.txns, sk2);
+    const res = await signSendAndConfirm(closeR.txns, sk3);
     console.log(res);
   } while (0); // end close
 } while (0); // end staking

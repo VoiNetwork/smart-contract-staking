@@ -17,8 +17,7 @@ CMD /root/.local/bin/algokit compile py \
     --template-var PERIOD_LIMIT=5 \
     --template-var VESTING_DELAY=12 \
     --template-var LOCKUP_DELAY=60 \
-    --template-var PERIOD_SECONDS=60 \
-    --template-var INDEXER_ID=1 \
+    --template-var PERIOD_SECONDS=10 \
     --template-var MESSENGER_ID=73060985 \
     --out-dir /artifacts \
     /src/contract.py && \

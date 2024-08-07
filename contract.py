@@ -2,6 +2,7 @@ import typing
 from algopy import (
     ARC4Contract, 
     Account,
+    Bytes,
     Global,
     OnCompleteAction,
     TemplateVar,
@@ -110,6 +111,7 @@ class Stakeable(Ownable):
         assert Txn.sender == self.owner or Txn.sender == self.delegate, "must be owner or delegate" 
         ###########################################
         key_reg_fee = Global.min_txn_fee
+        # require payment of min fee to prevent draining
         assert require_payment(Txn.sender) == key_reg_fee, "payment amout accurate"
         ###########################################
         itxn.KeyRegistration(
@@ -478,7 +480,7 @@ class Airdrop(BaseBridge):
     # - only callable by owner
     # - let balance be the current balance of the
     #   contract
-    # - balance - amount >= mag
+    # - balance - amount >= min_balance
     #   (fee paid in appl txn)
     # post-conditions: 
     # - transfer amount from the contract account
@@ -523,12 +525,26 @@ class Airdrop(BaseBridge):
         ###########################################
         assert self.calculate_min_balance() == 0, "min balance not zero"
         ###########################################
+        assert Txn.sender == self.owner or Txn.sender == self.funder, "must be owner or funder"
+        ###########################################
         oca = Txn.on_completion
         if oca == OnCompleteAction.DeleteApplication:
-            itxn.Payment(
+            keyreg_txn = itxn.KeyRegistration(
+                non_participation=True,
+                vote_key=Bytes.from_base64("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
+                selection_key=Bytes.from_base64("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
+                vote_first=UInt64(0),
+                vote_last=UInt64(0),
+                vote_key_dilution=UInt64(0),
+                state_proof_key=Bytes.from_base64("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="),
+                fee=0
+            )
+            pmt_txn = itxn.Payment(
                 receiver=self.owner,
-                close_remainder_to=self.owner
-            ).submit()
+                close_remainder_to=self.owner,
+                fee=0
+            )
+            itxn.submit_txns(keyreg_txn, pmt_txn)
         else:
             op.err() 
     ##############################################
