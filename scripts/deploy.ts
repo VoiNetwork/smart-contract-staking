@@ -3,6 +3,10 @@ import csv from "csv-parser";
 import { BaseClient, APP_SPEC as BaseSpec } from "./BaseClient.js";
 import { AirdropClient, APP_SPEC as AirdropSpec } from "./AirdropClient.js";
 import {
+  StakeRewardClient,
+  APP_SPEC as StakeRewardSpec,
+} from "./StakeRewardClient.js";
+import {
   AirdropFactoryClient,
   APP_SPEC as AirdropFactorySpec,
 } from "./AirdropFactoryClient.js";
@@ -10,6 +14,10 @@ import {
   BaseFactoryClient,
   APP_SPEC as BaseFactorySpec,
 } from "./BaseFactoryClient.js";
+import {
+  StakeRewardFactoryClient,
+  APP_SPEC as StakeRewardFactorySpec,
+} from "./StakeRewardFactoryClient.js";
 import {
   MessengerClient,
   APP_SPEC as MessengerSpec,
@@ -24,7 +32,18 @@ import moment from "moment";
 import * as dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
-const { MN, MN2, MN3, NODE_ADDR } = process.env;
+const { 
+  MN, 
+  MN2, 
+  MN3, 
+  NODE_ADDR, 
+  CTC_INFO_AIRDROP,
+  CTC_INFO_AIRDROP_FACTORY,
+  CTC_INFO_BASE,
+  CTC_INFO_BASE_FACTORY,
+  CTC_INFO_REWARD,
+  CTC_INFO_REWARD_FACTORY,
+} = process.env;
 
 const mnemonic = MN || "";
 const mnemonic2 = MN2 || "";
@@ -79,7 +98,13 @@ const secondsInHour = 3600;
 const secondsInMonth = 31557600;
 const periodSeconds = secondsCustom;
 
-const deployWhat: string = "airdrop-factory";
+// select what to deploy
+// - base-factory
+// - airdrop-factory
+// - reward-factory
+// - messenger
+
+const deployWhat: string = "reward-factory";
 
 // deploy
 do {
@@ -121,6 +146,24 @@ do {
       });
       break;
     }
+    case "reward-factory": {
+      const appClient = new StakeRewardFactoryClient(
+        {
+          resolveBy: "creatorAndName",
+          findExistingUsing: indexerClient,
+          creatorAddress: deployer.addr,
+          name: "f4",
+          sender: deployer,
+        },
+        algodClient
+      );
+      const app = await appClient.deploy({
+        deployTimeParams: {},
+        onUpdate: "update",
+        onSchemaBreak: "fail",
+      });
+      break;
+    }
     case "messenger": {
       const appClient = new MessengerClient(
         {
@@ -139,24 +182,25 @@ do {
       });
       break;
     }
-    case "staking": {
-      const appClient = new BaseClient(
-        {
-          resolveBy: "creatorAndName",
-          findExistingUsing: indexerClient,
-          creatorAddress: deployer.addr,
-          name: "311",
-          sender: deployer,
-        },
-        algodClient
-      );
-      const app = await appClient.deploy({
-        deployTimeParams: {},
-        onUpdate: "update",
-        onSchemaBreak: "fail",
-      });
-      break;
-    }
+    // depreciate, use factory
+    // case "staking": {
+    //   const appClient = new BaseClient(
+    //     {
+    //       resolveBy: "creatorAndName",
+    //       findExistingUsing: indexerClient,
+    //       creatorAddress: deployer.addr,
+    //       name: "311",
+    //       sender: deployer,
+    //     },
+    //     algodClient
+    //   );
+    //   const app = await appClient.deploy({
+    //     deployTimeParams: {},
+    //     onUpdate: "update",
+    //     onSchemaBreak: "fail",
+    //   });
+    //   break;
+    // }
   }
 } while (0); // end deploy
 // enter messenger
@@ -255,7 +299,7 @@ do {
 // enter base factory
 do {
   break;
-  const ctcInfo = 73855743;
+  const ctcInfo = Number(CTC_INFO_BASE_FACTORY);
   const spec = {
     name: "",
     desc: "",
@@ -285,7 +329,8 @@ do {
     const paymentAmount = 642000; // MBR increase for new contract
     ci.setPaymentAmount(paymentAmount);
     ci.setFee(3000);
-    const owner = addr2;
+    //const owner = addr2;
+    const owner = "RTKWX3FTDNNIHMAWHK5SDPKH3VRPPW7OS5ZLWN6RFZODF7E22YOBK2OGPE";
     const delegate = addr;
     const createR = await ci.create(owner, delegate);
     console.log(createR, owner, delegate);
@@ -300,7 +345,7 @@ do {
 // enter airdrop factory
 do {
   break;
-  const ctcInfo = 73765773;
+  const ctcInfo = Number(CTC_INFO_AIRDROP_FACTORY);
   const spec = {
     name: "",
     desc: "",
@@ -383,11 +428,128 @@ do {
     console.log(res);
   } while (0); // end create
 } while (0); // end factory
+// enter reward factory
+do {
+  break;
+  const ctcInfo = Number(CTC_INFO_REWARD_FACTORY);
+  const spec = {
+    name: "",
+    desc: "",
+    methods: StakeRewardFactorySpec.contract.methods,
+    events: [],
+  };
+  const makeCi = (ctcInfo: number, addr: string) => {
+    return new CONTRACT(ctcInfo, algodClient, indexerClient, spec, {
+      addr,
+      sk: new Uint8Array(0),
+    });
+  };
+  const ci = makeCi(ctcInfo, addr);
+  // update
+  do {
+    break;
+    //const BoxPayment = 105700;
+    //ci.setPaymentAmount(BoxPayment);
+    const updateR = await ci.update();
+    console.log(updateR);
+    const res = await signSendAndConfirm(updateR.txns, sk);
+    console.log(res);
+  } while (0); // end update
+  // create
+  do {
+    break;
+    const paymentAmount = 2e6; // MBR increase for new contract
+    ci.setPaymentAmount(paymentAmount);
+    ci.setFee(4000);
+    const owner = addr2;
+    const funder = addr3;
+    const delegate = addr;
+    const period = 0;
+    const createR = await ci.create(owner, funder, delegate, period);
+    console.log(createR, owner, delegate);
+    if (!createR.success) {
+      console.log("create failed");
+      break;
+    }
+    const res = await signSendAndConfirm(createR.txns, sk);
+    console.log(res);
+  } while (0); // end create
+} while (0);
+// enter reward
+do {
+  break;
+  // create instance of existing contract
+  const ctcInfo = Number(CTC_INFO_REWARD);
+
+  const spec = {
+    name: "",
+    desc: "",
+    methods: StakeRewardSpec.contract.methods,
+    events: [],
+  };
+  const makeCi = (ctcInfo: number, addr: string) => {
+    return new CONTRACT(ctcInfo, algodClient, indexerClient, spec, {
+      addr,
+      sk: new Uint8Array(0),
+    });
+  };
+  const ci = makeCi(ctcInfo, addr);
+  const ci2 = makeCi(ctcInfo, addr2);
+  const ci3 = makeCi(ctcInfo, addr3);
+  const currentTimestamp = moment().unix();
+  // fill as funder
+  do {
+    break;
+    // get period from global state and use it to set payment amount
+    // payment amount is gte global initial
+    ci3.setPaymentAmount(1e6);
+    const fillR = await ci3.fill();
+    console.log(fillR);
+    const res = await signSendAndConfirm(fillR.txns, sk3);
+    console.log(res);
+  } while (0); // end fill
+  // owner withdraws (simulate for mab)
+  do {
+    break;
+    ci2.setFee(2000);
+    const withdrawR = await ci2.withdraw(0);
+    if (!withdrawR.success) {
+      console.log(withdrawR);
+      break;
+    }
+    const withdraw = withdrawR.returnValue;
+    console.log(withdraw);
+  } while (0); // end withdraw (simulate for mab)
+  // owner withdraw
+  do {
+    break;
+    ci2.setFee(2000);
+    const withdrawR = await ci2.withdraw(1e6);
+    if (!withdrawR.success) {
+      console.log(withdrawR);
+      break;
+    }
+    const withdraw = withdrawR.returnValue;
+    console.log(withdraw);
+    const res = await signSendAndConfirm(withdrawR.txns, sk2);
+    console.log(res);
+  } while (0); // end withdraw
+  // only owner can withdraw
+  do {
+    break;
+    ci2.setFee(3000);
+    ci2.setOnComplete(5); // deleteApplicationOC
+    const closeR = await ci2.close();
+    console.log(closeR);
+    const res = await signSendAndConfirm(closeR.txns, sk2);
+    console.log(res);
+  } while (0); // end close
+} while (0); // end reward
 // enter airdrop
 do {
   break;
   // create instance of existing contract
-  const ctcInfo = 75701483;
+  const ctcInfo = Number(CTC_INFO_AIRDROP);
 
   const spec = {
     name: "",
