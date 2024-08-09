@@ -359,9 +359,10 @@ class Messenger(Upgradeable):
             vote_k, sel_k, vote_fst, vote_lst, vote_kd, sp_key)))
 
 ##################################################
-# OwnedUpgradeable
-#  combines owned and upgradeable and adds method 
-#  to approve update as owner
+# BaseBridge
+#  combines owned upgradeable and stakeable. Adds 
+#  method  to approve update as owner. Use by
+#  Base.
 ##################################################
 class BaseBridge(Stakeable, Upgradeable, Ownable):
     def __init__(self) -> None:
@@ -388,50 +389,7 @@ class BaseBridge(Stakeable, Upgradeable, Ownable):
     def approve_update(self, approval: arc4.Bool) -> None:
         assert Txn.sender == self.owner, "must be owner"
         self.updatable = approval.native
-
-
-##################################################
-# AirdropBridge
-#   similar to base bridge with lockable
-##################################################
-class AirdropBridge(Stakeable, Upgradeable, Lockable):
-    def __init__(self) -> None:
-        # stakeable state
-        self.delegate = Account()          # zero address
-        self.stakeable = bool(1)         # 1 (Default unlocked)
-        # upgradeable state
-        self.contract_version = UInt64()   # 0
-        self.deployment_version = UInt64() # 0
-        self.updatable = bool(1)           # 1 (Default unlocked)
-        # ownable state
-        self.owner = Account()             # zero address
-        # lockable state
-        self.funder = Account()            # zero address
-        self.period = UInt64()             # 0
-        self.funding = UInt64()            # 0
-        self.total = UInt64()              # 0
-        self.initial = UInt64()            # 0
-        self.deadline = UInt64()           # 0
-        self.parent_id = UInt64()                                   # 0
-        self.messenger_id = TemplateVar[UInt64]("MESSENGER_ID")     # ex) 0
-        self.period_seconds = TemplateVar[UInt64]("PERIOD_SECONDS") # ex) 2592000
-        self.lockup_delay = TemplateVar[UInt64]("LOCKUP_DELAY")     # ex) 12
-        self.vesting_delay = TemplateVar[UInt64]("VESTING_DELAY")   # ex) 12
-        self.period_limit = TemplateVar[UInt64]("PERIOD_LIMIT")     # ex) 5
-    ############################################## 
-    # function: approve_update
-    # arguments:
-    # - approval, approval status
-    # purpose: approve update
-    # pre-conditions
-    # - only callable by owner
-    # post-conditions:
-    # - updatable set to approval
     ##############################################
-    @arc4.abimethod
-    def approve_update(self, approval: arc4.Bool) -> None:
-        assert Txn.sender == self.owner, "must be owner"
-        self.updatable = approval.native 
 
 ##################################################
 # Base
@@ -547,6 +505,52 @@ class Base(BaseBridge):
             itxn.submit_txns(keyreg_txn, pmt_txn)
         else:
             op.err() 
+    ##############################################
+
+##################################################
+# AirdropBridge
+#   similar to base bridge with lockable instead
+#   of ownable. Used by Airdrop and StakeReward.
+##################################################
+class AirdropBridge(Stakeable, Upgradeable, Lockable):
+    def __init__(self) -> None:
+        # stakeable state
+        self.delegate = Account()          # zero address
+        self.stakeable = bool(1)         # 1 (Default unlocked)
+        # upgradeable state
+        self.contract_version = UInt64()   # 0
+        self.deployment_version = UInt64() # 0
+        self.updatable = bool(1)           # 1 (Default unlocked)
+        # ownable state
+        self.owner = Account()             # zero address
+        # lockable state
+        self.funder = Account()            # zero address
+        self.period = UInt64()             # 0
+        self.funding = UInt64()            # 0
+        self.total = UInt64()              # 0
+        self.initial = UInt64()            # 0
+        self.deadline = UInt64()           # 0
+        self.parent_id = UInt64()                                   # 0
+        self.messenger_id = TemplateVar[UInt64]("MESSENGER_ID")     # ex) 0
+        self.period_seconds = TemplateVar[UInt64]("PERIOD_SECONDS") # ex) 2592000
+        self.lockup_delay = TemplateVar[UInt64]("LOCKUP_DELAY")     # ex) 12
+        self.vesting_delay = TemplateVar[UInt64]("VESTING_DELAY")   # ex) 12
+        self.period_limit = TemplateVar[UInt64]("PERIOD_LIMIT")     # ex) 5
+    ############################################## 
+    # function: approve_update
+    # arguments:
+    # - approval, approval status
+    # purpose: approve update
+    # pre-conditions
+    # - only callable by owner
+    # post-conditions:
+    # - updatable set to approval
+    ##############################################
+    @arc4.abimethod
+    def approve_update(self, approval: arc4.Bool) -> None:
+        assert Txn.sender == self.owner, "must be owner"
+        self.updatable = approval.native 
+    ##############################################
 
 ##################################################
 # Airdrop
@@ -695,7 +699,7 @@ class Airdrop(AirdropBridge):
 
 ##################################################
 # StakeReward
-#   facilitates airdrop staking
+#   facilitates reward staking
 ##################################################
 class StakeReward(AirdropBridge):
     ##############################################
@@ -776,6 +780,10 @@ class StakeReward(AirdropBridge):
         self.funding = Global.latest_timestamp
     ##############################################
 
+##################################################
+# FactoryBridge
+#   bridge for factory
+##################################################
 class FactoryBridge(Ownable, Upgradeable):
     def __init__(self) -> None:
         # ownable state
@@ -784,7 +792,12 @@ class FactoryBridge(Ownable, Upgradeable):
         self.contract_version = UInt64()                # 0
         self.deployment_version = UInt64()              # 0
         self.updatable = bool(1)                        # 1 (Default unlocked)
+    ##############################################
 
+##################################################
+# BaseFactory
+#   factory for base
+##################################################
 class BaseFactory(FactoryBridge):
     def __init__(self) -> None:
         super().__init__()
@@ -808,6 +821,10 @@ class BaseFactory(FactoryBridge):
         return base_app.id
     ##############################################
 
+##################################################
+# AirdropFactory
+#   factory for airdrop
+##################################################
 class AirdropFactory(FactoryBridge):
     def __init__(self) -> None:
         super().__init__()
@@ -833,6 +850,10 @@ class AirdropFactory(FactoryBridge):
     ##############################################
 
 
+##################################################
+# StakeRewardFactory
+#   factory for stake reward
+##################################################
 class StakeRewardFactory(FactoryBridge):
     def __init__(self) -> None:
         super().__init__()
