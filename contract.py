@@ -344,8 +344,6 @@ class Lockable(Ownable):
         return min_balance
     ##############################################
 
-
-    
 ##################################################
 # Messenger
 #   emits events
@@ -741,10 +739,6 @@ class StakeReward(AirdropBridge):
         ##########################################
         assert period <= TemplateVar[UInt64]("PERIOD_LIMIT") 
         ##########################################
-        #caller_address = Global.caller_application_address
-        #payment_amount = require_payment(caller_address)
-        #assert payment_amount >= UInt64(0), "payment amount accurate"
-        ##########################################
         self.owner = owner.native
         self.funder = funder.native
         self.delegate = delegate.native
@@ -775,8 +769,6 @@ class StakeReward(AirdropBridge):
         ##########################################
         payment_amount = require_payment(self.funder)
         assert payment_amount > UInt64(0), "payment amount accurate"
-        ##########################################
-        #assert funding > 0, "funding must be greater than zero"
         ##########################################
         application_address = Global.current_application_address
         self.initial = application_address.balance - payment_amount
@@ -814,6 +806,7 @@ class BaseFactory(FactoryBridge):
         base_app = arc4.arc4_create(Base).created_app
         arc4.abi_call(Base.setup, owner, delegate, app_id=base_app)
         return base_app.id
+    ##############################################
 
 class AirdropFactory(FactoryBridge):
     def __init__(self) -> None:
