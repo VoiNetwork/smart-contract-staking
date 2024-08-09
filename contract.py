@@ -646,7 +646,7 @@ class Airdrop(AirdropBridge):
         payment_amount = require_payment(self.funder)
         assert payment_amount > UInt64(0), "payment amount accurate"
         ##########################################
-        assert funding > 0, "funding must  be greater than zero"
+        assert funding > self.deadline, "funding must after deadline"
         ##########################################
         self.total = payment_amount
         self.funding = funding.native
