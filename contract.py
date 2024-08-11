@@ -352,14 +352,11 @@ class Lockable(Ownable):
     @subroutine
     def calculate_min_balance(self) -> UInt64:
         now: UInt64 = Global.latest_timestamp
-        vesting_delay: UInt64 = self.vesting_delay
-        period_seconds: UInt64 = self.period_seconds
-        lockup_delay: UInt64 = self.lockup_delay
         min_balance: UInt64 = calculate_mab_pure(
             now,
-            vesting_delay,
-            period_seconds,
-            lockup_delay,
+            self.vesting_delay,
+            self.period_seconds,
+            self.lockup_delay,
             self.period,
             self.funding,
             self.total
