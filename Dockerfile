@@ -17,7 +17,7 @@ CMD /root/.local/bin/algokit compile py \
     --template-var PERIOD_LIMIT=5 \
     --template-var VESTING_DELAY=12 \
     --template-var LOCKUP_DELAY=12 \
-    --template-var PERIOD_SECONDS=10 \
+    --template-var PERIOD_SECONDS=5 \
     --template-var MESSENGER_ID=73060985 \
     --out-dir /artifacts \
     /src/contract.py && \
@@ -38,7 +38,21 @@ CMD /root/.local/bin/algokit compile py \
     jq '.contract' /artifacts/AirdropFactory.arc32.json > /artifacts/factory.airdrop.contract.json && \
     /root/.local/bin/algokit generate client /artifacts/StakeRewardFactory.arc32.json --language typescript --output /artifacts/StakeRewardFactoryClient.ts && \
     /root/.local/bin/algokit generate client /artifacts/StakeRewardFactory.arc32.json --language python --output /artifacts/StakeRewardFactoryClient.py && \
-    jq '.contract' /artifacts/StakeRewardFactory.arc32.json > /artifacts/factory.reward.contract.json && \
     /root/.local/bin/algokit generate client /artifacts/Messenger.arc32.json --language typescript --output /artifacts/MessengerClient.ts && \
     /root/.local/bin/algokit generate client /artifacts/Messenger.arc32.json --language python --output /artifacts/MessengerClient.py && \
-    jq '.contract' /artifacts/Messenger.arc32.json > /artifacts/messenger.contract.json
+    jq '.contract' /artifacts/Messenger.arc32.json > /artifacts/messenger.contract.json && \
+    /root/.local/bin/algokit compile py \
+    --output-bytecode \
+    --template-var PERIOD_LIMIT=18 \
+    --template-var VESTING_DELAY=12 \
+    --template-var LOCKUP_DELAY=1 \
+    --template-var PERIOD_SECONDS=5 \
+    --template-var MESSENGER_ID=73060985 \
+    --out-dir /artifacts \
+    /src/contract.py && \
+    /root/.local/bin/algokit generate client /artifacts/EarlyStakeReward.arc32.json --language typescript --output /artifacts/EarlyStakeRewardClient.ts && \
+    /root/.local/bin/algokit generate client /artifacts/EarlyStakeReward.arc32.json --language python --output /artifacts/EarlyStakeRewardClient.py && \
+    jq '.contract' /artifacts/EarlyStakeReward.arc32.json > /artifacts/early.contract.json && \
+    /root/.local/bin/algokit generate client /artifacts/EarlyStakeRewardFactory.arc32.json --language typescript --output /artifacts/EarlyStakeRewardFactoryClient.ts && \
+    /root/.local/bin/algokit generate client /artifacts/EarlyStakeRewardFactory.arc32.json --language python --output /artifacts/EarlyStakeRewardFactoryClient.py && \
+    jq '.contract' /artifacts/EarlyStakeRewardFactory.arc32.json > /artifacts/factory.early.contract.json

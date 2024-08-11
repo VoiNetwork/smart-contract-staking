@@ -211,6 +211,29 @@ class Upgradeable(ARC4Contract):
 ##################################################
 # Lockable
 #   allows contract to be lock network tokens
+# State:
+#   hot state
+#     - funder, who funded the contract
+#     - period, lockup period
+#     - funding, when funded
+#     - total, total amount funded
+#     - initial, initial balance
+#     - deadline, funding deadline
+#   warm state
+#     - vesting_delay, vesting delay
+#       periods from funding until lockup
+#       vesting delay in early staking rewards
+#       depends on period
+#       ex)
+#         vd = (p + 1) 2 / 3
+#               , where p is between 1 and 18
+#       otherwise cold
+#   cold state
+#     - parent_id, parent id
+#     - messenger_id, messenger id
+#     - period_seconds, period seconds
+#     - lockup_delay, lockup delay
+#     - period_limit, period limit
 ##################################################
 class Lockable(Ownable):
     ##############################################
@@ -329,9 +352,9 @@ class Lockable(Ownable):
     @subroutine
     def calculate_min_balance(self) -> UInt64:
         now: UInt64 = Global.latest_timestamp
-        vesting_delay: UInt64 = TemplateVar[UInt64]("VESTING_DELAY") # vesting delay
-        period_seconds: UInt64 = TemplateVar[UInt64]("PERIOD_SECONDS") 
-        lockup_delay: UInt64 = TemplateVar[UInt64]("LOCKUP_DELAY") * self.period # lockup period
+        vesting_delay: UInt64 = self.vesting_delay
+        period_seconds: UInt64 = self.period_seconds
+        lockup_delay: UInt64 = self.lockup_delay
         min_balance: UInt64 = calculate_mab_pure(
             now,
             vesting_delay,
@@ -339,7 +362,7 @@ class Lockable(Ownable):
             lockup_delay,
             self.period,
             self.funding,
-            self.total,
+            self.total
         )
         return min_balance
     ##############################################
@@ -618,6 +641,7 @@ class Airdrop(AirdropBridge):
         assert Txn.sender == self.owner, "must be owner"
         ##########################################
         assert period <= TemplateVar[UInt64]("PERIOD_LIMIT") 
+        assert period >= 0
         ##########################################
         assert self.deadline > Global.latest_timestamp, "deadline not passed"
         ##########################################
@@ -652,6 +676,45 @@ class Airdrop(AirdropBridge):
         ##########################################
         self.total = payment_amount
         self.funding = funding.native
+    ##############################################
+    # function: withdraw
+    # arguments:
+    # - amount
+    # returns: min balance
+    # purpose: extract funds from contract
+    # pre-conditions
+    # - only callable by owner
+    # post-conditions:
+    # - transfer amount from the contract account
+    #   to owner
+    ##############################################
+    @arc4.abimethod
+    def withdraw(self, amount: arc4.UInt64) -> UInt64:
+        ##########################################
+        assert Txn.sender == self.owner, "must be owner" 
+        ##########################################
+        if self.funding > 0:
+            min_balance = self.calculate_min_balance()
+            available_balance = get_available_balance()
+            assert available_balance - amount.native >= min_balance, "balance available"
+            if amount > 0:
+                itxn.Payment(
+                    amount=amount.native,
+                    receiver=Txn.sender,
+                    fee=0
+                ).submit()
+            return min_balance
+        else:
+            min_balance = UInt64(0)
+            available_balance = get_available_balance()
+            assert available_balance - amount.native >= min_balance, "balance available"
+            if amount > 0:
+                itxn.Payment(
+                    amount=amount.native,
+                    receiver=Txn.sender,
+                    fee=0
+                ).submit()
+            return min_balance
     ##############################################
     # function: close
     # purpose: deletes contract
@@ -742,6 +805,7 @@ class StakeReward(AirdropBridge):
         assert Txn.sender == Global.creator_address, "must be creator" 
         ##########################################
         assert period <= TemplateVar[UInt64]("PERIOD_LIMIT") 
+        assert period > 0
         ##########################################
         self.owner = owner.native
         self.funder = funder.native
@@ -772,13 +836,206 @@ class StakeReward(AirdropBridge):
         assert Txn.sender == self.funder, "must be funder" 
         ##########################################
         payment_amount = require_payment(self.funder)
+        min_balance = op.Global.min_balance
         assert payment_amount > UInt64(0), "payment amount accurate"
         ##########################################
         application_address = Global.current_application_address
-        self.initial = application_address.balance - payment_amount
-        self.total = application_address.balance
+        self.initial = application_address.balance - payment_amount - min_balance
+        self.total = application_address.balance - min_balance
         self.funding = Global.latest_timestamp
     ##############################################
+    # function: withdraw
+    # arguments:
+    # - amount
+    # returns: min balance
+    # purpose: extract funds from contract
+    # pre-conditions
+    # - only callable by owner
+    # post-conditions:
+    # - transfer amount from the contract account
+    #   to owner
+    ##############################################
+    @arc4.abimethod
+    def withdraw(self, amount: arc4.UInt64) -> UInt64:
+        ##########################################
+        assert Txn.sender == self.owner, "must be owner" 
+        ##########################################
+        if self.funding > 0:
+            min_balance = self.calculate_min_balance()
+            available_balance = get_available_balance()
+            assert available_balance - amount.native >= min_balance, "balance available"
+            if amount > 0:
+                itxn.Payment(
+                    amount=amount.native,
+                    receiver=Txn.sender,
+                    fee=0
+                ).submit()
+            return min_balance
+        else:
+            min_balance = UInt64(0)
+            available_balance = get_available_balance()
+            assert available_balance - amount.native >= min_balance, "balance available"
+            if amount > 0:
+                itxn.Payment(
+                    amount=amount.native,
+                    receiver=Txn.sender,
+                    fee=0
+                ).submit()
+            return min_balance
+
+##################################################
+# EarlyStakeReward
+#   facilitates early staking rewards
+##################################################
+class EarlyStakeReward(AirdropBridge):
+    ##############################################
+    # function: __init__ (builtin)
+    # arguments: None
+    # purpose: To set the initial state of the 
+    #          contract.
+    # pre-conditions: None
+    # post-conditions: initial state set
+    # details:
+    # - It calls the constructor of the parent class 
+    #   AirdropBridge, ensuring that the inherited 
+    #   properties are initialized correctly.
+    ##############################################
+    def __init__(self) -> None:
+        super().__init__()
+    ##############################################
+    # function: on_create
+    # arguments: None
+    # purpose: Handles actions required during the
+    #          creation of the contract.
+    # pre-conditions
+    # - only callable by CreateApplication
+    # post-conditions:
+    # - parent_id set to caller_application_id
+    # details:
+    # - Ensures that the contract is created by a
+    #   factory, validating the caller_application_id.
+    ##############################################
+    @arc4.baremethod(create="require")
+    def on_create(self) -> None:
+        caller_id = Global.caller_application_id
+        assert caller_id > 0, "must be created by factory"
+        self.parent_id = caller_id
+    #############################################
+    # function: setup
+    # arguments:
+    # - owner, who is the beneficiary
+    # - funder, who funded the contract
+    # - delegate, who is the delegate
+    # - period, lockup period
+    # - initial, initial balance
+    # purpose: 
+    # - Configures the initial settings of the contract, 
+    #   including the owner, funder, delegate, and 
+    #   staking period.
+    # post-conditions: 
+    # - Sets the owner, funder, delegate, period, 
+    #   and initial payment after verifying that they 
+    #   have not been set before and that the creator 
+    #   is making the call.
+    ##############################################
+    @arc4.abimethod
+    def setup(self, owner: arc4.Address, funder: arc4.Address, delegate: arc4.Address,
+        period: arc4.UInt64, initial: arc4.UInt64) -> None:
+        ##########################################
+        assert self.owner == Global.zero_address, "owner not initialized"
+        assert self.funder == Global.zero_address, "funder not initialized"
+        ##########################################
+        assert Txn.sender == Global.creator_address, "must be creator" 
+        ##########################################
+        assert period <= TemplateVar[UInt64]("PERIOD_LIMIT")
+        assert period > 0
+        ##########################################
+        assert initial > UInt64(0), "payment amount accurate"
+        ##########################################
+        self.initial = initial.native
+        self.owner = owner.native
+        self.funder = funder.native
+        self.delegate = delegate.native
+        self.deadline = Global.latest_timestamp
+        self.period = period.native
+        self.vesting_delay = (period.native + UInt64(1)) * UInt64(2) // UInt64(3)
+        
+    ##############################################
+    # function: fill
+    # arguments:
+    # - funding, when funded
+    # purpose: Allows the contract to be funded.
+    # pre-conditions
+    # - minimum balance of application address
+    #   satisfied
+    # - period must be set
+    # - funding and total must be uninitialized
+    # - must be combined with payment transaction
+    #   for total amount
+    # - must be only callable by funder 
+    # post-conditions: 
+    # - Sets the total amount and marks the funding 
+    #   timestamp.
+    ##############################################
+    @arc4.abimethod
+    def fill(self) -> None:
+        ##########################################
+        assert self.owner != Global.zero_address, "owner initialized"
+        assert self.funder != Global.zero_address, "funder initialized"
+        assert self.funding == 0, "funding not initialized"
+        ##########################################
+        assert Txn.sender == self.funder, "must be funder" 
+        ##########################################
+        payment_amount = require_payment(self.funder)
+        min_balance = op.Global.min_balance
+        assert payment_amount > UInt64(0), "payment amount accurate"
+        ##########################################
+        application_address = Global.current_application_address
+        self.total = application_address.balance - min_balance
+        self.funding = Global.latest_timestamp
+    ##############################################
+    # function: withdraw (override)
+    # arguments:
+    # - amount
+    # returns: min balance
+    # purpose: extract funds from contract
+    # pre-conditions
+    # - only callable by owner
+    # - let balance be the current balance of the
+    #   contract
+    # - balance - amount >= min_balance
+    #   (fee paid in appl txn)
+    # post-conditions: 
+    # - transfer amount from the contract account
+    #   to owner
+    ##############################################
+    @arc4.abimethod
+    def withdraw(self, amount: arc4.UInt64) -> UInt64:
+        ##########################################
+        assert Txn.sender == self.owner, "must be owner" 
+        ##########################################
+        if self.funding > 0:
+            min_balance = self.calculate_min_balance()
+            available_balance = get_available_balance()
+            assert available_balance - amount.native >= min_balance, "balance available"
+            if amount > 0:
+                itxn.Payment(
+                    amount=amount.native,
+                    receiver=Txn.sender,
+                    fee=0
+                ).submit()
+            return min_balance
+        else:
+            min_balance = self.initial
+            available_balance = get_available_balance()
+            assert available_balance - amount.native >= min_balance, "balance available"
+            if amount > 0:
+                itxn.Payment(
+                    amount=amount.native,
+                    receiver=Txn.sender,
+                    fee=0
+                ).submit()
+            return min_balance
 
 ##################################################
 # FactoryBridge
@@ -810,13 +1067,18 @@ class BaseFactory(FactoryBridge):
     # def remote_update(self, app_id: arc4.UInt64) -> None:
     #     pass
     ##############################################
-    # @arc4.abimethod
-    # def remote_delete(self, app_id: arc4.UInt64) -> None:
-    #     pass
-    ##############################################
     @arc4.abimethod
     def create(self, owner: arc4.Address, delegate: arc4.Address) -> UInt64:
+        payment_amount = require_payment(Txn.sender)
+        mbr_increase = UInt64(371000) 
+        min_balance = op.Global.min_balance # 100000
+        assert payment_amount >= mbr_increase + min_balance, "payment amount accurate" # 471000
         base_app = arc4.arc4_create(Base).created_app
+        itxn.Payment(
+            receiver=base_app.address,
+            amount=min_balance,
+            fee=0
+        ).submit()
         arc4.abi_call(Base.setup, owner, delegate, app_id=base_app)
         return base_app.id
     ##############################################
@@ -837,18 +1099,35 @@ class AirdropFactory(FactoryBridge):
     # def remote_update(self, app_id: arc4.UInt64) -> None:
     #     pass
     ##############################################
-    # @arc4.abimethod
-    # def remote_delete(self, app_id: arc4.UInt64) -> None:
-    #     pass
+    # function: create
+    # arguments:
+    # - owner, who is the beneficiary
+    # - funder, who funded the contract
+    # - deadline, funding deadline
+    # - initial, initial balance
+    # returns: app id
+    # purpose: create airdrop
+    # pre-conditions
+    # - payment amount >= 167750
+    # post-conditions:
+    # - create airdrop
     ##############################################
     @arc4.abimethod
     def create(self, owner: arc4.Address, funder: arc4.Address, deadline: arc4.UInt64,
         initial: arc4.UInt64) -> UInt64:
+        payment_amount = require_payment(Txn.sender)
+        mbr_increase = UInt64(677500) 
+        min_balance = op.Global.min_balance # 100000
+        assert payment_amount >= mbr_increase + min_balance, "payment amount accurate" # 777500
         base_app = arc4.arc4_create(Airdrop).created_app
+        itxn.Payment(
+            receiver=base_app.address,
+            amount=min_balance,
+            fee=0
+        ).submit()
         arc4.abi_call(Airdrop.setup, owner, funder, deadline, initial, app_id=base_app)
         return base_app.id
     ##############################################
-
 
 ##################################################
 # StakeRewardFactory
@@ -866,16 +1145,13 @@ class StakeRewardFactory(FactoryBridge):
     # def remote_update(self, app_id: arc4.UInt64) -> None:
     #     pass
     ##############################################
-    # @arc4.abimethod
-    # def remote_delete(self, app_id: arc4.UInt64) -> None:
-    #     pass
-    ##############################################
     @arc4.abimethod
     def create(self, owner: arc4.Address, funder: arc4.Address, delegate: arc4.Address,
         period: arc4.UInt64) -> UInt64:
         payment_amount = require_payment(Txn.sender) 
-        mbr_increase = UInt64(67750)
-        assert payment_amount > mbr_increase, "payment amount accurate" 
+        mbr_increase = UInt64(677500)
+        min_balance = op.Global.min_balance # 100000
+        assert payment_amount >= mbr_increase + min_balance, "payment amount accurate" 
         base_app = arc4.arc4_create(StakeReward).created_app
         itxn.Payment(
             receiver=base_app.address,
@@ -883,5 +1159,58 @@ class StakeRewardFactory(FactoryBridge):
             fee=0
         ).submit()
         arc4.abi_call(StakeReward.setup, owner, funder, delegate, period, app_id=base_app)
+        return base_app.id
+    ############################################## 
+
+##################################################
+# StakeRewardFactory
+#   factory for stake reward
+##################################################
+class EarlyStakeRewardFactory(FactoryBridge):
+    def __init__(self) -> None:
+        super().__init__()
+    ##############################################
+    # @arc4.abimethod
+    # def update(self) -> None:
+    #      pass
+    ##############################################
+    # @arc4.abimethod
+    # def remote_update(self, app_id: arc4.UInt64) -> None:
+    #     pass
+    ##############################################
+    # function: create
+    # arguments:
+    # - owner, who is the beneficiary
+    # - funder, who funded the contract
+    # - delegate, who is the delegate
+    # - period, lockup period
+    # returns: base app id
+    # purpose: create early stake reward
+    # pre-conditions
+    # - payment amount > 777500
+    # post-conditions:
+    # - create early stake reward
+    # notes:
+    # - receives mbr_increase as well as min balance
+    #   for new contract in addition to initial
+    #   payment ie any amount over 777500 is taken
+    #   as initial payment
+    ##############################################
+    @arc4.abimethod
+    def create(self, owner: arc4.Address, funder: arc4.Address, delegate: arc4.Address,
+        period: arc4.UInt64) -> UInt64:
+        payment_amount = require_payment(Txn.sender) 
+        mbr_increase = UInt64(677500)
+        min_balance = op.Global.min_balance # 100000
+        assert payment_amount > mbr_increase + min_balance, "payment amount accurate" # 777500
+        initial = payment_amount - mbr_increase 
+        base_app = arc4.arc4_create(EarlyStakeReward).created_app
+        itxn.Payment(
+            receiver=base_app.address,
+            amount=initial,
+            fee=0
+        ).submit()
+        arc4.abi_call(EarlyStakeReward.setup, owner, funder, delegate, period,
+            initial - min_balance, app_id=base_app) 
         return base_app.id
     ############################################## 
