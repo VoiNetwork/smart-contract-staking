@@ -16,7 +16,7 @@ from algopy import (
 from contract_mab import calculate_mab_pure
 from utils import (
     require_payment,
-    get_available_balance
+    get_available_balance,
 )
 
 Bytes32: typing.TypeAlias = arc4.StaticArray[arc4.Byte, typing.Literal[32]]
@@ -1066,17 +1066,20 @@ class BaseFactory(FactoryBridge):
     ##############################################
     @arc4.abimethod
     def create(self, owner: arc4.Address, delegate: arc4.Address) -> UInt64:
+        ##########################################
         payment_amount = require_payment(Txn.sender)
         mbr_increase = UInt64(371000) 
         min_balance = op.Global.min_balance # 100000
         assert payment_amount >= mbr_increase + min_balance, "payment amount accurate" # 471000
+        ##########################################
         base_app = arc4.arc4_create(Base).created_app
         itxn.Payment(
             receiver=base_app.address,
-            amount=min_balance,
+            amount=min_balance, # 100000
             fee=0
         ).submit()
         arc4.abi_call(Base.setup, owner, delegate, app_id=base_app)
+        ##########################################
         return base_app.id
     ##############################################
 
@@ -1112,17 +1115,20 @@ class AirdropFactory(FactoryBridge):
     @arc4.abimethod
     def create(self, owner: arc4.Address, funder: arc4.Address, deadline: arc4.UInt64,
         initial: arc4.UInt64) -> UInt64:
+        ##########################################
         payment_amount = require_payment(Txn.sender)
         mbr_increase = UInt64(677500) 
         min_balance = op.Global.min_balance # 100000
         assert payment_amount >= mbr_increase + min_balance, "payment amount accurate" # 777500
+        ##########################################
         base_app = arc4.arc4_create(Airdrop).created_app
         itxn.Payment(
             receiver=base_app.address,
-            amount=min_balance,
+            amount=min_balance, # 100000
             fee=0
         ).submit()
         arc4.abi_call(Airdrop.setup, owner, funder, deadline, initial, app_id=base_app)
+        ##########################################
         return base_app.id
     ##############################################
 
@@ -1133,29 +1139,24 @@ class AirdropFactory(FactoryBridge):
 class StakeRewardFactory(FactoryBridge):
     def __init__(self) -> None:
         super().__init__()
-    ##############################################
-    # @arc4.abimethod
-    # def update(self) -> None:
-    #      pass
-    ##############################################
-    # @arc4.abimethod
-    # def remote_update(self, app_id: arc4.UInt64) -> None:
-    #     pass
-    ##############################################
     @arc4.abimethod
     def create(self, owner: arc4.Address, funder: arc4.Address, delegate: arc4.Address,
         period: arc4.UInt64) -> UInt64:
+        ##########################################
         payment_amount = require_payment(Txn.sender) 
         mbr_increase = UInt64(677500)
         min_balance = op.Global.min_balance # 100000
         assert payment_amount >= mbr_increase + min_balance, "payment amount accurate" 
+        initial = payment_amount - mbr_increase - min_balance
+        ##########################################
         base_app = arc4.arc4_create(StakeReward).created_app
         itxn.Payment(
             receiver=base_app.address,
-            amount=payment_amount - mbr_increase,
+            amount=initial + min_balance,
             fee=0
         ).submit()
         arc4.abi_call(StakeReward.setup, owner, funder, delegate, period, app_id=base_app)
+        ##########################################
         return base_app.id
     ############################################## 
 
@@ -1196,18 +1197,21 @@ class EarlyStakeRewardFactory(FactoryBridge):
     @arc4.abimethod
     def create(self, owner: arc4.Address, funder: arc4.Address, delegate: arc4.Address,
         period: arc4.UInt64) -> UInt64:
+        ##########################################
         payment_amount = require_payment(Txn.sender) 
         mbr_increase = UInt64(677500)
         min_balance = op.Global.min_balance # 100000
         assert payment_amount > mbr_increase + min_balance, "payment amount accurate" # 777500
-        initial = payment_amount - mbr_increase 
+        initial = payment_amount - mbr_increase - min_balance
+        ##########################################
         base_app = arc4.arc4_create(EarlyStakeReward).created_app
         itxn.Payment(
             receiver=base_app.address,
-            amount=initial,
+            amount=initial + min_balance,
             fee=0
         ).submit()
-        arc4.abi_call(EarlyStakeReward.setup, owner, funder, delegate, period,
-            initial - min_balance, app_id=base_app) 
-        return base_app.id
+        arc4.abi_call(EarlyStakeReward.setup, owner, funder, delegate, period, 
+            initial, app_id=base_app) 
+        ##########################################
+        return base_app.id 
     ############################################## 

@@ -5,7 +5,7 @@ from algopy import (
     UInt64,
     gtxn,
     op,
-    subroutine,
+    subroutine
 )
 
 ##############################################
