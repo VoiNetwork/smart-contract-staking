@@ -384,7 +384,7 @@ class Messenger(Upgradeable):
 #  method  to approve update as owner. Use by
 #  Base.
 ##################################################
-class BaseBridge(Stakeable, Upgradeable, Ownable):
+class BaseBridge(Stakeable, Upgradeable):
     def __init__(self) -> None:
         # stakeable state
         self.delegate = Account()          # zero address
