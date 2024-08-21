@@ -1,6 +1,6 @@
 import typing
 from algopy import (
-    ARC4Contract, 
+    ARC4Contract,
     Account,
     Bytes,
     Global,
@@ -11,7 +11,7 @@ from algopy import (
     arc4,
     itxn,
     op,
-    subroutine
+    subroutine,
 )
 from contract_mab import calculate_mab_pure
 from utils import (
@@ -22,6 +22,7 @@ from utils import (
 Bytes32: typing.TypeAlias = arc4.StaticArray[arc4.Byte, typing.Literal[32]]
 Bytes64: typing.TypeAlias = arc4.StaticArray[arc4.Byte, typing.Literal[64]]
 
+
 class PartKeyInfo(arc4.Struct):
     address: arc4.Address
     vote_key: Bytes32
@@ -31,84 +32,188 @@ class PartKeyInfo(arc4.Struct):
     vote_key_dilution: arc4.UInt64
     state_proof_key: Bytes64
 
+
 class MessagePartKeyInfo(arc4.Struct):
     who: arc4.Address
     partkey: PartKeyInfo
+
+
+##################################################
+# Fundable
+#   allows contract to be funded
+##################################################
+
+
+class FundableInterface(ARC4Contract):
+    """
+    Interface for all methods called by funder.
+
+    This class defines the basic interface for all types of vehicles,
+    including methods for starting and stopping the engine. Subclasses
+    must implement these methods to provide concrete behavior
+
+    Global State:
+    - funder, who funded the contract
+    - funding, when funded
+    """
+
+    def __init__(self) -> None:
+        self.funder = Account()
+        self.funding = UInt64()
+        self.total = UInt64()
+
+    @arc4.abimethod
+    def fill(self) -> None:
+        """
+        Add funds to the contract and increments total.
+        """
+        pass
+
+    @arc4.abimethod
+    def set_funding(self, funding: arc4.UInt64) -> None:
+        """
+        Extend the funding period. Should be called before the funding deadline.
+        Should not allow setting the funding deadline back. Can be called multiple
+        times.
+        """
+        pass
+
+
+class Fundable(FundableInterface):
+    def __init__(self) -> None:
+        super().__init__()
+
+    @arc4.abimethod
+    def fill(self) -> None:
+        #########################################
+        assert Txn.sender == self.funder, "must be funder"
+        #########################################
+        payment_amount = require_payment(self.funder)
+        assert payment_amount >= UInt64(0), "payment amount accurate"
+        #########################################
+        self.total = self.total + payment_amount
+
+    @arc4.abimethod
+    def set_funding(self, funding: arc4.UInt64) -> None:
+        #########################################
+        assert Txn.sender == self.funder, "must be funder"
+        #########################################
+        assert funding == 0 or (
+            funding > Global.latest_timestamp and Global.latest_timestamp < self.funding
+        ), "funding not be initialized or can be extended"
+        #########################################
+        self.funding = funding.native
+
 
 ##################################################
 # Ownable
 #   allows contract to be owned
 ##################################################
-class Ownable(ARC4Contract):
-    ##############################################
-    # function: __init__ (builtin)
-    # arguments: None
-    # purpose: construct initial state
-    # pre-conditions: None
-    # post-conditions: initial state set
-    ##############################################
+
+
+class OwnableInterface(ARC4Contract):
+    """
+    Interface for all abimethods operated by owner.
+    """
+
     def __init__(self) -> None:
-        self.owner = Account()             # zero address
-    ##############################################
-    # function: transfer
-    # arguments:
-    # - new_owner, new owner
-    # purpose: change owner
-    # pre-conditions
-    # - only callable by the owner
-    # post-conditions: 
-    # - new owner asigned
-    ##############################################
+        self.owner = Account()
+
+    @arc4.abimethod
+    def transfer(self, new_owner: arc4.Address) -> None:
+        """
+        Transfer ownership of the contract to a new owner.
+        """
+        pass
+
+    @subroutine
+    def get_owner(self) -> Account:
+        """
+        Get the owner of the contract.
+        """
+        return Account()
+
+
+class Ownable(OwnableInterface):
+    def __init__(self) -> None:
+        super().__init__()
+
     @arc4.abimethod
     def transfer(self, new_owner: arc4.Address) -> None:
         assert Txn.sender == self.owner, "must be owner"
         self.owner = new_owner.native
+
+    @subroutine
+    def get_owner(self) -> Account:
+        return self.owner
+
 
 ##################################################
 # Stakeable
 #   allows contract to participate in consensus,
 #   stake
 ##################################################
-class Stakeable(Ownable):
+
+
+class StakeableInterface(ARC4Contract):
+    """
+    Interface for all abimethods of stakeable contract.
+    """
+
     def __init__(self) -> None:
-        self.delegate = Account()          # zero address
-        self.stakeable = bool(1)         # 1 (Default unlocked)
-    #############################################
-    # function: set_delegate
-    # arguments:
-    # - delegate, who is the delegate
-    # purpose: set delegate
-    # pre-conditions
-    # - only callable by owner
-    # post-conditions: delegate set
-    ##############################################
+        self.delegate = Account()
+        self.stakeable = bool(1)
+
+    @arc4.abimethod
+    def set_delegate(self, delegate: arc4.Address) -> None:
+        """
+        Set delegate.
+        """
+        pass
+
+    @arc4.abimethod
+    def participate(
+        self,
+        vote_k: Bytes32,
+        sel_k: Bytes32,
+        vote_fst: arc4.UInt64,
+        vote_lst: arc4.UInt64,
+        vote_kd: arc4.UInt64,
+        sp_key: Bytes64,
+    ) -> None:
+        """
+        Participate in consensus.
+        """
+        pass
+
+
+class Stakeable(StakeableInterface, OwnableInterface):
+    def __init__(self) -> None:
+        # ownable state
+        self.owner = Account()
+        # stakeable state
+        self.delegate = Account()  # zero address
+        self.stakeable = bool(1)  # 1 (Default unlocked)
+
     @arc4.abimethod
     def set_delegate(self, delegate: arc4.Address) -> None:
         assert Txn.sender == self.owner, "must be owner"
         self.delegate = delegate.native
-    ##############################################
-    # function: participate
-    # arguments:
-    # - key registration params
-    # purpose: allow contract to particpate
-    # pre-conditions
-    # - must be callable by owner only
-    # - must be combined with transaction transfering
-    #   one fee into the contract account
-    # post-conditions: 
-    # - contract generates itnx for keyreg
-    # notes:
-    # - fee payment is to prevent potential draining
-    #   into fees, even though it is not likely that
-    #   a user may attempt to drain their funds
-    # - min balance is not relevant due to the fee
-    #   payment added
-    ##############################################
+
     @arc4.abimethod
-    def participate(self, vote_k: Bytes32, sel_k: Bytes32, vote_fst: arc4.UInt64,
-        vote_lst: arc4.UInt64, vote_kd: arc4.UInt64, sp_key: Bytes64) -> None: 
+    def participate(
+        self,
+        vote_k: Bytes32,
+        sel_k: Bytes32,
+        vote_fst: arc4.UInt64,
+        vote_lst: arc4.UInt64,
+        vote_kd: arc4.UInt64,
+        sp_key: Bytes64,
+    ) -> None:
         ###########################################
-        assert Txn.sender == self.owner or Txn.sender == self.delegate, "must be owner or delegate" 
+        assert (
+            Txn.sender == self.owner or Txn.sender == self.delegate
+        ), "must be owner or delegate"
         ###########################################
         key_reg_fee = Global.min_txn_fee
         # require payment of min fee to prevent draining
@@ -121,33 +226,36 @@ class Stakeable(Ownable):
             vote_last=vote_lst.native,
             vote_key_dilution=vote_kd.native,
             state_proof_key=sp_key.bytes,
-            fee=key_reg_fee
+            fee=key_reg_fee,
         ).submit()
+
 
 ##################################################
 # Deleteable
 #   allows contract to be deleted
 ##################################################
-class Deleteable(ARC4Contract):
-    ##############################################
-    # function: __init__ (builtin)
-    # arguments: None
-    # purpose: construct initial state
-    # pre-conditions: None
-    # post-conditions: initial state set
-    ##############################################
+
+
+class DeleteableInterface(ARC4Contract):
+    """
+    Interface for all abimethods of deletable contract.
+    """
+
     def __init__(self) -> None:
-        self.deletable = bool(1) # 1 (Default unlocked)
-    ##############################################
-    # function: on_delete
-    # arguments: None
-    # purpose: on delete
-    # pre-conditions
-    # - only callable by creator
-    # - deletable must be true
-    # post-conditions:
-    # - None
-    ##############################################
+        self.deletable = bool(1)
+
+    @arc4.abimethod
+    def on_delete(self) -> None:
+        """
+        Delete the contract.
+        """
+        pass
+
+
+class Deleteable(DeleteableInterface):
+    def __init__(self) -> None:
+        super().__init__()
+
     @arc4.baremethod(allow_actions=["DeleteApplication"])
     def on_delete(self) -> None:
         ##########################################
@@ -157,48 +265,59 @@ class Deleteable(ARC4Contract):
         assert self.deletable == UInt64(1), "not approved"
         ##########################################
 
+
 ##################################################
 # Upgradeable
 #   allows contract to be updated
 ##################################################
-class Upgradeable(ARC4Contract):
-    ##############################################
-    # function: __init__ (builtin)
-    # arguments: None
-    # purpose: construct initial state
-    # pre-conditions: None
-    # post-conditions: initial state set
-    ##############################################
+
+
+class UpgradeableInterface(ARC4Contract):
+    """
+    Interface for all abimethods of upgradeable contract.
+    """
+
     def __init__(self) -> None:
-        self.contract_version = UInt64()   # 0
-        self.deployment_version = UInt64() # 0
-        self.updatable = bool(1)           # 1 (Default unlocked)
-    ##############################################
-    # function: set_version
-    # arguments:
-    # - contract_version, contract version
-    # - deployment_version, deployment version
-    # purpose: set version
-    # pre-conditions
-    # - only callable by creator
-    # post-conditions:
-    # - contract_version and deployment_version set
-    ##############################################
+        self.contract_version = UInt64()
+        self.deployment_version = UInt64()
+        self.updatable = bool(1)
+
     @arc4.abimethod
-    def set_version(self, contract_version: arc4.UInt64, deployment_version: arc4.UInt64) -> None:
+    def set_version(
+        self, contract_version: arc4.UInt64, deployment_version: arc4.UInt64
+    ) -> None:
+        """
+        Set contract and deployment version.
+        """
+        pass
+
+    @arc4.abimethod
+    def on_update(self) -> None:
+        """
+        On update.
+        """
+        pass
+
+    @arc4.abimethod
+    def approve_update(self, approval: arc4.Bool) -> None:
+        """
+        Approve update.
+        """
+        pass
+
+
+class Upgradeable(UpgradeableInterface, OwnableInterface):
+    def __init__(self) -> None:
+        super().__init__()
+
+    @arc4.abimethod
+    def set_version(
+        self, contract_version: arc4.UInt64, deployment_version: arc4.UInt64
+    ) -> None:
         assert Txn.sender == Global.creator_address, "must be creator"
         self.contract_version = contract_version.native
         self.deployment_version = deployment_version.native
-    ##############################################
-    # function: on_update
-    # arguments: None
-    # purpose: on update
-    # pre-conditions
-    # - only callable by creator
-    # - updatable must be true
-    # post-conditions:
-    # - None
-    ##############################################
+
     @arc4.baremethod(allow_actions=["UpdateApplication"])
     def on_update(self) -> None:
         ##########################################
@@ -207,6 +326,128 @@ class Upgradeable(ARC4Contract):
         assert Txn.sender == Global.creator_address, "must be creator"
         assert self.updatable == UInt64(1), "not approved"
         ##########################################
+
+    ##############################################
+    # function: approve_update
+    # arguments:
+    # - approval, approval status
+    # purpose: approve update
+    # pre-conditions
+    # - only callable by owner
+    # post-conditions:
+    # - updatable set to approval
+    ##############################################
+    @arc4.abimethod
+    def approve_update(self, approval: arc4.Bool) -> None:
+        assert Txn.sender == self.owner, "must be owner"
+        self.updatable = approval.native
+
+    ##############################################
+
+
+##################################################
+# Lockable
+#   allows contract to be lock network tokens
+##################################################
+
+
+class LockableInterface(ARC4Contract):
+    """
+    Interface for all methods of lockable contracts.
+    This class defines the basic interface for all types of lockable contracts.
+    Subclasses must implement these methods to provide concrete behavior
+
+    Global State:
+    - period, lockup period
+    - initial, initial balance
+    - deadline, deadline for lockup period configuration
+    - period_seconds, seconds in a period
+    - lockup_delay, lockup delay
+    - vesting_delay, vesting delay
+    - period_limit, period limit
+    """
+
+    def __init__(self) -> None:
+        self.period = UInt64()  # 0
+        self.initial = UInt64()  # 0
+        self.deadline = UInt64()  # 0
+        self.period_seconds = TemplateVar[UInt64]("PERIOD_SECONDS")  # ex) 2592000
+        self.lockup_delay = TemplateVar[UInt64]("LOCKUP_DELAY")  # ex) 12
+        self.vesting_delay = TemplateVar[UInt64]("VESTING_DELAY")  # ex) 12
+        self.period_limit = TemplateVar[UInt64]("PERIOD_LIMIT")  # ex) 5
+
+    @arc4.abimethod
+    def preconfigure_period(self) -> None:
+        """
+        Preconfigure lockup period.
+        """
+        pass
+
+    # @arc4.abimethod
+    # def set_deadline(self, deadline: arc4.UInt64) -> None:
+    #     """
+    #     Set deadline to configure. Should be called by creator.
+    #     """
+    #     pass
+
+    # @arc4.abimethod
+    # def set_period(self, period: arc4.UInt64) -> None:
+    #     """
+    #     Set lockup period. Should be called by creator.
+    #     """
+    #     pass
+
+    @arc4.abimethod
+    def set_vesting_delay(self, vesting_delay: arc4.UInt64) -> None:
+        """
+        Set vesting delay. Should be called by creator.
+        """
+        pass
+
+    @arc4.abimethod
+    def set_total(self, funding: arc4.UInt64) -> None:
+        """
+        Set total funding. Should be called by creator.
+        """
+        pass
+
+    @arc4.abimethod
+    def setup(
+        self, owner: arc4.Address, funder: arc4.Address, initial: arc4.UInt64
+    ) -> None:
+        """
+        Setup lockup. Should be called by creator.
+        """
+        pass
+
+    @arc4.abimethod
+    def configure(self, period: arc4.UInt64) -> None:
+        """
+        Configure lockup period. Should be called by owner.
+        """
+        pass
+
+    @arc4.abimethod
+    def withdraw(self, amount: arc4.UInt64) -> UInt64:
+        """
+        Withdraw funds from contract. Should be called by owner.
+        """
+        return UInt64()
+
+    @arc4.abimethod
+    def close(self) -> None:
+        """
+        Close contract. Should be called by owner or funder.
+        """
+        pass
+
+    @subroutine
+    def calculate_min_balance(self) -> UInt64:
+        """
+        Calculate minimum balance.
+        """
+        return UInt64()
+
 
 ##################################################
 # Lockable
@@ -230,34 +471,99 @@ class Upgradeable(ARC4Contract):
 #       otherwise cold
 #   cold state
 #     - parent_id, parent id
-#     - messenger_id, messenger id
 #     - period_seconds, period seconds
 #     - lockup_delay, lockup delay
 #     - period_limit, period limit
 ##################################################
-class Lockable(Ownable):
-    ##############################################
-    # function: __init__ (builtin)
-    # arguments: None
-    # purpose: construct initial state
-    # pre-conditions: None
-    # post-conditions: initial state set
-    ##############################################
+class Lockable(OwnableInterface, LockableInterface, FundableInterface):
     def __init__(self) -> None:
-        # hot state
-        self.funder = Account()            # zero address
-        self.period = UInt64()             # 0
-        self.funding = UInt64()            # 0
-        self.total = UInt64()              # 0
-        self.initial = UInt64()            # 0
-        self.deadline = UInt64()           # 0
-        # cold state
-        self.parent_id = UInt64()                                   # 0
-        self.messenger_id = TemplateVar[UInt64]("MESSENGER_ID")     # ex) 0
-        self.period_seconds = TemplateVar[UInt64]("PERIOD_SECONDS") # ex) 2592000
-        self.lockup_delay = TemplateVar[UInt64]("LOCKUP_DELAY")     # ex) 12
-        self.vesting_delay = TemplateVar[UInt64]("VESTING_DELAY")   # ex) 12
-        self.period_limit = TemplateVar[UInt64]("PERIOD_LIMIT")     # ex) 5
+        # ownable state
+        self.owner = Account()
+        # lockable state
+        self.period = UInt64()
+        self.initial = UInt64()
+        self.deadline = UInt64()
+        self.period_seconds = TemplateVar[UInt64]("PERIOD_SECONDS")
+        self.lockup_delay = TemplateVar[UInt64]("LOCKUP_DELAY")
+        self.vesting_delay = TemplateVar[UInt64]("VESTING_DELAY")
+        self.period_limit = TemplateVar[UInt64]("PERIOD_LIMIT")
+        # fundable state
+        self.funder = Account()
+        self.funding = UInt64()
+        self.total = UInt64()
+
+    @arc4.abimethod
+    def preconfigure(self, period: arc4.UInt64, deadline: arc4.UInt64) -> None:
+        """
+        Preconfigure lockup period and deadline.
+        """
+        ##########################################
+        assert self.owner == Global.zero_address, "owner not initialized"
+        assert self.funder == Global.zero_address, "funder not initialized"
+        ##########################################
+        assert Txn.sender == Global.creator_address, "must be creator"
+        ##########################################
+        self.period = period.native
+        self.deadline = deadline.native
+
+    @arc4.abimethod
+    def set_vesting_delay(self, vesting_delay: arc4.UInt64) -> None:
+        """
+        Set vesting delay.
+        """
+        ##########################################
+        assert self.owner == Global.zero_address, "owner not initialized"
+        assert self.funder == Global.zero_address, "funder not initialized"
+        ##########################################
+        assert Txn.sender == Global.creator_address, "must be creator"
+        ##########################################
+        self.vesting_delay = vesting_delay.native
+
+    @arc4.abimethod
+    def set_total(self, funding: arc4.UInt64) -> None:
+        """
+        Set total funding.
+        """
+        ##########################################
+        assert self.owner == Global.zero_address, "owner not initialized"
+        assert self.funder == Global.zero_address, "funder not initialized"
+        ##########################################
+        assert Txn.sender == Global.creator_address, "must be creator"
+        ##########################################
+        self.total = funding.native
+
+    @arc4.abimethod
+    def setup(
+        self,
+        owner: arc4.Address,
+        funder: arc4.Address,
+        initial: arc4.UInt64,
+    ) -> None:
+        ##########################################
+        assert self.owner == Global.zero_address, "owner not initialized"
+        assert self.funder == Global.zero_address, "funder not initialized"
+        ##########################################
+        assert Txn.sender == Global.creator_address, "must be creator"
+        ##########################################
+        self.owner = owner.native
+        self.funder = funder.native
+        self.initial = initial.native
+
+    @arc4.abimethod
+    def configure(self, period: arc4.UInt64) -> None:
+        ##########################################
+        assert self.funding == 0, "funding not initialized"
+        assert self.total == 0, "total not initialized"
+        ##########################################
+        assert Txn.sender == self.owner, "must be owner"
+        ##########################################
+        assert period <= TemplateVar[UInt64]("PERIOD_LIMIT")
+        assert period >= 0
+        ##########################################
+        assert self.deadline > Global.latest_timestamp, "deadline not passed"
+        ##########################################
+        self.period = period.native
+
     ##############################################
     # function: withdraw
     # arguments:
@@ -270,28 +576,34 @@ class Lockable(Ownable):
     #   contract
     # - balance - amount >= min_balance
     #   (fee paid in appl txn)
-    # post-conditions: 
+    # post-conditions:
     # - transfer amount from the contract account
     #   to owner
     # notes: costs 2 fees
     ##############################################
     @arc4.abimethod
     def withdraw(self, amount: arc4.UInt64) -> UInt64:
+        """
+        Withdraw funds from contract.
+        """
         ##########################################
-        assert self.funding > 0, "funding initialized"
+        assert Txn.sender == self.owner, "must be owner"
         ##########################################
-        assert Txn.sender == self.owner, "must be owner" 
-        ##########################################
-        min_balance = self.calculate_min_balance()
-        available_balance = get_available_balance()
-        assert available_balance - amount.native >= min_balance, "balance available"
-        if amount > 0:
-            itxn.Payment(
-                amount=amount.native,
-                receiver=Txn.sender,
-                fee=0
-            ).submit()
-        return min_balance
+        if self.funding > 0:
+            min_balance = self.calculate_min_balance()
+            available_balance = get_available_balance()
+            assert available_balance - amount.native >= min_balance, "balance available"
+            if amount > 0:
+                itxn.Payment(amount=amount.native, receiver=Txn.sender, fee=0).submit()
+            return min_balance
+        else:
+            min_balance = self.total
+            available_balance = get_available_balance()
+            assert available_balance - amount.native >= min_balance, "balance available"
+            if amount > 0:
+                itxn.Payment(amount=amount.native, receiver=Txn.sender, fee=0).submit()
+            return min_balance
+
     ##############################################
     # function: close
     # purpose: deletes contract
@@ -304,37 +616,42 @@ class Lockable(Ownable):
     # - should be alled with onCompletion
     #   deleteApplication
     ##############################################
-    @arc4.abimethod(allow_actions=[
-        OnCompleteAction.DeleteApplication
-    ])
+    @arc4.abimethod(allow_actions=[OnCompleteAction.DeleteApplication])
     def close(self) -> None:
         ###########################################
-        assert self.funding > 0, "funding initialized"
+        assert self.funding > 0, "funded"
         ###########################################
         assert self.calculate_min_balance() == 0, "min balance not zero"
         ###########################################
-        assert Txn.sender == self.owner, "must be owner"
+        assert (
+            Txn.sender == self.owner or Txn.sender == self.funder
+        ), "must be owner or funder"
         ###########################################
         oca = Txn.on_completion
         if oca == OnCompleteAction.DeleteApplication:
             keyreg_txn = itxn.KeyRegistration(
                 non_participation=True,
-                vote_key=Bytes.from_base64("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
-                selection_key=Bytes.from_base64("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
+                vote_key=Bytes.from_base64(
+                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                ),
+                selection_key=Bytes.from_base64(
+                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                ),
                 vote_first=UInt64(0),
                 vote_last=UInt64(0),
                 vote_key_dilution=UInt64(0),
-                state_proof_key=Bytes.from_base64("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="),
-                fee=0
+                state_proof_key=Bytes.from_base64(
+                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+                ),
+                fee=0,
             )
             pmt_txn = itxn.Payment(
-                receiver=self.owner,
-                close_remainder_to=self.owner,
-                fee=0
+                receiver=self.owner, close_remainder_to=self.owner, fee=0
             )
             itxn.submit_txns(keyreg_txn, pmt_txn)
         else:
-            op.err() 
+            op.err()
+
     ##############################################
     # function: min_balance (internal)
     # arguments: None
@@ -359,814 +676,327 @@ class Lockable(Ownable):
             self.lockup_delay,
             self.period,
             self.funding,
-            self.total
+            self.total,
         )
         return min_balance
-    ##############################################
+
+
+##################################################
+# Receiver
+#   reference to messenger
+##################################################
+
+
+class ReceiverInterface(ARC4Contract):
+    """
+    Interface for all abimethods of receiver contract.
+    """
+
+    def __init__(self) -> None:
+        self.messenger_id = UInt64()
+
+
+class Receiver(ReceiverInterface):
+    def __init__(self) -> None:
+        self.messenger_id = TemplateVar[UInt64]("MESSENGER_ID")
+
 
 ##################################################
 # Messenger
 #   emits events
 ##################################################
-class Messenger(Upgradeable):
-    def __init__(self) -> None:
-        super().__init__()
-    @arc4.abimethod
-    def partkey_broastcast(self, address: arc4.Address, vote_k: Bytes32, sel_k: Bytes32,
-        vote_fst: arc4.UInt64, vote_lst: arc4.UInt64, vote_kd: arc4.UInt64, 
-        sp_key: Bytes64) -> None: 
-        arc4.emit(MessagePartKeyInfo(arc4.Address(Txn.sender), PartKeyInfo(address, 
-            vote_k, sel_k, vote_fst, vote_lst, vote_kd, sp_key)))
 
-##################################################
-# BaseBridge
-#  combines owned upgradeable and stakeable. Adds 
-#  method  to approve update as owner. Use by
-#  Base.
-##################################################
-class BaseBridge(Stakeable, Upgradeable):
+
+class MessengerInterface(ARC4Contract):
+    """
+    Interface for all abimethods of messenger contract.
+    """
+
+    @arc4.abimethod
+    def partkey_broastcast(
+        self,
+        address: arc4.Address,
+        vote_k: Bytes32,
+        sel_k: Bytes32,
+        vote_fst: arc4.UInt64,
+        vote_lst: arc4.UInt64,
+        vote_kd: arc4.UInt64,
+        sp_key: Bytes64,
+    ) -> None:
+        """
+        Broastcast partkey information.
+        """
+        pass
+
+
+class Messenger(MessengerInterface, Upgradeable):
     def __init__(self) -> None:
-        # stakeable state
-        self.delegate = Account()          # zero address
-        self.stakeable = bool(1)         # 1 (Default unlocked)
         # upgradeable state
-        self.contract_version = UInt64()   # 0
-        self.deployment_version = UInt64() # 0
-        self.updatable = bool(1)           # 1 (Default unlocked)
-        # ownable state
-        self.owner = Account()             # zero address
-    ##############################################
-    # function: approve_update
-    # arguments:
-    # - approval, approval status
-    # purpose: approve update
-    # pre-conditions
-    # - only callable by owner
-    # post-conditions:
-    # - updatable set to approval
-    ##############################################
+        self.contract_version = UInt64()  # 0
+        self.deployment_version = UInt64()  # 0
+        self.updatable = bool(1)  # 1 (Default unlocked)
+
     @arc4.abimethod
-    def approve_update(self, approval: arc4.Bool) -> None:
-        assert Txn.sender == self.owner, "must be owner"
-        self.updatable = approval.native
-    ##############################################
+    def partkey_broastcast(
+        self,
+        address: arc4.Address,
+        vote_k: Bytes32,
+        sel_k: Bytes32,
+        vote_fst: arc4.UInt64,
+        vote_lst: arc4.UInt64,
+        vote_kd: arc4.UInt64,
+        sp_key: Bytes64,
+    ) -> None:
+        arc4.emit(
+            MessagePartKeyInfo(
+                arc4.Address(Txn.sender),
+                PartKeyInfo(
+                    address, vote_k, sel_k, vote_fst, vote_lst, vote_kd, sp_key
+                ),
+            )
+        )
+
 
 ##################################################
-# Base
-#   smart contract staking
+# Deployable
+#   ensures that contract is created by factory
+#   and recorded
 ##################################################
-class Base(BaseBridge):
-    ##############################################
-    # function: __init__ (builtin)
-    # arguments: None
-    # purpose: construct initial state
-    # pre-conditions: None
-    # post-conditions: initial state set
-    ##############################################
+
+
+class DeployableInterface(ARC4Contract):
+    """
+    Interface for all abimethods of deployable contract.
+    """
+
+    def __init__(self) -> None:
+        self.parent_id = UInt64()
+
+    @arc4.abimethod(create="require")
+    def on_create(self) -> None:
+        """
+        Execute on create.
+        """
+        pass
+
+
+class Deployable(DeployableInterface):
     def __init__(self) -> None:
         super().__init__()
-        self.parent_id = UInt64()                               # 0
-        self.messenger_id = TemplateVar[UInt64]("MESSENGER_ID") # ex) 0
-    ##############################################
-    # function: on_create
-    # arguments: None
-    # purpose: on create
-    # pre-conditions
-    # - only callable by CreateApplication
-    # post-conditions:
-    # - indexer_id set to caller_application_id
-    ##############################################
+
     @arc4.baremethod(create="require")
     def on_create(self) -> None:
         caller_id = Global.caller_application_id
         assert caller_id > 0, "must be created by factory"
         self.parent_id = caller_id
-    ##############################################
-    # function: setup
-    # arguments:
-    # - owner, who is the beneficiary
-    # - delegate, who is the delegate
-    # purpose: set owner and delegate
-    # post-conditions: owner and delegate set
-    ##############################################
-    @arc4.abimethod
-    def setup(self, owner: arc4.Address, delegate: arc4.Address) -> None:
-        ##########################################
-        assert self.owner == Global.zero_address, "owner not initialized"
-        ##########################################
-        assert Txn.sender == Global.creator_address, "must be creator" 
-        ##########################################
-        self.owner = owner.native
-        self.delegate = delegate.native
-    ##############################################
-    # function: withdraw
-    # arguments:
-    # - amount
-    # returns: available balance
-    # purpose: extract funds from contract
-    # pre-conditions
-    # - only callable by owner
-    # post-conditions: 
-    # - transfer amount from the contract account
-    #   to owner
-    # notes: costs 2 fees
-    ##############################################
-    @arc4.abimethod
-    def withdraw(self, amount: arc4.UInt64) -> UInt64:
-        ##########################################
-        assert Txn.sender == self.owner, "must be owner" 
-        ##########################################
-        available_balance = get_available_balance()
-        remaining_balance = available_balance - amount.native
-        assert remaining_balance >= 0, "balance available"
-        if amount > 0:
-            itxn.Payment(
-                amount=amount.native,
-                receiver=Txn.sender,
-                fee=0
-            ).submit()
-        return available_balance
-    ##############################################
-    # function: close
-    # purpose: deletes contract
-    # pre-conditions:
-    # - must be owner 
-    # post-conditions:
-    # - contract is deleted
-    # - account closed out to owner if it has a balance
-    # notes:
-    # - should be alled with onCompletion
-    #   deleteApplication
-    ##############################################
-    @arc4.abimethod(allow_actions=[
-        OnCompleteAction.DeleteApplication
-    ])
-    def close(self) -> None:
-        ###########################################
-        assert Txn.sender == self.owner, "must be owner"
-        ###########################################
-        oca = Txn.on_completion
-        if oca == OnCompleteAction.DeleteApplication:
-            keyreg_txn = itxn.KeyRegistration(
-                non_participation=True,
-                vote_key=Bytes.from_base64("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
-                selection_key=Bytes.from_base64("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
-                vote_first=UInt64(0),
-                vote_last=UInt64(0),
-                vote_key_dilution=UInt64(0),
-                state_proof_key=Bytes.from_base64("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="),
-                fee=0
-            )
-            pmt_txn = itxn.Payment(
-                receiver=self.owner,
-                close_remainder_to=self.owner,
-                fee=0
-            )
-            itxn.submit_txns(keyreg_txn, pmt_txn)
-        else:
-            op.err() 
-    ##############################################
 
-##################################################
-# AirdropBridge
-#   similar to base bridge with lockable instead
-#   of ownable. Used by Airdrop and StakeReward.
-##################################################
-class AirdropBridge(Stakeable, Upgradeable, Lockable):
-    def __init__(self) -> None:
-        # stakeable state
-        self.delegate = Account()          # zero address
-        self.stakeable = bool(1)         # 1 (Default unlocked)
-        # upgradeable state
-        self.contract_version = UInt64()   # 0
-        self.deployment_version = UInt64() # 0
-        self.updatable = bool(1)           # 1 (Default unlocked)
-        # ownable state
-        self.owner = Account()             # zero address
-        # lockable state
-        self.funder = Account()            # zero address
-        self.period = UInt64()             # 0
-        self.funding = UInt64()            # 0
-        self.total = UInt64()              # 0
-        self.initial = UInt64()            # 0
-        self.deadline = UInt64()           # 0
-        self.parent_id = UInt64()                                   # 0
-        self.messenger_id = TemplateVar[UInt64]("MESSENGER_ID")     # ex) 0
-        self.period_seconds = TemplateVar[UInt64]("PERIOD_SECONDS") # ex) 2592000
-        self.lockup_delay = TemplateVar[UInt64]("LOCKUP_DELAY")     # ex) 12
-        self.vesting_delay = TemplateVar[UInt64]("VESTING_DELAY")   # ex) 12
-        self.period_limit = TemplateVar[UInt64]("PERIOD_LIMIT")     # ex) 5
-    ############################################## 
-    # function: approve_update
-    # arguments:
-    # - approval, approval status
-    # purpose: approve update
-    # pre-conditions
-    # - only callable by owner
-    # post-conditions:
-    # - updatable set to approval
-    ##############################################
-    @arc4.abimethod
-    def approve_update(self, approval: arc4.Bool) -> None:
-        assert Txn.sender == self.owner, "must be owner"
-        self.updatable = approval.native 
-    ##############################################
 
 ##################################################
 # Airdrop
 #   facilitates airdrop staking
 ##################################################
-class Airdrop(AirdropBridge):
-    ##############################################
-    # function: __init__ (builtin)
-    # arguments: None
-    # purpose: construct initial state
-    # pre-conditions: None
-    # post-conditions: initial state set
-    ##############################################
-    def __init__(self) -> None:
-        super().__init__()
-    ##############################################
-    # function: on_create
-    # arguments: None
-    # purpose: on create
-    # pre-conditions
-    # - only callable by CreateApplication
-    # post-conditions:
-    # - indexer_id set to caller_application_id
-    ##############################################
-    @arc4.baremethod(create="require")
-    def on_create(self) -> None:
-        caller_id = Global.caller_application_id
-        assert caller_id > 0, "must be created by factory"
-        self.parent_id = caller_id
-    #############################################
-    # function: setup
-    # arguments:
-    # - owner, who is the beneficiary
-    # purpose: set owner once
-    # post-conditions: owner set
-    ##############################################
-    @arc4.abimethod
-    def setup(self, owner: arc4.Address, funder: arc4.Address, deadline: arc4.UInt64,
-        initial: arc4.UInt64) -> None:
-        ##########################################
-        assert self.owner == Global.zero_address, "owner not initialized"
-        assert self.funder == Global.zero_address, "funder not initialized"
-        ##########################################
-        assert Txn.sender == Global.creator_address, "must be creator" 
-        ##########################################
-        self.owner = owner.native
-        self.funder = funder.native
-        self.deadline = deadline.native
-        self.initial = initial.native
-    ##############################################
-    # function: configure
-    # arguments:
-    # - period, lockup period
-    # purpose: set lockup period before funded
-    # pre-conditions
-    # - owner initialized
-    # post-conditions: period set
-    ##############################################
-    @arc4.abimethod
-    def configure(self, period: arc4.UInt64) -> None:
-        ##########################################
-        assert self.funding == 0, "funding not initialized"
-        assert self.total == 0, "total not initialized" 
-        ##########################################
-        assert Txn.sender == self.owner, "must be owner"
-        ##########################################
-        assert period <= TemplateVar[UInt64]("PERIOD_LIMIT") 
-        assert period >= 0
-        ##########################################
-        assert self.deadline > Global.latest_timestamp, "deadline not passed"
-        ##########################################
-        self.period = period.native
-    ##############################################
-    # function: fill
-    # arguments:
-    # - funding, when funded
-    # purpose: fund it
-    # pre-conditions
-    # - period must be set
-    # - funding and total must be uninitialized
-    # - must be combined with payment transaction
-    #   for total amount
-    # - must be only callable by funder 
-    # post-conditions: 
-    # - total and funding are set to arguments
-    ##############################################
-    @arc4.abimethod
-    def fill(self, funding: arc4.UInt64) -> None:
-        ##########################################
-        assert self.owner != Global.zero_address, "owner initialized"
-        assert self.funder != Global.zero_address, "funder initialized"
-        assert self.funding == 0, "funding not initialized"
-        ##########################################
-        assert Txn.sender == self.funder, "must be funder" 
-        ##########################################
-        payment_amount = require_payment(self.funder)
-        assert payment_amount > UInt64(0), "payment amount accurate"
-        ##########################################
-        assert funding > self.deadline, "funding must after deadline"
-        ##########################################
-        self.total = payment_amount
-        self.funding = funding.native
-    ##############################################
-    # function: withdraw
-    # arguments:
-    # - amount
-    # returns: min balance
-    # purpose: extract funds from contract
-    # pre-conditions
-    # - only callable by owner
-    # post-conditions:
-    # - transfer amount from the contract account
-    #   to owner
-    ##############################################
-    @arc4.abimethod
-    def withdraw(self, amount: arc4.UInt64) -> UInt64:
-        ##########################################
-        assert Txn.sender == self.owner, "must be owner" 
-        ##########################################
-        if self.funding > 0:
-            min_balance = self.calculate_min_balance()
-            available_balance = get_available_balance()
-            assert available_balance - amount.native >= min_balance, "balance available"
-            if amount > 0:
-                itxn.Payment(
-                    amount=amount.native,
-                    receiver=Txn.sender,
-                    fee=0
-                ).submit()
-            return min_balance
-        else:
-            min_balance = UInt64(0)
-            available_balance = get_available_balance()
-            assert available_balance - amount.native >= min_balance, "balance available"
-            if amount > 0:
-                itxn.Payment(
-                    amount=amount.native,
-                    receiver=Txn.sender,
-                    fee=0
-                ).submit()
-            return min_balance
-    ##############################################
-    # function: close
-    # purpose: deletes contract
-    # pre-conditions:
-    # - min balance is 0
-    # post-conditions:
-    # - contract is deleted
-    # - account closed out to owner if it has a balance
-    # notes:
-    # - should be alled with onCompletion
-    #   deleteApplication
-    ##############################################
-    @arc4.abimethod(allow_actions=[
-        OnCompleteAction.DeleteApplication
-    ])
-    def close(self) -> None:
-        ###########################################
-        assert self.funding > 0, "funding initialized"
-        ###########################################
-        assert self.calculate_min_balance() == 0, "min balance not zero"
-        ###########################################
-        assert Txn.sender == self.owner or Txn.sender == self.funder, "must be owner or funder"
-        ###########################################
-        oca = Txn.on_completion
-        if oca == OnCompleteAction.DeleteApplication:
-            keyreg_txn = itxn.KeyRegistration(
-                non_participation=True,
-                vote_key=Bytes.from_base64("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
-                selection_key=Bytes.from_base64("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
-                vote_first=UInt64(0),
-                vote_last=UInt64(0),
-                vote_key_dilution=UInt64(0),
-                state_proof_key=Bytes.from_base64("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="),
-                fee=0
-            )
-            pmt_txn = itxn.Payment(
-                receiver=self.owner,
-                close_remainder_to=self.owner,
-                fee=0
-            )
-            itxn.submit_txns(keyreg_txn, pmt_txn)
-        else:
-            op.err() 
-    ##############################################
 
-##################################################
-# StakeReward
-#   facilitates reward staking
-##################################################
-class StakeReward(AirdropBridge):
-    ##############################################
-    # function: __init__ (builtin)
-    # arguments: None
-    # purpose: construct initial state
-    # pre-conditions: None
-    # post-conditions: initial state set
-    ##############################################
-    def __init__(self) -> None:
-        super().__init__()
-    ##############################################
-    # function: on_create
-    # arguments: None
-    # purpose: on create
-    # pre-conditions
-    # - only callable by CreateApplication
-    # post-conditions:
-    # - indexer_id set to caller_application_id
-    ##############################################
-    @arc4.baremethod(create="require")
-    def on_create(self) -> None:
-        caller_id = Global.caller_application_id
-        assert caller_id > 0, "must be created by factory"
-        self.parent_id = caller_id
-    #############################################
-    # function: setup
-    # arguments:
-    # - owner, who is the beneficiary
-    # purpose: set owner once
-    # post-conditions: owner set
-    ##############################################
-    @arc4.abimethod
-    def setup(self, owner: arc4.Address, funder: arc4.Address, delegate: arc4.Address,
-        period: arc4.UInt64) -> None:
-        ##########################################
-        assert self.owner == Global.zero_address, "owner not initialized"
-        assert self.funder == Global.zero_address, "funder not initialized"
-        ##########################################
-        assert Txn.sender == Global.creator_address, "must be creator" 
-        ##########################################
-        assert period <= TemplateVar[UInt64]("PERIOD_LIMIT") 
-        assert period > 0
-        ##########################################
-        self.owner = owner.native
-        self.funder = funder.native
-        self.delegate = delegate.native
-        self.deadline = Global.latest_timestamp
-        self.period = period.native
-    ##############################################
-    # function: fill
-    # arguments:
-    # - funding, when funded
-    # purpose: fund it
-    # pre-conditions
-    # - period must be set
-    # - funding and total must be uninitialized
-    # - must be combined with payment transaction
-    #   for total amount
-    # - must be only callable by funder 
-    # post-conditions: 
-    # - total and funding are set to arguments
-    ##############################################
-    @arc4.abimethod
-    def fill(self) -> None:
-        ##########################################
-        assert self.owner != Global.zero_address, "owner initialized"
-        assert self.funder != Global.zero_address, "funder initialized"
-        assert self.funding == 0, "funding not initialized"
-        ##########################################
-        assert Txn.sender == self.funder, "must be funder" 
-        ##########################################
-        payment_amount = require_payment(self.funder)
-        min_balance = op.Global.min_balance
-        assert payment_amount > UInt64(0), "payment amount accurate"
-        ##########################################
-        application_address = Global.current_application_address
-        self.initial = application_address.balance - payment_amount - min_balance
-        self.total = application_address.balance - min_balance
-        self.funding = Global.latest_timestamp
-    ##############################################
-    # function: withdraw
-    # arguments:
-    # - amount
-    # returns: min balance
-    # purpose: extract funds from contract
-    # pre-conditions
-    # - only callable by owner
-    # post-conditions:
-    # - transfer amount from the contract account
-    #   to owner
-    ##############################################
-    @arc4.abimethod
-    def withdraw(self, amount: arc4.UInt64) -> UInt64:
-        ##########################################
-        assert Txn.sender == self.owner, "must be owner" 
-        ##########################################
-        if self.funding > 0:
-            min_balance = self.calculate_min_balance()
-            available_balance = get_available_balance()
-            assert available_balance - amount.native >= min_balance, "balance available"
-            if amount > 0:
-                itxn.Payment(
-                    amount=amount.native,
-                    receiver=Txn.sender,
-                    fee=0
-                ).submit()
-            return min_balance
-        else:
-            min_balance = UInt64(0)
-            available_balance = get_available_balance()
-            assert available_balance - amount.native >= min_balance, "balance available"
-            if amount > 0:
-                itxn.Payment(
-                    amount=amount.native,
-                    receiver=Txn.sender,
-                    fee=0
-                ).submit()
-            return min_balance
 
-##################################################
-# EarlyStakeReward
-#   facilitates early staking rewards
-##################################################
-class EarlyStakeReward(AirdropBridge):
-    ##############################################
-    # function: __init__ (builtin)
-    # arguments: None
-    # purpose: To set the initial state of the 
-    #          contract.
-    # pre-conditions: None
-    # post-conditions: initial state set
-    # details:
-    # - It calls the constructor of the parent class 
-    #   AirdropBridge, ensuring that the inherited 
-    #   properties are initialized correctly.
-    ##############################################
+class Airdrop(
+    Deployable,
+    Stakeable,
+    Upgradeable,
+    Ownable,
+    Lockable,
+    Fundable,
+    Receiver
+):
     def __init__(self) -> None:
-        super().__init__()
-    ##############################################
-    # function: on_create
-    # arguments: None
-    # purpose: Handles actions required during the
-    #          creation of the contract.
-    # pre-conditions
-    # - only callable by CreateApplication
-    # post-conditions:
-    # - parent_id set to caller_application_id
-    # details:
-    # - Ensures that the contract is created by a
-    #   factory, validating the caller_application_id.
-    ##############################################
-    @arc4.baremethod(create="require")
-    def on_create(self) -> None:
-        caller_id = Global.caller_application_id
-        assert caller_id > 0, "must be created by factory"
-        self.parent_id = caller_id
-    #############################################
-    # function: setup
-    # arguments:
-    # - owner, who is the beneficiary
-    # - funder, who funded the contract
-    # - delegate, who is the delegate
-    # - period, lockup period
-    # - initial, initial balance
-    # purpose: 
-    # - Configures the initial settings of the contract, 
-    #   including the owner, funder, delegate, and 
-    #   staking period.
-    # post-conditions: 
-    # - Sets the owner, funder, delegate, period, 
-    #   and initial payment after verifying that they 
-    #   have not been set before and that the creator 
-    #   is making the call.
-    ##############################################
-    @arc4.abimethod
-    def setup(self, owner: arc4.Address, funder: arc4.Address, delegate: arc4.Address,
-        period: arc4.UInt64, initial: arc4.UInt64) -> None:
-        ##########################################
-        assert self.owner == Global.zero_address, "owner not initialized"
-        assert self.funder == Global.zero_address, "funder not initialized"
-        ##########################################
-        assert Txn.sender == Global.creator_address, "must be creator" 
-        ##########################################
-        assert period <= TemplateVar[UInt64]("PERIOD_LIMIT")
-        assert period > 0
-        ##########################################
-        assert initial > UInt64(0), "payment amount accurate"
-        ##########################################
-        self.initial = initial.native
-        self.owner = owner.native
-        self.funder = funder.native
-        self.delegate = delegate.native
-        self.deadline = Global.latest_timestamp
-        self.period = period.native
-        self.vesting_delay = (period.native + UInt64(1)) * UInt64(2) // UInt64(3)
-        
-    ##############################################
-    # function: fill
-    # arguments:
-    # - funding, when funded
-    # purpose: Allows the contract to be funded.
-    # pre-conditions
-    # - minimum balance of application address
-    #   satisfied
-    # - period must be set
-    # - funding and total must be uninitialized
-    # - must be combined with payment transaction
-    #   for total amount
-    # - must be only callable by funder 
-    # post-conditions: 
-    # - Sets the total amount and marks the funding 
-    #   timestamp.
-    ##############################################
-    @arc4.abimethod
-    def fill(self) -> None:
-        ##########################################
-        assert self.owner != Global.zero_address, "owner initialized"
-        assert self.funder != Global.zero_address, "funder initialized"
-        assert self.funding == 0, "funding not initialized"
-        ##########################################
-        assert Txn.sender == self.funder, "must be funder" 
-        ##########################################
-        payment_amount = require_payment(self.funder)
-        min_balance = op.Global.min_balance
-        assert payment_amount > UInt64(0), "payment amount accurate"
-        ##########################################
-        application_address = Global.current_application_address
-        self.total = application_address.balance - min_balance
-        self.funding = Global.latest_timestamp
-    ##############################################
-    # function: withdraw (override)
-    # arguments:
-    # - amount
-    # returns: min balance
-    # purpose: extract funds from contract
-    # pre-conditions
-    # - only callable by owner
-    # - let balance be the current balance of the
-    #   contract
-    # - balance - amount >= min_balance
-    #   (fee paid in appl txn)
-    # post-conditions: 
-    # - transfer amount from the contract account
-    #   to owner
-    ##############################################
-    @arc4.abimethod
-    def withdraw(self, amount: arc4.UInt64) -> UInt64:
-        ##########################################
-        assert Txn.sender == self.owner, "must be owner" 
-        ##########################################
-        if self.funding > 0:
-            min_balance = self.calculate_min_balance()
-            available_balance = get_available_balance()
-            assert available_balance - amount.native >= min_balance, "balance available"
-            if amount > 0:
-                itxn.Payment(
-                    amount=amount.native,
-                    receiver=Txn.sender,
-                    fee=0
-                ).submit()
-            return min_balance
-        else:
-            min_balance = self.initial
-            available_balance = get_available_balance()
-            assert available_balance - amount.native >= min_balance, "balance available"
-            if amount > 0:
-                itxn.Payment(
-                    amount=amount.native,
-                    receiver=Txn.sender,
-                    fee=0
-                ).submit()
-            return min_balance
-
-##################################################
-# FactoryBridge
-#   bridge for factory
-##################################################
-class FactoryBridge(Ownable, Upgradeable):
-    def __init__(self) -> None:
-        # ownable state
-        self.owner = Account()                          # zero address
+        # deployable state
+        self.parent_id = UInt64()
+        # stakeable state
+        self.delegate = Account()
+        self.stakeable = bool(1)
         # upgradeable state
-        self.contract_version = UInt64()                # 0
-        self.deployment_version = UInt64()              # 0
-        self.updatable = bool(1)                        # 1 (Default unlocked)
-    ##############################################
+        self.contract_version = UInt64()
+        self.deployment_version = UInt64()
+        self.updatable = bool(1)
+        # ownable state
+        self.owner = Account()
+        # lockable state
+        self.period = UInt64()
+        self.initial = UInt64()
+        self.deadline = UInt64()
+        self.period_seconds = TemplateVar[UInt64]("PERIOD_SECONDS")
+        self.lockup_delay = TemplateVar[UInt64]("LOCKUP_DELAY")
+        self.vesting_delay = TemplateVar[UInt64]("VESTING_DELAY")
+        self.period_limit = TemplateVar[UInt64]("PERIOD_LIMIT")
+        # fundable state
+        self.funder = Account()
+        self.funding = UInt64()
+        self.total = UInt64()
+        # receiver state
+        self.messenger_id = TemplateVar[UInt64]("MESSENGER_ID")
+
 
 ##################################################
 # BaseFactory
-#   factory for base
+#   factory for airdrop also serves as a base for
+#   upgrading contracts if applicable
 ##################################################
-class BaseFactory(FactoryBridge):
+
+
+class BaseFactory(Upgradeable):
+    """
+    Base factory for all factories.
+    """
+
     def __init__(self) -> None:
-        super().__init__()
-    ##############################################
-    # @arc4.abimethod
-    # def update(self) -> None:
-    #      pass
-    ##############################################
-    # @arc4.abimethod
-    # def remote_update(self, app_id: arc4.UInt64) -> None:
-    #     pass
-    ##############################################
-    @arc4.abimethod
-    def create(self, owner: arc4.Address, delegate: arc4.Address) -> UInt64:
-        ##########################################
+        """
+        Initialize factory.
+        """
+        # upgradeable state
+        self.contract_version = UInt64()  # 0
+        self.deployment_version = UInt64()  # 0
+        self.updatable = bool(1)  # 1 (Default unlocked)
+
+        ##############################################
+        # @arc4.abimethod
+        # def update(self) -> None:
+        #      pass
+        ##############################################
+        # @arc4.abimethod
+        # def remote_update(self, app_id: arc4.UInt64) -> None:
+        #     pass
+        ##############################################
+        # @arc4.abimethod
+        # def create(self, *args) -> UInt64:
+        #    return UInt64()
+        ##############################################
+
+    @subroutine
+    def get_initial_payment(self) -> UInt64:
+        """
+        Get initial payment.
+        """
         payment_amount = require_payment(Txn.sender)
-        mbr_increase = UInt64(371000) 
-        min_balance = op.Global.min_balance # 100000
-        assert payment_amount >= mbr_increase + min_balance, "payment amount accurate" # 471000
-        ##########################################
-        base_app = arc4.arc4_create(Base).created_app
-        itxn.Payment(
-            receiver=base_app.address,
-            amount=min_balance, # 100000
-            fee=0
-        ).submit()
-        arc4.abi_call(Base.setup, owner, delegate, app_id=base_app)
-        ##########################################
-        return base_app.id
-    ##############################################
+        mbr_increase = UInt64(677500)
+        min_balance = op.Global.min_balance  # 100000
+        assert (
+            payment_amount >= mbr_increase + min_balance
+        ), "payment amount accurate"  # 777500
+        initial = payment_amount - mbr_increase - min_balance
+        return initial
+
 
 ##################################################
 # AirdropFactory
-#   factory for airdrop
+#   factory for airdrop also serves as a base for
+#   upgrading contracts if applicable
 ##################################################
-class AirdropFactory(FactoryBridge):
+
+
+class AirdropFactory(BaseFactory):
+    """
+    Factory for airdrop requiring lockup period
+    configuration and funding.
+    """
+
     def __init__(self) -> None:
         super().__init__()
-    ##############################################
-    # @arc4.abimethod
-    # def update(self) -> None:
-    #      pass
-    ##############################################
-    # @arc4.abimethod
-    # def remote_update(self, app_id: arc4.UInt64) -> None:
-    #     pass
-    ##############################################
-    # function: create
-    # arguments:
-    # - owner, who is the beneficiary
-    # - funder, who funded the contract
-    # - deadline, funding deadline
-    # - initial, initial balance
-    # returns: app id
-    # purpose: create airdrop
-    # pre-conditions
-    # - payment amount >= 167750
-    # post-conditions:
-    # - create airdrop
-    ##############################################
+
     @arc4.abimethod
-    def create(self, owner: arc4.Address, funder: arc4.Address, deadline: arc4.UInt64,
-        initial: arc4.UInt64) -> UInt64:
+    def create(
+        self,
+        owner: arc4.Address,
+        funder: arc4.Address,
+        deadline: arc4.UInt64,
+        initial: arc4.UInt64,
+    ) -> UInt64:
+        """
+        Create airdrop.
+
+        Arguments:
+        - owner, who is the beneficiary
+        - funder, who funded the contract
+        - deadline, funding deadline
+        - initial, initial funded value not including lockup bonus
+
+        Returns:
+        - app id
+        """
         ##########################################
-        payment_amount = require_payment(Txn.sender)
-        mbr_increase = UInt64(677500) 
-        min_balance = op.Global.min_balance # 100000
-        assert payment_amount >= mbr_increase + min_balance, "payment amount accurate" # 777500
+        self.get_initial_payment()
+        ##########################################
+        base_app = arc4.arc4_create(Airdrop).created_app
+        arc4.abi_call(Airdrop.preconfigure, UInt64(0), deadline, app_id=base_app)
+        itxn.Payment(
+            receiver=base_app.address, amount=op.Global.min_balance, fee=0  # 100000
+        ).submit()
+        arc4.abi_call(Airdrop.setup, owner, funder, initial, app_id=base_app)
+        # configured by owner
+        # funder
+        #   fill
+        #   set funding
+        # vesting
+        # lockup
+        # done
+        ##########################################
+        return base_app.id
+
+
+##################################################
+# VanillaFactory
+#   factory for staking contract vesting and lockup
+##################################################
+
+
+class VanillaFactory(BaseFactory):
+    """
+    Factory for staking contract without vesting and lockup.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    @arc4.abimethod
+    def create(self, delegate: arc4.Address) -> UInt64:
+        ##########################################
+        owner = Txn.sender
+        initial = self.get_initial_payment()
         ##########################################
         base_app = arc4.arc4_create(Airdrop).created_app
         itxn.Payment(
             receiver=base_app.address,
-            amount=min_balance, # 100000
-            fee=0
+            amount=initial + op.Global.min_balance,  # initial + 100000
+            fee=0,
         ).submit()
-        arc4.abi_call(Airdrop.setup, owner, funder, deadline, initial, app_id=base_app)
+        arc4.abi_call(
+            Airdrop.preconfigure, UInt64(0), Global.latest_timestamp, app_id=base_app
+        )
+        arc4.abi_call(Airdrop.set_delegate, delegate, app_id=base_app)
+        arc4.abi_call(Airdrop.set_total, initial, app_id=base_app)
+        arc4.abi_call(
+            Airdrop.setup,
+            owner,  # owner
+            Global.current_application_address,  # funder
+            initial,
+            app_id=base_app,
+        )
+        arc4.abi_call(Airdrop.set_funding, Global.latest_timestamp, app_id=base_app)
+        # withdraw particpate
+        # close
         ##########################################
         return base_app.id
-    ##############################################
+
 
 ##################################################
 # StakeRewardFactory
 #   factory for stake reward
 ##################################################
-class StakeRewardFactory(FactoryBridge):
-    def __init__(self) -> None:
-        super().__init__()
-    @arc4.abimethod
-    def create(self, owner: arc4.Address, funder: arc4.Address, delegate: arc4.Address,
-        period: arc4.UInt64) -> UInt64:
-        ##########################################
-        payment_amount = require_payment(Txn.sender) 
-        mbr_increase = UInt64(677500)
-        min_balance = op.Global.min_balance # 100000
-        assert payment_amount >= mbr_increase + min_balance, "payment amount accurate" 
-        initial = payment_amount - mbr_increase - min_balance
-        ##########################################
-        base_app = arc4.arc4_create(StakeReward).created_app
-        itxn.Payment(
-            receiver=base_app.address,
-            amount=initial + min_balance,
-            fee=0
-        ).submit()
-        arc4.abi_call(StakeReward.setup, owner, funder, delegate, period, app_id=base_app)
-        ##########################################
-        return base_app.id
-    ############################################## 
+class StakeRewardFactory(BaseFactory):
+    """
+    Factory for stake reward.
+    """
 
-##################################################
-# StakeRewardFactory
-#   factory for stake reward
-##################################################
-class EarlyStakeRewardFactory(FactoryBridge):
     def __init__(self) -> None:
         super().__init__()
+
     ##############################################
     # @arc4.abimethod
     # def update(self) -> None:
@@ -1182,36 +1012,133 @@ class EarlyStakeRewardFactory(FactoryBridge):
     # - funder, who funded the contract
     # - delegate, who is the delegate
     # - period, lockup period
-    # returns: base app id
-    # purpose: create early stake reward
+    # returns: app id
+    # purpose: create airdrop
     # pre-conditions
-    # - payment amount > 777500
+    # - payment amount >= 677500 + 100000
     # post-conditions:
-    # - create early stake reward
-    # notes:
-    # - receives mbr_increase as well as min balance
-    #   for new contract in addition to initial
-    #   payment ie any amount over 777500 is taken
-    #   as initial payment
+    # - create airdrop
     ##############################################
     @arc4.abimethod
-    def create(self, owner: arc4.Address, funder: arc4.Address, delegate: arc4.Address,
-        period: arc4.UInt64) -> UInt64:
+    def create(
+        self,
+        owner: arc4.Address,
+        funder: arc4.Address,
+        delegate: arc4.Address,
+        period: arc4.UInt64,
+    ) -> UInt64:
+        """
+        Create stake reward.
+
+        Arguments:
+        - owner, who is the beneficiary
+        - funder, who funded the contract
+        - delegate, who is the delegate
+        - period, lockup period
+
+        Returns:
+        - app id
+        """
         ##########################################
-        payment_amount = require_payment(Txn.sender) 
-        mbr_increase = UInt64(677500)
-        min_balance = op.Global.min_balance # 100000
-        assert payment_amount > mbr_increase + min_balance, "payment amount accurate" # 777500
-        initial = payment_amount - mbr_increase - min_balance
+        initial = self.get_initial_payment()
         ##########################################
-        base_app = arc4.arc4_create(EarlyStakeReward).created_app
+        base_app = arc4.arc4_create(Airdrop).created_app
         itxn.Payment(
-            receiver=base_app.address,
-            amount=initial + min_balance,
-            fee=0
+            receiver=base_app.address, amount=initial + op.Global.min_balance, fee=0
         ).submit()
-        arc4.abi_call(EarlyStakeReward.setup, owner, funder, delegate, period, 
-            initial, app_id=base_app) 
+        # common in stake reward
+        #   set delgate and prevent furture changes by owner
+        arc4.abi_call(
+            Airdrop.preconfigure, period, Global.latest_timestamp, app_id=base_app
+        )
+        arc4.abi_call(Airdrop.set_delegate, delegate, app_id=base_app)
+        # common in airdrop
+        #   set owner and funder locking out further changes by creator
+        arc4.abi_call(
+            Airdrop.setup,
+            owner,
+            funder,
+            initial,
+            app_id=base_app,
+        )
+        # funder
+        #   fill
+        #   set funding
+        # vesting, lockup
+        #   withdraw
+        #   participate
+        # close
         ##########################################
-        return base_app.id 
-    ############################################## 
+        return base_app.id
+
+
+##################################################
+# EarlyStakeRewardFactory
+#   factory for early stake reward
+##################################################
+
+
+class EarlyStakeRewardFactory(BaseFactory):
+    def __init__(self) -> None:
+        """
+        Factory for early stake reward.
+        """
+
+    @arc4.abimethod
+    def create(
+        self,
+        owner: arc4.Address,
+        funder: arc4.Address,
+        delegate: arc4.Address,
+        period: arc4.UInt64,
+    ) -> UInt64:
+        """
+        Create early stake reward.
+
+        Arguments:
+        - owner, who is the beneficiary
+        - funder, who funded the contract
+        - delegate, who is the delegate
+        - period, lockup period
+
+        Returns:
+        - app id
+        """
+        ##########################################
+        initial = self.get_initial_payment()
+        ##########################################
+        base_app = arc4.arc4_create(Airdrop).created_app
+        itxn.Payment(
+            receiver=base_app.address, amount=initial + op.Global.min_balance, fee=0
+        ).submit()
+        # common in stake reward
+        #   set delgate and prevent furture changes by owner
+        arc4.abi_call(
+            Airdrop.preconfigure, period, Global.latest_timestamp, app_id=base_app
+        )
+        arc4.abi_call(Airdrop.set_delegate, delegate, app_id=base_app)
+        # unique to early staking
+        #   locks initial deposit to be vested
+        arc4.abi_call(Airdrop.set_total, initial, app_id=base_app)
+        # unique to early staking
+        #   variable vesting delay adjustment
+        arc4.abi_call(
+            Airdrop.set_vesting_delay,
+            (period.native + UInt64(1)) * UInt64(2) // UInt64(3),
+            app_id=base_app,
+        )
+        # common in airdrop
+        arc4.abi_call(
+            Airdrop.setup,
+            owner,
+            funder,
+            initial,
+            app_id=base_app,
+        )
+        # funder
+        #   fill, set funding
+        # vesting, lockup
+        #   withdraw, participate
+        # close
+        #########################################
+        return base_app.id

@@ -106,11 +106,11 @@ const deployer = {
 // - root-factory
 // - messenger
 
-const deployWhat: string = "early-factory";
+const deployWhat: string = "airdrop-factory";
 
 // deploy
 do {
-  break;
+  //break;
   switch (deployWhat) {
     case "base-factory": {
       const appClient = new BaseFactoryClient(
@@ -136,7 +136,7 @@ do {
           resolveBy: "creatorAndName",
           findExistingUsing: indexerClient,
           creatorAddress: deployer.addr,
-          name: "f7",
+          name: "f8",
           sender: deployer,
         },
         algodClient
@@ -319,7 +319,7 @@ do {
 // enter base factory
 do {
   break;
-  const ctcInfo = Number(CTC_INFO_BASE_FACTORY);
+  const ctcInfo = Number(73855743);
   const spec = {
     name: "",
     desc: "",
@@ -345,14 +345,13 @@ do {
   } while (0); // end update
   // create
   do {
-    break;
-    const paymentAmount = 371000 + 100000; // MBR increase for new contract + min balance
+    //break;
+    const paymentAmount = 1e6 + 677500 + 100000; // MBR increase for new contract + min balance
     ci.setPaymentAmount(paymentAmount);
-    ci.setFee(4000);
-    const owner = addr2;
+    ci.setFee(6000);
     const delegate = addr;
-    const createR = await ci.create(owner, delegate);
-    console.log(createR, owner, delegate);
+    const createR = await ci.create(delegate);
+    console.log(createR, delegate);
     if (!createR.success) {
       console.log("create failed");
       break;
@@ -476,7 +475,7 @@ do {
   } while (0);
   // close
   do {
-    //break;
+    break;
     ci2.setFee(3000);
     ci2.setOnComplete(5); // deleteApplicationOC
     const closeR = await ci2.close();
@@ -604,8 +603,8 @@ do {
 } while (0); // end reward
 // enter airdrop factory
 do {
-  break;
-  const ctcInfo = Number(CTC_INFO_AIRDROP_FACTORY);
+  //break;
+  const ctcInfo = Number(81405780);
   const spec = {
     name: "",
     desc: "",
@@ -671,9 +670,9 @@ do {
   // create
   do {
     //break;
-    const paymentAmount = 677500 + 100000; // MBR increase for new contract
+    const paymentAmount = 777500 + 100000; // MBR increase for new contract
     ci.setPaymentAmount(paymentAmount);
-    ci.setFee(4000);
+    ci.setFee(5000);
     const owner = addr2;
     const funder = addr;
     const now: number = moment().unix();
@@ -693,7 +692,7 @@ do {
 do {
   break;
   // create instance of existing contract
-  const ctcInfo = Number(77517237);
+  const ctcInfo = Number(81398540);
 
   const spec = {
     name: "",
@@ -730,7 +729,7 @@ do {
   // owner configure lockup period
   do {
     break;
-    const period = 3;
+    const period = 5;
     const configureR = await ci2.configure(period);
     console.log(configureR);
     const res = await signSendAndConfirm(configureR.txns, sk2);
@@ -739,13 +738,18 @@ do {
   // funder fills contract
   do {
     break;
-    // payment amount is gte global initial
+    //payment amount is gte global initial
     ci.setPaymentAmount(1e6);
     const now: number = moment().unix();
-    const fillR = await ci.fill(now + 3600); // 1 hour
+    const fillR = await ci.fill(); // 1 hour
     console.log(fillR);
     const res = await signSendAndConfirm(fillR.txns, key);
     console.log(res);
+    // const set_fundingR = await ci.set_funding(now + 3600);
+    // console.log(set_fundingR);
+    // const res2 = await signSendAndConfirm(set_fundingR.txns, key);
+    // console.log(res2);
+    // TODO combine txns into group
   } while (0); // end fill
   // owner or delegate participates (participation)
   do {
@@ -760,8 +764,8 @@ do {
       new Uint8Array(
         Buffer.from("oxigRtYVOHpCD/qldT814sPYeQGzgUfjBOpbD3NHv0Y=", "base64")
       ),
-      6558699,
-      9558699,
+      9_777_253,
+      9_777_253 + 1_000_000,
       1733,
       new Uint8Array(
         Buffer.from(
@@ -772,6 +776,32 @@ do {
     );
     console.log(participateR);
     const res = await signSendAndConfirm(participateR.txns, sk2);
+    console.log(res);
+  } while (0); // end participation (participation)
+  // delegate participates (non-participation)
+  do {
+    break;
+    // send 100000
+    ci.setPaymentAmount(1000);
+    const participateR = await ci.participate(
+      new Uint8Array(
+        Buffer.from("rqzFOfwFPvMCkVxk/NKgj8idbwrsEGwxDbQwmHwtACE=", "base64")
+      ),
+      new Uint8Array(
+        Buffer.from("oxigRtYVOHpCD/qldT814sPYeQGzgUfjBOpbD3NHv0Y=", "base64")
+      ),
+      9_777_253,
+      9_777_253 + 1_000_000,
+      1733,
+      new Uint8Array(
+        Buffer.from(
+          "FxHMlnefM+QUzFEi9jF4moujCSs9iFYPyUX0+yvJgoMmXxTZfFd5Wus2InMW/FAP+mXSeZqBrezUdx88q0VTpw==",
+          "base64"
+        )
+      )
+    );
+    console.log(participateR);
+    const res = await signSendAndConfirm(participateR.txns, sk);
     console.log(res);
   } while (0); // end participation (participation)
   // owner or delegate participates (non-participation)
@@ -794,15 +824,15 @@ do {
   // owner set delegate
   do {
     break;
-    const nodeAddr = NODE_ADDR || "";
-    const set_delegateR = await ci2.set_delegate(nodeAddr);
+    console.log("set delegate");
+    const set_delegateR = await ci2.set_delegate(addr);
     console.log(set_delegateR);
     const res = await signSendAndConfirm(set_delegateR.txns, sk2);
     console.log(res);
   } while (0); // end set delegate
   // owner withdraws (simulate for mab)
   do {
-    //break;
+    break;
     ci2.setFee(2000);
     const withdrawR = await ci2.withdraw(0);
     if (!withdrawR.success) {
@@ -810,7 +840,7 @@ do {
       break;
     }
     const withdraw = withdrawR.returnValue;
-    console.log(withdraw);
+    console.log("mab", withdraw.toString());
   } while (0); // end withdraw (simulate for mab)
   // owner withdraw
   do {

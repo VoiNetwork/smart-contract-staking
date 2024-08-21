@@ -20,7 +20,7 @@ algokit generate client SmartContractStaking.arc32.json --language python --outp
 
 ### build and run script
 ```shell
-(docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder && cp -v artifacts/BaseClient.ts ./scripts/ && cp -v artifacts/AirdropClient.ts ./scripts/ && cp -v artifacts/StakeRewardClient.ts ./scripts/  && cp -v artifacts/EarlyStakeRewardClient.ts ./scripts/ && cp -v artifacts/BaseFactoryClient.ts ./scripts/ && cp -v artifacts/AirdropFactoryClient.ts ./scripts/ && cp -v artifacts/StakeRewardFactoryClient.ts ./scripts/ && cp -v artifacts/EarlyStakeRewardFactoryClient.ts ./scripts/  && cp -v artifacts/RootFactoryClient.ts ./scripts/ && cp -v artifacts/MessengerClient.ts ./scripts/ && (cd scripts/ && npx tsc && node deploy.js))
+(docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder && cp -v artifacts/BaseClient.ts ./scripts/ && cp -v artifacts/AirdropClient.ts ./scripts/ && cp -v artifacts/StakeRewardClient.ts ./scripts/  && cp -v artifacts/EarlyStakeRewardClient.ts ./scripts/ && cp -v artifacts/BaseFactoryClient.ts ./scripts/ && cp -v artifacts/AirdropFactoryClient.ts ./scripts/ && cp -v artifacts/StakeRewardFactoryClient.ts ./scripts/ && cp -v artifacts/EarlyStakeRewardFactoryClient.ts ./scripts/ && cp -v artifacts/MessengerClient.ts ./scripts/ && (cd scripts/ && npx tsc && node deploy.js))
 ```
 
 ### build all using docker
