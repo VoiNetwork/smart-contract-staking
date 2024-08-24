@@ -1,15 +1,6 @@
 import fs from "fs";
 import csv from "csv-parser";
-import { BaseClient, APP_SPEC as BaseSpec } from "./BaseClient.js";
 import { AirdropClient, APP_SPEC as AirdropSpec } from "./AirdropClient.js";
-import {
-  StakeRewardClient,
-  APP_SPEC as StakeRewardSpec,
-} from "./StakeRewardClient.js";
-import {
-  EarlyStakeRewardClient,
-  APP_SPEC as EarlyStakeRewardSpec,
-} from "./EarlyStakeRewardClient.js";
 import {
   AirdropFactoryClient,
   APP_SPEC as AirdropFactorySpec,
@@ -40,16 +31,7 @@ import moment from "moment";
 import * as dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
-const {
-  MN,
-  MN2,
-  MN3,
-  NODE_ADDR,
-  CTC_INFO_AIRDROP_FACTORY,
-  CTC_INFO_BASE_FACTORY,
-  CTC_INFO_REWARD_FACTORY,
-  CTC_INFO_EARLY_FACTORY,
-} = process.env;
+const { MN, MN2, MN3, CTC_INFO_FACTORY_AIRDROP } = process.env;
 
 const mnemonic = MN || "";
 const mnemonic2 = MN2 || "";
@@ -108,7 +90,8 @@ const deployer = {
 
 const deployWhat: string = "airdrop-factory";
 
-// deploy
+// deploy contracts
+
 do {
   //break;
   switch (deployWhat) {
@@ -202,25 +185,6 @@ do {
       });
       break;
     }
-    // depreciate, use factory
-    // case "staking": {
-    //   const appClient = new BaseClient(
-    //     {
-    //       resolveBy: "creatorAndName",
-    //       findExistingUsing: indexerClient,
-    //       creatorAddress: deployer.addr,
-    //       name: "311",
-    //       sender: deployer,
-    //     },
-    //     algodClient
-    //   );
-    //   const app = await appClient.deploy({
-    //     deployTimeParams: {},
-    //     onUpdate: "update",
-    //     onSchemaBreak: "fail",
-    //   });
-    //   break;
-    // }
   }
 } while (0); // end deploy
 // enter messenger
@@ -316,10 +280,11 @@ do {
     console.log(PartKeyInfoEvents);
   } while (0); // end get events
 } while (0); // end messenger
+// TODO: update naming to vanilla
 // enter base factory
 do {
   break;
-  const ctcInfo = Number(73855743);
+  const ctcInfo = Number(1);
   const spec = {
     name: "",
     desc: "",
@@ -363,7 +328,7 @@ do {
 // enter early factory
 do {
   break;
-  const ctcInfo = Number(CTC_INFO_EARLY_FACTORY);
+  const ctcInfo = Number(1);
   const spec = {
     name: "",
     desc: "",
@@ -415,7 +380,7 @@ do {
   const spec = {
     name: "",
     desc: "",
-    methods: EarlyStakeRewardSpec.contract.methods,
+    methods: AirdropSpec.contract.methods,
     events: [],
   };
   const makeCi = (ctcInfo: number, addr: string) => {
@@ -487,7 +452,7 @@ do {
 // enter reward factory
 do {
   break;
-  const ctcInfo = Number(CTC_INFO_REWARD_FACTORY);
+  const ctcInfo = Number(1);
   const spec = {
     name: "",
     desc: "",
@@ -540,7 +505,7 @@ do {
   const spec = {
     name: "",
     desc: "",
-    methods: StakeRewardSpec.contract.methods,
+    methods: AirdropSpec.contract.methods,
     events: [],
   };
   const makeCi = (ctcInfo: number, addr: string) => {
@@ -603,8 +568,8 @@ do {
 } while (0); // end reward
 // enter airdrop factory
 do {
-  //break;
-  const ctcInfo = Number(81405780);
+  break;
+  const ctcInfo = Number(CTC_INFO_FACTORY_AIRDROP);
   const spec = {
     name: "",
     desc: "",
@@ -653,9 +618,9 @@ do {
         for (const airdrop of results) {
           const { owner, funder, deadline, initial } = airdrop;
           console.log(owner, funder, deadline, initial);
-          const paymentAmount = 642000; // MBR increase for new contract
+          const paymentAmount = 777500 + 100000; // MBR increase for new contract
           ci.setPaymentAmount(paymentAmount);
-          ci.setFee(3000);
+          ci.setFee(5000);
           const initialBi = BigInt(initial);
           const createR = await ci.create(owner, funder, deadline, initialBi);
           if (!createR.success) {
@@ -669,14 +634,14 @@ do {
   } while (0); // end create batch
   // create
   do {
-    //break;
+    break;
     const paymentAmount = 777500 + 100000; // MBR increase for new contract
     ci.setPaymentAmount(paymentAmount);
     ci.setFee(5000);
     const owner = addr2;
     const funder = addr;
     const now: number = moment().unix();
-    const deadline = now + 3600; // 1 hour
+    const deadline = now + 3600 * 24; // 1 hour
     const initial = 1e6 * 1; // 1 VOI
     const createR = await ci.create(owner, funder, deadline, initial);
     console.log(createR, addr2);
@@ -688,11 +653,98 @@ do {
     console.log(res);
   } while (0); // end create
 } while (0); // end airdrop factory
+// enter funding batch
+do {
+  break;
+  console.log("funding batch");
+  // read from csv
+  // contractId,contractAddress,ownerAddress,funderAddress,period,total,funding
+  interface FundingI {
+    contractId: number;
+    contractAddress: string;
+    ownerAddress: string;
+    funderAddress: string;
+    period: number;
+    partVoteLst: number;
+    total: number;
+    funding: number;
+    targetAmount: number;
+    targetFunding: number;
+  }
+  const results: FundingI[] = [];
+  fs.createReadStream("funding.csv")
+    .pipe(csv())
+    .on("data", (data) =>
+      results.push({
+        contractId: Number(data.contractId),
+        contractAddress: data.contractAddress,
+        ownerAddress: data.ownerAddress,
+        funderAddress: data.funderAddress,
+        period: Number(data.period),
+        partVoteLst: Number(data.partVoteLst),
+        total: Number(data.total),
+        funding: Number(data.funding),
+        targetAmount: Number(data.targetAmount),
+        targetFunding: Number(data.targetFunding),
+      })
+    )
+    .on("end", async () => {
+      for (const r of results) {
+        const {
+          contractId,
+          contractAddress,
+          ownerAddress,
+          funderAddress,
+          period,
+          partVoteLst,
+          total,
+          funding,
+          targetAmount,
+          targetFunding,
+        } = r;
+
+        console.log(r);
+
+        const spec = {
+          name: "",
+          desc: "",
+          methods: AirdropSpec.contract.methods,
+          events: [],
+        };
+
+        const makeCi = (ctcInfo: number, addr: string) => {
+          return new CONTRACT(ctcInfo, algodClient, indexerClient, spec, {
+            addr,
+            sk: new Uint8Array(0),
+          });
+        };
+
+        const ci = makeCi(contractId, addr);
+
+        // TODO make atomic
+        ci.setPaymentAmount(targetAmount);
+        const fillR = await ci.fill(); // 1 hour
+        console.log(fillR);
+        if (fillR.success) {
+          const res = await signSendAndConfirm(fillR.txns, key);
+          console.log(res);
+        }
+
+        ci.setPaymentAmount(0);
+        const set_fundingR = await ci.set_funding(targetFunding);
+        console.log(set_fundingR);
+        if (set_fundingR.success) {
+          const res2 = await signSendAndConfirm(set_fundingR.txns, key);
+          console.log(res2);
+        }
+      }
+    });
+} while (0);
 // enter airdrop
 do {
   break;
   // create instance of existing contract
-  const ctcInfo = Number(81398540);
+  const ctcInfo = Number(81432702);
 
   const spec = {
     name: "",
@@ -735,9 +787,11 @@ do {
     const res = await signSendAndConfirm(configureR.txns, sk2);
     console.log(res);
   } while (0); // end configure
+
   // funder fills contract
   do {
     break;
+    console.log("fill");
     //payment amount is gte global initial
     ci.setPaymentAmount(1e6);
     const now: number = moment().unix();
@@ -745,11 +799,11 @@ do {
     console.log(fillR);
     const res = await signSendAndConfirm(fillR.txns, key);
     console.log(res);
-    // const set_fundingR = await ci.set_funding(now + 3600);
+    // const set_fundingR = await ci.set_funding(now + 60);
     // console.log(set_fundingR);
     // const res2 = await signSendAndConfirm(set_fundingR.txns, key);
     // console.log(res2);
-    // TODO combine txns into group
+    //TODO combine txns into group
   } while (0); // end fill
   // owner or delegate participates (participation)
   do {
@@ -859,6 +913,7 @@ do {
   // owner or funder can close
   do {
     break;
+    console.log("close");
     ci.setFee(3000);
     ci.setOnComplete(5); // deleteApplicationOC
     const closeR = await ci.close();

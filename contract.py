@@ -98,8 +98,9 @@ class Fundable(FundableInterface):
         #########################################
         assert Txn.sender == self.funder, "must be funder"
         #########################################
-        assert funding == 0 or (
-            funding > Global.latest_timestamp and Global.latest_timestamp < self.funding
+        assert (
+            self.funding == UInt64(0) 
+            or self.funding > Global.latest_timestamp
         ), "funding not be initialized or can be extended"
         #########################################
         self.funding = funding.native
@@ -798,13 +799,7 @@ class Deployable(DeployableInterface):
 
 
 class Airdrop(
-    Deployable,
-    Stakeable,
-    Upgradeable,
-    Ownable,
-    Lockable,
-    Fundable,
-    Receiver
+    Deployable, Stakeable, Upgradeable, Ownable, Lockable, Fundable, Receiver
 ):
     def __init__(self) -> None:
         # deployable state
