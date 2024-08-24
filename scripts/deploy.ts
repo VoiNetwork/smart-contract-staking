@@ -583,7 +583,7 @@ do {
     });
   };
   const ci = makeCi(ctcInfo, addr);
-  // update
+  // update (only used for non-Deployable contracts)
   do {
     break;
     //const BoxPayment = 105700;
@@ -638,11 +638,13 @@ do {
     const paymentAmount = 777500 + 100000; // MBR increase for new contract
     ci.setPaymentAmount(paymentAmount);
     ci.setFee(5000);
-    const owner = addr2;
+    // begin params
+    const owner = addr2; 
     const funder = addr;
     const now: number = moment().unix();
     const deadline = now + 3600 * 24; // 1 hour
     const initial = 1e6 * 1; // 1 VOI
+    // end params
     const createR = await ci.create(owner, funder, deadline, initial);
     console.log(createR, addr2);
     if (!createR.success) {
