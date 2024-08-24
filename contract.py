@@ -378,25 +378,11 @@ class LockableInterface(ARC4Contract):
         self.period_limit = TemplateVar[UInt64]("PERIOD_LIMIT")  # ex) 5
 
     @arc4.abimethod
-    def preconfigure_period(self) -> None:
+    def preconfigure(self, period: arc4.UInt64, deadline: arc4.UInt64) -> None:
         """
-        Preconfigure lockup period.
+        Preconfigure lockup period and deadline.
         """
         pass
-
-    # @arc4.abimethod
-    # def set_deadline(self, deadline: arc4.UInt64) -> None:
-    #     """
-    #     Set deadline to configure. Should be called by creator.
-    #     """
-    #     pass
-
-    # @arc4.abimethod
-    # def set_period(self, period: arc4.UInt64) -> None:
-    #     """
-    #     Set lockup period. Should be called by creator.
-    #     """
-    #     pass
 
     @arc4.abimethod
     def set_vesting_delay(self, vesting_delay: arc4.UInt64) -> None:
