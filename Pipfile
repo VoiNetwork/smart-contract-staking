@@ -5,13 +5,12 @@ verify_ssl = true
 
 [packages]
 algokit = "==2.2.3"
-puyapy = ">=2.2.0"
-algopy = "*"
-algorand-python-testing = "*"
+puyapy = "==3.0.2"
 
 [dev-packages]
 pytest = "*"
 pytest-cov = "*"
+algorand-python-testing = "*"
 
 [requires]
 python_version = "3.12.3"

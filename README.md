@@ -53,3 +53,11 @@ Generate plot and csv file for all lockup period options
 ```
 python simulate.py
 ```
+
+### GitHub Actions
+
+To run the GitHub Action workflows locally use [act](https://github.com/nektos/act) to simulate the GitHub Actions environment.
+
+```bash
+act -s GITHUB_TOKEN="$(gh auth token)" --container-architecture linux/amd64
+```
