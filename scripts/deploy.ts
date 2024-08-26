@@ -568,14 +568,18 @@ do {
 } while (0); // end reward
 // enter airdrop factory
 do {
-  break;
+  //break;
   const ctcInfo = Number(CTC_INFO_FACTORY_AIRDROP);
-  const spec = {
-    name: "",
-    desc: "",
-    methods: AirdropFactorySpec.contract.methods,
-    events: [],
+  const ctcAddr = algosdk.getApplicationAddress(ctcInfo);
+  const makeSpec = (methods: any) => {
+    return {
+      name: "",
+      desc: "",
+      methods,
+      events: [],
+    };
   };
+  const spec = makeSpec(AirdropSpec.contract.methods);
   const makeCi = (ctcInfo: number, addr: string) => {
     return new CONTRACT(ctcInfo, algodClient, indexerClient, spec, {
       addr,
@@ -583,6 +587,56 @@ do {
     });
   };
   const ci = makeCi(ctcInfo, addr);
+  // cleanup as funder
+  do {
+    break;
+    console.log("close out all contracts as funder");
+    console.log({ addr });
+    const {
+      account: { ["created-apps"]: createdApps },
+    } = await indexerClient.lookupAccountByID(ctcAddr).do();
+    console.log(createdApps);
+    for await (const app of createdApps) {
+      const ctcInfo = app.id;
+      const ci = new CONTRACT(
+        ctcInfo,
+        algodClient,
+        indexerClient,
+        makeSpec(AirdropSpec.contract.methods),
+        {
+          addr,
+          sk: new Uint8Array(0),
+        }
+      );
+      // owner withdraws (simulate for mab)
+      do {
+        break;
+        // need to simulate as owner
+        ci.setFee(2000);
+        const withdrawR = await ci.withdraw(0);
+        if (!withdrawR.success) {
+          console.log(withdrawR);
+          break;
+        }
+        const withdraw = withdrawR.returnValue;
+        console.log("mab", withdraw);
+      } while (0);
+      // close
+      do {
+        //break;
+        ci.setFee(3000);
+        ci.setOnComplete(5); // deleteApplicationOC
+        const closeR = await ci.close();
+        console.log(closeR);
+        if (closeR.success) {
+          const res = await signSendAndConfirm(closeR.txns, sk);
+          console.log(res);
+        }
+      } while (0);
+      // break;
+    }
+  } while (0);
+
   // update (only used for non-Deployable contracts)
   do {
     break;
@@ -639,7 +693,7 @@ do {
     ci.setPaymentAmount(paymentAmount);
     ci.setFee(5000);
     // begin params
-    const owner = addr2; 
+    const owner = addr2;
     const funder = addr;
     const now: number = moment().unix();
     const deadline = now + 3600 * 24; // 1 hour
