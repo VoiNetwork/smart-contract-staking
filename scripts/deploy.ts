@@ -1,4 +1,5 @@
 import fs from "fs";
+import axios from "axios";
 import csv from "csv-parser";
 import { AirdropClient, APP_SPEC as AirdropSpec } from "./AirdropClient.js";
 import {
@@ -30,6 +31,15 @@ import moment from "moment";
 
 import * as dotenv from "dotenv";
 dotenv.config({ path: ".env" });
+
+const makeSpec = (methods: any) => {
+  return {
+    name: "",
+    desc: "",
+    methods,
+    events: [],
+  };
+};
 
 const { MN, MN2, MN3, CTC_INFO_FACTORY_AIRDROP } = process.env;
 
@@ -93,7 +103,7 @@ const deployWhat: string = "airdrop-factory";
 // deploy contracts
 
 do {
-  break;
+  //break;
   switch (deployWhat) {
     case "base-factory": {
       const appClient = new BaseFactoryClient(
@@ -187,6 +197,89 @@ do {
     }
   }
 } while (0); // end deploy
+// enter airdrop factory cleanup
+do {
+  break;
+  console.log("airdrop factory cleanup");
+  const {
+    data: { accounts },
+  } = await axios.get(
+    `https://arc72-idx.nautilus.sh/v1/scs/accounts?parentId=${CTC_INFO_FACTORY_AIRDROP}&deleted=0`
+  );
+  for await (const account of accounts) {
+    const { contractId, global_funder, global_funding, global_total } = account;
+    if (global_funder !== addr) continue;
+    const now = moment().unix();
+    if (global_funding === 1) {
+      const ci = new CONTRACT(
+        contractId,
+        algodClient,
+        indexerClient,
+        makeSpec(AirdropSpec.contract.methods),
+        {
+          addr,
+          sk: new Uint8Array(0),
+        }
+      );
+      // close
+      ci.setFee(3000);
+      ci.setOnComplete(5); // deleteApplicationOC
+      const closeR = await ci.close();
+      console.log(closeR);
+      if (closeR.success) {
+        console.log("closing...");
+        const res = await signSendAndConfirm(closeR.txns, sk);
+        console.log(res);
+        break;
+      }
+    }
+    if (!global_funding) {
+      const ci = new CONTRACT(
+        contractId,
+        algodClient,
+        indexerClient,
+        makeSpec(AirdropSpec.contract.methods),
+        {
+          addr,
+          sk: new Uint8Array(0),
+        }
+      );
+      const set_fundingR = await ci.set_funding(1);
+      console.log(set_fundingR);
+      console.log(set_fundingR);
+      if (set_fundingR.success) {
+        console.log("funding");
+        const res2 = await signSendAndConfirm(set_fundingR.txns, key);
+        console.log(res2);
+        break;
+      }
+    } else {
+      console.log(`[${contractId}] something else`);
+      // try close
+      const ci = new CONTRACT(
+        contractId,
+        algodClient,
+        indexerClient,
+        makeSpec(AirdropSpec.contract.methods),
+        {
+          addr,
+          sk: new Uint8Array(0),
+        }
+      );
+      ci.setFee(3000);
+      ci.setOnComplete(5); // deleteApplicationOC
+      const closeR = await ci.close();
+      console.log(closeR);
+      if (closeR.success) {
+        console.log("closing...");
+        //const res = await signSendAndConfirm(closeR.txns, sk);
+        //console.log(res);
+        break;
+      }
+    }
+  }
+} while (0); // end airdrop factory cleanup
+
 // enter messenger
 do {
   break;
@@ -310,7 +403,7 @@ do {
   } while (0); // end update
   // create
   do {
-    //break;
+    break;
     const paymentAmount = 1e6 + 677500 + 100000; // MBR increase for new contract + min balance
     ci.setPaymentAmount(paymentAmount);
     ci.setFee(6000);
@@ -568,23 +661,20 @@ do {
 } while (0); // end reward
 // enter airdrop factory
 do {
-  //break;
+  break;
   const ctcInfo = Number(CTC_INFO_FACTORY_AIRDROP);
   const ctcAddr = algosdk.getApplicationAddress(ctcInfo);
-  const makeSpec = (methods: any) => {
-    return {
-      name: "",
-      desc: "",
-      methods,
-      events: [],
-    };
-  };
-  const spec = makeSpec(AirdropSpec.contract.methods);
   const makeCi = (ctcInfo: number, addr: string) => {
-    return new CONTRACT(ctcInfo, algodClient, indexerClient, spec, {
-      addr,
-      sk: new Uint8Array(0),
-    });
+    return new CONTRACT(
+      ctcInfo,
+      algodClient,
+      indexerClient,
+      makeSpec(AirdropFactorySpec.contract.methods),
+      {
+        addr,
+        sk: new Uint8Array(0),
+      }
+    );
   };
   const ci = makeCi(ctcInfo, addr);
   // cleanup as funder

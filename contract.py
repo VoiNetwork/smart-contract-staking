@@ -810,6 +810,8 @@ class Airdrop(
         self.lockup_delay = TemplateVar[UInt64]("LOCKUP_DELAY")
         self.vesting_delay = TemplateVar[UInt64]("VESTING_DELAY")
         self.period_limit = TemplateVar[UInt64]("PERIOD_LIMIT")
+        self.distribution_count = TemplateVar[UInt64]("DISTRIBUTION_COUNT") 
+        self.distribution_seconds = TemplateVar[UInt64]("DISTRIBUTION_SECONDS")
         # fundable state
         self.funder = Account()
         self.funding = UInt64()
