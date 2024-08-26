@@ -1,0 +1,17 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[packages]
+algokit = "==2.2.3"
+puyapy = ">=2.2.0"
+algopy = "*"
+algorand-python-testing = "*"
+
+[dev-packages]
+pytest = "*"
+pytest-cov = "*"
+
+[requires]
+python_version = "3.12.3"
