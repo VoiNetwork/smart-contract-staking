@@ -93,7 +93,7 @@ const deployWhat: string = "airdrop-factory";
 // deploy contracts
 
 do {
-  //break;
+  break;
   switch (deployWhat) {
     case "base-factory": {
       const appClient = new BaseFactoryClient(
