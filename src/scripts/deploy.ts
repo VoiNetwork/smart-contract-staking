@@ -1,27 +1,27 @@
 import fs from "fs";
 import axios from "axios";
 import csv from "csv-parser";
-import { AirdropClient, APP_SPEC as AirdropSpec } from "./AirdropClient.js";
+import { AirdropClient, APP_SPEC as AirdropSpec } from "./AirdropClient";
 import {
   AirdropFactoryClient,
   APP_SPEC as AirdropFactorySpec,
-} from "./AirdropFactoryClient.js";
+} from "./AirdropFactoryClient";
 import {
   BaseFactoryClient,
   APP_SPEC as BaseFactorySpec,
-} from "./BaseFactoryClient.js";
+} from "./BaseFactoryClient";
 import {
   StakeRewardFactoryClient,
   APP_SPEC as StakeRewardFactorySpec,
-} from "./StakeRewardFactoryClient.js";
+} from "./StakeRewardFactoryClient";
 import {
   EarlyStakeRewardFactoryClient,
   APP_SPEC as EarlyStakeRewardFactorySpec,
-} from "./EarlyStakeRewardFactoryClient.js";
+} from "./EarlyStakeRewardFactoryClient";
 import {
   MessengerClient,
   APP_SPEC as MessengerSpec,
-} from "./MessengerClient.js";
+} from "./MessengerClient";
 
 import algosdk from "algosdk";
 

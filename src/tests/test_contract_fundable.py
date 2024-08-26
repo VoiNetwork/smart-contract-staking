@@ -4,7 +4,7 @@ from algopy_testing import AlgopyTestContext, algopy_testing_context
 import algopy
 from unittest.mock import patch, MagicMock
 import typing
-from contract import Fundable
+from src.contract import Fundable
 
 zero_address = algopy.arc4.Address(
     "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"

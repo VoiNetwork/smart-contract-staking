@@ -4,7 +4,7 @@ from algopy_testing import AlgopyTestContext, algopy_testing_context
 from unittest.mock import MagicMock
 import typing
 import algopy
-from contract import Airdrop
+from src.contract import Airdrop
 
 zero_address = algopy.arc4.Address(
     "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"

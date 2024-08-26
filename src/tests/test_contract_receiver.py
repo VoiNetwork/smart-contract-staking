@@ -2,9 +2,9 @@ from collections.abc import Generator
 import pytest
 from algopy_testing import AlgopyTestContext, algopy_testing_context
 import algopy
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 import typing
-from contract import Receiver
+from src.contract import Receiver
 
 zero_address = algopy.arc4.Address(
     "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"

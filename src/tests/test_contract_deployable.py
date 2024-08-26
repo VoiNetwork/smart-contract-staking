@@ -1,7 +1,7 @@
 from collections.abc import Generator
 import pytest
 from algopy_testing import AlgopyTestContext, algopy_testing_context
-from contract import Deployable
+from src.contract import Deployable
 
 @pytest.fixture()
 def context() -> Generator[AlgopyTestContext, None, None]:

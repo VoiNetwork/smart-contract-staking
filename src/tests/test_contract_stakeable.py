@@ -2,7 +2,7 @@ from collections.abc import Generator
 import pytest
 from algopy_testing import AlgopyTestContext, algopy_testing_context
 import algopy
-from contract import Stakeable, Bytes32, Bytes64
+from src.contract import Stakeable, Bytes32, Bytes64
 
 zero_address = algopy.arc4.Address(
     "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
