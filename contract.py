@@ -99,8 +99,7 @@ class Fundable(FundableInterface):
         assert Txn.sender == self.funder, "must be funder"
         #########################################
         assert (
-            self.funding == UInt64(0) 
-            or self.funding > Global.latest_timestamp
+            self.funding == UInt64(0) or self.funding > Global.latest_timestamp
         ), "funding not be initialized or can be extended"
         #########################################
         self.funding = funding.native
@@ -127,13 +126,6 @@ class OwnableInterface(ARC4Contract):
         """
         pass
 
-    @subroutine
-    def get_owner(self) -> Account:
-        """
-        Get the owner of the contract.
-        """
-        return Account()
-
 
 class Ownable(OwnableInterface):
     def __init__(self) -> None:
@@ -143,10 +135,6 @@ class Ownable(OwnableInterface):
     def transfer(self, new_owner: arc4.Address) -> None:
         assert Txn.sender == self.owner, "must be owner"
         self.owner = new_owner.native
-
-    @subroutine
-    def get_owner(self) -> Account:
-        return self.owner
 
 
 ##################################################
@@ -309,7 +297,12 @@ class UpgradeableInterface(ARC4Contract):
 
 class Upgradeable(UpgradeableInterface, OwnableInterface):
     def __init__(self) -> None:
-        super().__init__()
+        # ownable state
+        self.owner = Account()
+        # upgradeable state
+        self.contract_version = UInt64()
+        self.deployment_version = UInt64()
+        self.updatable = bool(1)
 
     @arc4.abimethod
     def set_version(
@@ -376,6 +369,10 @@ class LockableInterface(ARC4Contract):
         self.lockup_delay = TemplateVar[UInt64]("LOCKUP_DELAY")  # ex) 12
         self.vesting_delay = TemplateVar[UInt64]("VESTING_DELAY")  # ex) 12
         self.period_limit = TemplateVar[UInt64]("PERIOD_LIMIT")  # ex) 5
+        self.distribution_count = TemplateVar[UInt64]("DISTRIBUTION_COUNT")  # ex) 12
+        self.distribution_seconds = TemplateVar[UInt64](
+            "DISTRIBUTION_SECONDS"
+        )  # ex) 2592000
 
     @arc4.abimethod
     def preconfigure(self, period: arc4.UInt64, deadline: arc4.UInt64) -> None:
@@ -474,6 +471,10 @@ class Lockable(OwnableInterface, LockableInterface, FundableInterface):
         self.lockup_delay = TemplateVar[UInt64]("LOCKUP_DELAY")
         self.vesting_delay = TemplateVar[UInt64]("VESTING_DELAY")
         self.period_limit = TemplateVar[UInt64]("PERIOD_LIMIT")
+        self.distribution_count = TemplateVar[UInt64]("DISTRIBUTION_COUNT")
+        self.distribution_seconds = TemplateVar[UInt64]("DISTRIBUTION_SECONDS")
+        # prevent division by zero in calculate_mab_pure
+        assert self.distribution_seconds > 0, "distribution seconds must be positive"
         # fundable state
         self.funder = Account()
         self.funding = UInt64()
@@ -664,6 +665,8 @@ class Lockable(OwnableInterface, LockableInterface, FundableInterface):
             self.period,
             self.funding,
             self.total,
+            self.distribution_count,
+            self.distribution_seconds,
         )
         return min_balance
 
@@ -978,28 +981,6 @@ class StakeRewardFactory(BaseFactory):
     def __init__(self) -> None:
         super().__init__()
 
-    ##############################################
-    # @arc4.abimethod
-    # def update(self) -> None:
-    #      pass
-    ##############################################
-    # @arc4.abimethod
-    # def remote_update(self, app_id: arc4.UInt64) -> None:
-    #     pass
-    ##############################################
-    # function: create
-    # arguments:
-    # - owner, who is the beneficiary
-    # - funder, who funded the contract
-    # - delegate, who is the delegate
-    # - period, lockup period
-    # returns: app id
-    # purpose: create airdrop
-    # pre-conditions
-    # - payment amount >= 677500 + 100000
-    # post-conditions:
-    # - create airdrop
-    ##############################################
     @arc4.abimethod
     def create(
         self,

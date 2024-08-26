@@ -19,6 +19,8 @@ CMD /root/.local/bin/algokit compile py \
     --template-var LOCKUP_DELAY=12 \
     --template-var PERIOD_SECONDS=3600 \
     --template-var MESSENGER_ID=73060985 \
+    --template-var DISTRIBUTION_COUNT=12 \
+    --template-var DISTRIBUTION_SECONDS=3600 \
     --out-dir /artifacts \
     /src/contract.py && \
     /root/.local/bin/algokit generate client /artifacts/Base.arc32.json --language typescript --output /artifacts/BaseClient.ts && \
@@ -48,6 +50,8 @@ CMD /root/.local/bin/algokit compile py \
     --template-var LOCKUP_DELAY=1 \
     --template-var PERIOD_SECONDS=5 \
     --template-var MESSENGER_ID=73060985 \
+    --template-var DISTRIBUTION_COUNT=12 \
+    --template-var DISTRIBUTION_SECONDS=5 \
     --out-dir /artifacts \
     /src/contract.py && \
     /root/.local/bin/algokit generate client /artifacts/EarlyStakeReward.arc32.json --language typescript --output /artifacts/EarlyStakeRewardClient.ts && \

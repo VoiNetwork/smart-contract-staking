@@ -11,18 +11,6 @@ Implementation of smart contract for staking solution described in document [Sma
 
 ## commands
 
-### build all using algokit
-```shell
-algokit compile py contract.py --output-teal
-algokit generate client SmartContractStaking.arc32.json --language typescript --output SmartContractStakingClient.ts
-algokit generate client SmartContractStaking.arc32.json --language python --output SmartContractStakingClient.py
-```
-
-### build and run script
-```shell
-(docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder && cp -v artifacts/BaseClient.ts ./scripts/ && cp -v artifacts/AirdropClient.ts ./scripts/ && cp -v artifacts/StakeRewardClient.ts ./scripts/  && cp -v artifacts/EarlyStakeRewardClient.ts ./scripts/ && cp -v artifacts/BaseFactoryClient.ts ./scripts/ && cp -v artifacts/AirdropFactoryClient.ts ./scripts/ && cp -v artifacts/StakeRewardFactoryClient.ts ./scripts/ && cp -v artifacts/EarlyStakeRewardFactoryClient.ts ./scripts/ && cp -v artifacts/MessengerClient.ts ./scripts/ && (cd scripts/ && npx tsc && node deploy.js))
-```
-
 ### build all using docker
 
 ```shell
@@ -31,6 +19,29 @@ docker build . -t algokit-builder
  
 ```shell
 docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder
+```
+
+### build and run script
+```shell
+(docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder && cp -v artifacts/BaseClient.ts ./scripts/ && cp -v artifacts/AirdropClient.ts ./scripts/ && cp -v artifacts/StakeRewardClient.ts ./scripts/  && cp -v artifacts/EarlyStakeRewardClient.ts ./scripts/ && cp -v artifacts/BaseFactoryClient.ts ./scripts/ && cp -v artifacts/AirdropFactoryClient.ts ./scripts/ && cp -v artifacts/StakeRewardFactoryClient.ts ./scripts/ && cp -v artifacts/EarlyStakeRewardFactoryClient.ts ./scripts/ && cp -v artifacts/MessengerClient.ts ./scripts/)
+```
+
+```
+(cd scripts && npx tsc && node deploy.js)
+```
+
+### unit test
+
+```shell
+pytest
+```
+
+### check mab
+
+Run the following command to make sure the mab function in the contract matches the mab function in the simulateion python code.
+
+```shell
+bash check_mab.sh
 ```
 
 ### simulate
