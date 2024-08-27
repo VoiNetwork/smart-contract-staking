@@ -13,8 +13,8 @@ from algopy import (
     op,
     subroutine,
 )
-from contract_mab import calculate_mab_pure
-from utils import require_payment, get_available_balance, close_offline_on_delete
+from src.contract_mab import calculate_mab_pure
+from src.utils import require_payment, get_available_balance, close_offline_on_delete
 
 Bytes32: typing.TypeAlias = arc4.StaticArray[arc4.Byte, typing.Literal[32]]
 Bytes64: typing.TypeAlias = arc4.StaticArray[arc4.Byte, typing.Literal[64]]

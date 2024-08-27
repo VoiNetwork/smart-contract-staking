@@ -8,6 +8,7 @@ COPY /src /src
 COPY Pipfile /
 COPY Pipfile.lock /
 COPY pytest.ini /
+COPY generate_clients.sh /
 
 WORKDIR /
 
@@ -17,15 +18,10 @@ RUN apt-get update && apt-get install -y jq
 RUN python3 -m pip install --user pipenv && \
     /root/.local/bin/pipenv install --deploy --ignore-pipfile --system
 
+RUN mkdir -p /artifacts
+
 # uses latest version of puyapy
-CMD generate_clients() { \
-    for artifact in Base Airdrop StakeReward BaseFactory AirdropFactory StakeRewardFactory Messenger EarlyStakeReward EarlyStakeRewardFactory; do \
-        /root/.local/bin/pipenv run algokit generate client /artifacts/${artifact}.arc32.json --language typescript --output /artifacts/${artifact}Client.ts && \
-        /root/.local/bin/pipenv run algokit generate client /artifacts/${artifact}.arc32.json --language python --output /artifacts/${artifact}Client.py && \
-        jq '.contract' /artifacts/${artifact}.arc32.json > /artifacts/${artifact,,}.contract.json; \
-    done; \
-}; \
-/root/.local/bin/pipenv run algokit compile py \
+CMD /root/.local/bin/pipenv run algokit compile py \
     --output-bytecode \
     --template-var PERIOD_LIMIT=5 \
     --template-var VESTING_DELAY=12 \
@@ -36,7 +32,7 @@ CMD generate_clients() { \
     --template-var DISTRIBUTION_SECONDS=3600 \
     --out-dir /artifacts \
     /src/contract.py && \
-generate_clients && \
+/generate_clients.sh && \
 /root/.local/bin/pipenv run algokit compile py \
     --output-bytecode \
     --template-var PERIOD_LIMIT=18 \
@@ -48,4 +44,4 @@ generate_clients && \
     --template-var DISTRIBUTION_SECONDS=5 \
     --out-dir /artifacts \
     /src/contract.py && \
-generate_clients
+/generate_clients.sh
