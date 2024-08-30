@@ -23,7 +23,7 @@ docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder
 
 ### build and run script
 ```shell
-(docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder && cp -v artifacts/BaseClient.ts ./scripts/ && cp -v artifacts/AirdropClient.ts ./scripts/ && cp -v artifacts/StakeRewardClient.ts ./scripts/  && cp -v artifacts/EarlyStakeRewardClient.ts ./scripts/ && cp -v artifacts/BaseFactoryClient.ts ./scripts/ && cp -v artifacts/AirdropFactoryClient.ts ./scripts/ && cp -v artifacts/StakeRewardFactoryClient.ts ./scripts/ && cp -v artifacts/EarlyStakeRewardFactoryClient.ts ./scripts/ && cp -v artifacts/MessengerClient.ts ./scripts/)
+(docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder && cp -v artifacts/AirdropClient.ts ./scripts/ && cp -v artifacts/AirdropFactoryClient.ts ./scripts/ && cp -v artifacts/StakingFactoryClient.ts ./scripts/ && cp -v artifacts/MessengerClient.ts ./scripts/ && cp -v artifacts/CompensationFactoryClient.ts ./scripts/)
 ```
 
 ```

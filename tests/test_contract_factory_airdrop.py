@@ -39,7 +39,7 @@ def test_factory_airdrop(contract: AirdropFactory):
 def test_factory_airdrop_create(contract: AirdropFactory, context: AlgopyTestContext):
     app = context.ledger.get_app(contract)
     extra_payment = context.any.txn.payment(
-        amount=777500,
+        amount=884500 + 100000,
         sender=context.default_sender,
         receiver=app.address,
     )

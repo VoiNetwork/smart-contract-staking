@@ -345,8 +345,8 @@ def plot_mab_compensation():
 # TOD - generate plot from args
 
 plot_mab_airdrop()
-plot_mab_staking()
-plot_mab_compensation()
+#plot_mab_staking()
+#plot_mab_compensation()
 
 plt.ylabel("MB")
 plt.xlabel("t")
