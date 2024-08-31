@@ -21,4 +21,4 @@ RUN python3 -m pip install --user pipenv && \
 RUN mkdir -p /artifacts
 
 # uses latest version of puyapy
-CMD /generate_clients.sh Messenger 
+CMD /generate_clients.sh
