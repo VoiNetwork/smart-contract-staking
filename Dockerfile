@@ -21,27 +21,4 @@ RUN python3 -m pip install --user pipenv && \
 RUN mkdir -p /artifacts
 
 # uses latest version of puyapy
-CMD /root/.local/bin/pipenv run algokit compile py \
-    --output-bytecode \
-    --template-var PERIOD_LIMIT=5 \
-    --template-var VESTING_DELAY=12 \
-    --template-var LOCKUP_DELAY=12 \
-    --template-var PERIOD_SECONDS=3600 \
-    --template-var MESSENGER_ID=73060985 \
-    --template-var DISTRIBUTION_COUNT=12 \
-    --template-var DISTRIBUTION_SECONDS=3600 \
-    --out-dir /artifacts \
-    /src/contract.py && \
-/generate_clients.sh && \
-/root/.local/bin/pipenv run algokit compile py \
-    --output-bytecode \
-    --template-var PERIOD_LIMIT=18 \
-    --template-var VESTING_DELAY=12 \
-    --template-var LOCKUP_DELAY=1 \
-    --template-var PERIOD_SECONDS=5 \
-    --template-var MESSENGER_ID=73060985 \
-    --template-var DISTRIBUTION_COUNT=12 \
-    --template-var DISTRIBUTION_SECONDS=5 \
-    --out-dir /artifacts \
-    /src/contract.py && \
-/generate_clients.sh
+CMD /generate_clients.sh Messenger 

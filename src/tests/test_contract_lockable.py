@@ -91,10 +91,12 @@ def test_lockable_setup(contract: Lockable, context: AlgopyTestContext):
     Must be called by creator
     """
     # TODO test abi_call by creator
+    new_deployer = context.any.arc4.address()
     new_owner = context.any.arc4.address()
     new_funder = context.any.arc4.address()
     new_initial = context.any.arc4.uint64()
-    contract.setup(new_owner, new_funder, new_initial)
+    contract.setup(new_deployer, new_owner, new_funder, new_initial)
+    assert contract.deployer == new_deployer
     assert contract.owner == new_owner
     assert contract.funder == new_funder
     assert contract.initial == new_initial
@@ -186,6 +188,16 @@ def test_lockable_close(contract: Lockable, context: AlgopyTestContext):
     # TODO close remaineder amount is balance before minus global min balance
     # TODO test outcome of close_remainder_to contract owner
 
+def test_lockable_set_distribution_cound(contract: Lockable, context: AlgopyTestContext):
+    """
+    Test the set_distribution_count function
+    Must be called by owner
+    """
+    assert contract.owner == zero_address
+    assert contract.funder == zero_address
+    new_distribution_count = context.any.arc4.uint64()
+    contract.set_distribution_count(new_distribution_count)
+    assert contract.distribution_count == new_distribution_count
 
 def test_lockable_calculate_min_balance(contract: Lockable, context: AlgopyTestContext):
     """

@@ -36,10 +36,30 @@ def test_upgradable_set_version(contract: Upgradeable, context: AlgopyTestContex
     Test the set_version function
     Must be called by creator
     """
-    # TODO test abi_call by creator 
+    # TODO test abi_call by creator
     contract.set_version(algopy.arc4.UInt64(1), algopy.arc4.UInt64(1))
     assert contract.contract_version == 1
     assert contract.deployment_version == 1
 
 
+def test_upgradable_approve_update(contract: Upgradeable, context: AlgopyTestContext):
+    """
+    Test the approve_update function
+    Must be called by owner
+    """
+    with pytest.raises(Exception):
+        contract.approve_update(algopy.arc4.Bool(0))
+    contract.owner = context.default_sender
+    assert contract.updatable == bool(1)
+    contract.approve_update(algopy.arc4.Bool(0))
+    assert contract.updatable == bool(0)
+
 # TODO mock update
+def test_upgradable_update(contract: Upgradeable, context: AlgopyTestContext):
+    """
+    Test the update function
+    Must be called by creator
+    """
+    # TODO test abi_call by creator
+    # TODO test new appApproval
+    # TODO test updatable

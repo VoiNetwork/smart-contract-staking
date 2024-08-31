@@ -1,47 +1,33 @@
 import fs from "fs";
 import axios from "axios";
 import csv from "csv-parser";
-import { AirdropClient, APP_SPEC as AirdropSpec } from "./AirdropClient";
+import { AirdropClient, APP_SPEC as AirdropSpec } from "./AirdropClient.js";
 import {
   AirdropFactoryClient,
   APP_SPEC as AirdropFactorySpec,
-} from "./AirdropFactoryClient";
+} from "./AirdropFactoryClient.js";
 import {
-  BaseFactoryClient,
-  APP_SPEC as BaseFactorySpec,
-} from "./BaseFactoryClient";
-import {
-  StakeRewardFactoryClient,
-  APP_SPEC as StakeRewardFactorySpec,
-} from "./StakeRewardFactoryClient";
-import {
-  EarlyStakeRewardFactoryClient,
-  APP_SPEC as EarlyStakeRewardFactorySpec,
-} from "./EarlyStakeRewardFactoryClient";
+  StakingFactoryClient,
+  APP_SPEC as StakingFactorySpec,
+} from "./StakingFactoryClient.js";
 import {
   MessengerClient,
   APP_SPEC as MessengerSpec,
-} from "./MessengerClient";
-
+} from "./MessengerClient.js";
 import algosdk from "algosdk";
-
 import { CONTRACT } from "ulujs";
-
 import moment from "moment";
-
 import * as dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
-const makeSpec = (methods: any) => {
-  return {
-    name: "",
-    desc: "",
-    methods,
-    events: [],
-  };
-};
-
-const { MN, MN2, MN3, CTC_INFO_FACTORY_AIRDROP } = process.env;
+const {
+  MN,
+  MN2,
+  MN3,
+  CTC_INFO_FACTORY_AIRDROP,
+  CTC_INFO_FACTORY_STAKING,
+  CTC_INFO_AIRDROP,
+} = process.env;
 
 const mnemonic = MN || "";
 const mnemonic2 = MN2 || "";
@@ -51,7 +37,7 @@ const { addr, sk } = algosdk.mnemonicToSecretKey(mnemonic);
 const { addr: addr2, sk: sk2 } = algosdk.mnemonicToSecretKey(mnemonic2);
 const { addr: addr3, sk: sk3 } = algosdk.mnemonicToSecretKey(mnemonic3);
 
-console.log({ addr, addr2, addr3 });
+//console.log({ addr, addr2, addr3 });
 
 const address = addr;
 const key = sk;
@@ -71,6 +57,15 @@ const indexerClient = new algosdk.Indexer(
   process.env.INDEXER_PORT || ""
 );
 
+const makeSpec = (methods: any) => {
+  return {
+    name: "",
+    desc: "",
+    methods,
+    events: [],
+  };
+};
+
 const signSendAndConfirm = async (txns: string[], sk: any) => {
   const stxns = txns
     .map((t) => new Uint8Array(Buffer.from(t, "base64")))
@@ -78,51 +73,29 @@ const signSendAndConfirm = async (txns: string[], sk: any) => {
     .map((t: any) => algosdk.signTransaction(t, sk));
   console.log(stxns.map((res: any) => res.txID));
   await algodClient.sendRawTransaction(stxns.map((txn: any) => txn.blob)).do();
-  await Promise.all(
+  return await Promise.all(
     stxns.map((res: any) =>
       algosdk.waitForConfirmation(algodClient, res.txID, 4)
     )
   );
 };
 
-const deployer = {
-  addr: address,
-  sk: key,
-};
-
-// select what to deploy
-// - base-factory
-// - airdrop-factory
-// - reward-factory
-// - early-factory
-// - root-factory
-// - messenger
-
-const deployWhat: string = "airdrop-factory";
-
-// deploy contracts
-
+// enter deploy
 do {
+  const deployer = {
+    addr: address,
+    sk: key,
+  };
+
+  // select what to deploy
+  // - airdrop-factory
+  // - staking-factory
+  // - messenger
+
+  const deployWhat: string = "staking-factory";
+
   //break;
   switch (deployWhat) {
-    case "base-factory": {
-      const appClient = new BaseFactoryClient(
-        {
-          resolveBy: "creatorAndName",
-          findExistingUsing: indexerClient,
-          creatorAddress: deployer.addr,
-          name: "f1",
-          sender: deployer,
-        },
-        algodClient
-      );
-      const app = await appClient.deploy({
-        deployTimeParams: {},
-        onUpdate: "update",
-        onSchemaBreak: "fail",
-      });
-      break;
-    }
     case "airdrop-factory": {
       const appClient = new AirdropFactoryClient(
         {
@@ -141,31 +114,13 @@ do {
       });
       break;
     }
-    case "reward-factory": {
-      const appClient = new StakeRewardFactoryClient(
+    case "staking-factory": {
+      const appClient = new StakingFactoryClient(
         {
           resolveBy: "creatorAndName",
           findExistingUsing: indexerClient,
           creatorAddress: deployer.addr,
-          name: "f4",
-          sender: deployer,
-        },
-        algodClient
-      );
-      const app = await appClient.deploy({
-        deployTimeParams: {},
-        onUpdate: "update",
-        onSchemaBreak: "fail",
-      });
-      break;
-    }
-    case "early-factory": {
-      const appClient = new EarlyStakeRewardFactoryClient(
-        {
-          resolveBy: "creatorAndName",
-          findExistingUsing: indexerClient,
-          creatorAddress: deployer.addr,
-          name: "0",
+          name: "staking-factory-2",
           sender: deployer,
         },
         algodClient
@@ -373,15 +328,14 @@ do {
     console.log(PartKeyInfoEvents);
   } while (0); // end get events
 } while (0); // end messenger
-// TODO: update naming to vanilla
-// enter base factory
+// enter staking factory
 do {
   break;
-  const ctcInfo = Number(1);
+  const ctcInfo = Number(CTC_INFO_FACTORY_STAKING);
   const spec = {
     name: "",
     desc: "",
-    methods: BaseFactorySpec.contract.methods,
+    methods: StakingFactorySpec.contract.methods,
     events: [],
   };
   const makeCi = (ctcInfo: number, addr: string) => {
@@ -391,7 +345,7 @@ do {
     });
   };
   const ci = makeCi(ctcInfo, addr);
-  // update
+  // update (only used for non-Deployable contracts)
   do {
     break;
     //const BoxPayment = 105700;
@@ -401,264 +355,24 @@ do {
     const res = await signSendAndConfirm(updateR.txns, sk);
     console.log(res);
   } while (0); // end update
-  // create
+  // create staking
   do {
     break;
-    const paymentAmount = 1e6 + 677500 + 100000; // MBR increase for new contract + min balance
+    const paymentAmount = 1e6 + 834500 + 100000; // MBR increase for new contract
     ci.setPaymentAmount(paymentAmount);
-    ci.setFee(6000);
-    const delegate = addr;
-    const createR = await ci.create(delegate);
-    console.log(createR, delegate);
-    if (!createR.success) {
-      console.log("create failed");
-      break;
-    }
-    const res = await signSendAndConfirm(createR.txns, sk);
-    console.log(res);
-  } while (0); // end create
-} while (0); // end factory
-// enter early factory
-do {
-  break;
-  const ctcInfo = Number(1);
-  const spec = {
-    name: "",
-    desc: "",
-    methods: EarlyStakeRewardFactorySpec.contract.methods,
-    events: [],
-  };
-  const makeCi = (ctcInfo: number, addr: string) => {
-    return new CONTRACT(ctcInfo, algodClient, indexerClient, spec, {
-      addr,
-      sk: new Uint8Array(0),
-    });
-  };
-  const ci = makeCi(ctcInfo, addr);
-  // update
-  do {
-    break;
-    //const BoxPayment = 105700;
-    //ci.setPaymentAmount(BoxPayment);
-    const updateR = await ci.update();
-    console.log(updateR);
-    const res = await signSendAndConfirm(updateR.txns, sk);
-    console.log(res);
-  } while (0); // end update
-  // create
-  do {
-    break;
-    const paymentAmount = 2e6 + 677500 + 100000; // MBR increase for new contract
-    ci.setPaymentAmount(paymentAmount);
-    ci.setFee(4000);
+    ci.setFee(8000);
     const owner = addr2;
-    const funder = addr3;
-    const delegate = addr;
-    const period = 18;
+    const funder = addr;
+    const delegate = addr3;
+    const period = 9;
     const createR = await ci.create(owner, funder, delegate, period);
-    if (!createR.success) {
-      console.log("create failed");
-      break;
+    console.log(createR);
+    if (createR.success) {
+      const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);
+      console.log(appCallTxn["inner-txns"][0]["application-index"]);
     }
-    const res = await signSendAndConfirm(createR.txns, sk);
-    console.log(res);
-  } while (0); // end create
-} while (0); // end early factory
-// enter early
-do {
-  break;
-  // create instance of existing contract
-  const ctcInfo = Number(77517010);
-
-  const spec = {
-    name: "",
-    desc: "",
-    methods: AirdropSpec.contract.methods,
-    events: [],
-  };
-  const makeCi = (ctcInfo: number, addr: string) => {
-    return new CONTRACT(ctcInfo, algodClient, indexerClient, spec, {
-      addr,
-      sk: new Uint8Array(0),
-    });
-  };
-  const ci = makeCi(ctcInfo, addr);
-  const ci2 = makeCi(ctcInfo, addr2);
-  const ci3 = makeCi(ctcInfo, addr3);
-  const currentTimestamp = moment().unix();
-  // fill as funder
-  do {
-    break;
-    // get period from global state and use it to set payment amount
-    // payment amount is gte global initial
-    ci3.setPaymentAmount(1e6);
-    const fillR = await ci3.fill();
-    console.log(fillR);
-    const res = await signSendAndConfirm(fillR.txns, sk3);
-    console.log(res);
-  } while (0); // end fill
-  // owner withdraws (simulate for mab)
-  do {
-    break;
-    ci2.setFee(2000);
-    const withdrawR = await ci2.withdraw(0);
-    if (!withdrawR.success) {
-      console.log(withdrawR);
-      break;
-    }
-    const withdraw = withdrawR.returnValue;
-    console.log(withdraw);
-  } while (0); // end withdraw (simulate for mab)
-  // owner withdraw
-  do {
-    break;
-    ci2.setFee(2000);
-    const withdrawR = await ci2.withdraw(1e6 - 100000);
-    if (!withdrawR.success) {
-      console.log(withdrawR);
-      break;
-    }
-    const withdraw = withdrawR.returnValue;
-    console.log(withdraw);
-    const res = await signSendAndConfirm(withdrawR.txns, sk2);
-    console.log(res);
-  } while (0); // end withdraw
-  // only owner can withdraw
-  do {
-    break;
-    ci2.setFee(3000);
-    ci2.setOnComplete(5); // deleteApplicationOC
-    const closeR = await ci2.close();
-    console.log(closeR);
   } while (0);
-  // close
-  do {
-    break;
-    ci2.setFee(3000);
-    ci2.setOnComplete(5); // deleteApplicationOC
-    const closeR = await ci2.close();
-    console.log(closeR);
-    const res = await signSendAndConfirm(closeR.txns, sk2);
-    console.log(res);
-  } while (0); // end close
-} while (0); // end early
-// enter reward factory
-do {
-  break;
-  const ctcInfo = Number(1);
-  const spec = {
-    name: "",
-    desc: "",
-    methods: StakeRewardFactorySpec.contract.methods,
-    events: [],
-  };
-  const makeCi = (ctcInfo: number, addr: string) => {
-    return new CONTRACT(ctcInfo, algodClient, indexerClient, spec, {
-      addr,
-      sk: new Uint8Array(0),
-    });
-  };
-  const ci = makeCi(ctcInfo, addr);
-  // update
-  do {
-    break;
-    //const BoxPayment = 105700;
-    //ci.setPaymentAmount(BoxPayment);
-    const updateR = await ci.update();
-    console.log(updateR);
-    const res = await signSendAndConfirm(updateR.txns, sk);
-    console.log(res);
-  } while (0); // end update
-  // create
-  do {
-    break;
-    const paymentAmount = 677500 + 100000; // MBR increase for new contract
-    ci.setPaymentAmount(paymentAmount);
-    ci.setFee(4000);
-    const owner = addr2;
-    const funder = addr3;
-    const delegate = addr;
-    const period = 1;
-    const createR = await ci.create(owner, funder, delegate, period);
-    console.log(createR, owner, delegate);
-    if (!createR.success) {
-      console.log("create failed");
-      break;
-    }
-    const res = await signSendAndConfirm(createR.txns, sk);
-    console.log(res);
-  } while (0); // end create
-} while (0); // end reward factory
-// enter reward
-do {
-  break;
-  // create instance of existing contract
-  const ctcInfo = Number(77517391);
-
-  const spec = {
-    name: "",
-    desc: "",
-    methods: AirdropSpec.contract.methods,
-    events: [],
-  };
-  const makeCi = (ctcInfo: number, addr: string) => {
-    return new CONTRACT(ctcInfo, algodClient, indexerClient, spec, {
-      addr,
-      sk: new Uint8Array(0),
-    });
-  };
-  const ci = makeCi(ctcInfo, addr);
-  const ci2 = makeCi(ctcInfo, addr2);
-  const ci3 = makeCi(ctcInfo, addr3);
-  const currentTimestamp = moment().unix();
-  // fill as funder
-  do {
-    break;
-    // get period from global state and use it to set payment amount
-    // payment amount is gte global initial
-    ci3.setPaymentAmount(1e6);
-    const fillR = await ci3.fill();
-    console.log(fillR);
-    const res = await signSendAndConfirm(fillR.txns, sk3);
-    console.log(res);
-  } while (0); // end fill
-  // owner withdraws (simulate for mab)
-  do {
-    //break;
-    ci2.setFee(2000);
-    const withdrawR = await ci2.withdraw(0);
-    if (!withdrawR.success) {
-      console.log(withdrawR);
-      break;
-    }
-    const withdraw = withdrawR.returnValue;
-    console.log(withdraw);
-  } while (0); // end withdraw (simulate for mab)
-  // owner withdraw
-  do {
-    break;
-    ci2.setFee(2000);
-    const withdrawR = await ci2.withdraw(1e6);
-    if (!withdrawR.success) {
-      console.log(withdrawR);
-      break;
-    }
-    const withdraw = withdrawR.returnValue;
-    console.log(withdraw);
-    const res = await signSendAndConfirm(withdrawR.txns, sk2);
-    console.log(res);
-  } while (0); // end withdraw
-  // only owner can withdraw
-  do {
-    break;
-    ci2.setFee(3000);
-    ci2.setOnComplete(5); // deleteApplicationOC
-    const closeR = await ci2.close();
-    console.log(closeR);
-    const res = await signSendAndConfirm(closeR.txns, sk2);
-    console.log(res);
-  } while (0); // end close
-} while (0); // end reward
+} while (0);
 // enter airdrop factory
 do {
   break;
@@ -713,7 +427,7 @@ do {
       } while (0);
       // close
       do {
-        //break;
+        break;
         ci.setFee(3000);
         ci.setOnComplete(5); // deleteApplicationOC
         const closeR = await ci.close();
@@ -737,7 +451,7 @@ do {
     const res = await signSendAndConfirm(updateR.txns, sk);
     console.log(res);
   } while (0); // end update
-  // create batch
+  // create airdrop batch
   do {
     break;
     // read from csv
@@ -776,7 +490,7 @@ do {
         }
       });
   } while (0); // end create batch
-  // create
+  // create airdrop
   do {
     break;
     const paymentAmount = 777500 + 100000; // MBR increase for new contract
@@ -886,11 +600,12 @@ do {
       }
     });
 } while (0);
+
 // enter airdrop
 do {
-  break;
+  //break;
   // create instance of existing contract
-  const ctcInfo = Number(81432702);
+  const ctcInfo = Number(CTC_INFO_AIRDROP);
 
   const spec = {
     name: "",
@@ -911,19 +626,39 @@ do {
   const ci3 = makeCi(ctcInfo, addr3);
 
   const currentTimestamp = moment().unix();
-  // not in use, setup must be factory
-  // creator setup owner and funder
-  // do {
-  //   break;
-  //   ci.setPaymentAmount(0.1 * 1e6);
-  //   const setupR = await ci.setup(
-  //     "NL3HRVWN37WUIWGE7LXF2JBOOY36UOI4ARGERNPWK3RKEV4ISV272O2WRM",
-  //     addr
-  //   );
-  //   console.log(setupR);
-  //   const res = await signSendAndConfirm(setupR.txns, sk);
-  //   console.log(res);
-  // } while (0); // end setup
+
+  // reduce total
+  do {
+    break;
+    console.log("reduce total");
+    const reduceR = await ci.reduce_total(0.5e6);
+    console.log(reduceR);
+    const res = await signSendAndConfirm(reduceR.txns, sk);
+    console.log(res);
+  } while (0); // end reduce total
+  // abort funding
+  do {
+    break;
+    console.log("abort funding");
+    ci.setFee(3000);
+    ci.setOnComplete(5); // deleteApplicationOC
+    const abortR = await ci.abort_funding();
+    console.log(abortR);
+    const res = await signSendAndConfirm(abortR.txns, sk);
+    console.log(res);
+  } while (0); // end abort funding
+  // creator setup owner and funder (only used for non-Deployable contracts)
+  do {
+    break;
+    ci.setPaymentAmount(0.1 * 1e6);
+    const setupR = await ci.setup(
+      "NL3HRVWN37WUIWGE7LXF2JBOOY36UOI4ARGERNPWK3RKEV4ISV272O2WRM",
+      addr
+    );
+    console.log(setupR);
+    const res = await signSendAndConfirm(setupR.txns, sk);
+    console.log(res);
+  } while (0); // end setup
   // owner configure lockup period
   do {
     break;
@@ -933,8 +668,30 @@ do {
     const res = await signSendAndConfirm(configureR.txns, sk2);
     console.log(res);
   } while (0); // end configure
-
-  // funder fills contract
+  // funder fill only
+  do {
+    break;
+    console.log("fill only");
+    ci.setPaymentAmount(1e6);
+    const fillR = await ci.fill();
+    console.log(fillR);
+    if (fillR.success) {
+      const res = await signSendAndConfirm(fillR.txns, sk);
+      console.log(res);
+    }
+  } while (0);
+  // funder set funding only
+  do {
+    break;
+    console.log("set funding only");
+    const set_fundingR = await ci.set_funding(currentTimestamp);
+    console.log(set_fundingR);
+    if (set_fundingR.success) {
+      const res2 = await signSendAndConfirm(set_fundingR.txns, sk);
+      console.log(res2);
+    }
+  } while (0);
+  // funder fills and sets funding
   do {
     break;
     console.log("fill");
@@ -945,10 +702,11 @@ do {
     console.log(fillR);
     const res = await signSendAndConfirm(fillR.txns, key);
     console.log(res);
-    // const set_fundingR = await ci.set_funding(now + 60);
-    // console.log(set_fundingR);
-    // const res2 = await signSendAndConfirm(set_fundingR.txns, key);
-    // console.log(res2);
+    ci.setPaymentAmount(0);
+    const set_fundingR = await ci.set_funding(now + 60);
+    console.log(set_fundingR);
+    const res2 = await signSendAndConfirm(set_fundingR.txns, key);
+    console.log(res2);
     //TODO combine txns into group
   } while (0); // end fill
   // owner or delegate participates (participation)
@@ -1040,7 +798,7 @@ do {
       break;
     }
     const withdraw = withdrawR.returnValue;
-    console.log("mab", withdraw.toString());
+    console.log(new Date(), "mab", withdraw.toString());
   } while (0); // end withdraw (simulate for mab)
   // owner withdraw
   do {
@@ -1067,4 +825,4 @@ do {
     const res = await signSendAndConfirm(closeR.txns, sk);
     console.log(res);
   } while (0); // end close
-} while (0); // end staking
+} while (0); // end airdrop

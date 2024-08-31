@@ -4,8 +4,9 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [packages]
-algokit = "==2.2.3"
-puyapy = "==3.0.2"
+algokit = "==2.3.0"
+puyapy = "==3.0.3"
+pytest-cov = "*"
 
 [dev-packages]
 pytest = "*"
