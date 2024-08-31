@@ -12,8 +12,8 @@ from algopy import (
     op,
     subroutine,
 )
-from contract_mab import calculate_mab_pure
-from utils import require_payment, get_available_balance, close_offline_on_delete
+from src.contract_mab import calculate_mab_pure
+from src.utils import require_payment, get_available_balance, close_offline_on_delete
 
 Bytes32: typing.TypeAlias = arc4.StaticArray[arc4.Byte, typing.Literal[32]]
 Bytes64: typing.TypeAlias = arc4.StaticArray[arc4.Byte, typing.Literal[64]]
@@ -45,11 +45,11 @@ class OwnableInterface(ARC4Contract):
     Interface for all abimethods operated by owner.
     """
 
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         self.owner = Account()
 
     @arc4.abimethod
-    def transfer(self, new_owner: arc4.Address) -> None:
+    def transfer(self, new_owner: arc4.Address) -> None: # pragma: no cover
         """
         Transfer ownership of the contract to a new owner.
         """
@@ -57,7 +57,7 @@ class OwnableInterface(ARC4Contract):
 
 
 class Ownable(OwnableInterface):
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         super().__init__()
 
     @arc4.abimethod
@@ -85,20 +85,20 @@ class FundableInterface(ARC4Contract):
     - funding, when funded
     """
 
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         self.funder = Account()
         self.funding = UInt64()
         self.total = UInt64()
 
     @arc4.abimethod
-    def fill(self) -> None:
+    def fill(self) -> None: # pragma: no cover
         """
         Add funds to the contract and increments total.
         """
         pass
 
     @arc4.abimethod
-    def set_funding(self, funding: arc4.UInt64) -> None:
+    def set_funding(self, funding: arc4.UInt64) -> None: # pragma: no cover
         """
         Extend the funding period. Should be called before the funding deadline.
         Should not allow setting the funding deadline back. Can be called multiple
@@ -107,14 +107,14 @@ class FundableInterface(ARC4Contract):
         pass
 
     @arc4.abimethod(allow_actions=[OnCompleteAction.DeleteApplication])
-    def abort_funding(self) -> None:
+    def abort_funding(self) -> None: # pragma: no cover
         """
         Abort funding. Must be called when funding not initialized.
         """
         pass
 
     @arc4.abimethod
-    def reduce_total(self, adjustment: arc4.UInt64) -> None:
+    def reduce_total(self, adjustment: arc4.UInt64) -> None: # pragma: no cover
         """
         Adjust total funding. Should be called by funder when funding not initialized.
         Used to reduce the total funding amount in the contract in case of staking
@@ -124,7 +124,7 @@ class FundableInterface(ARC4Contract):
 
 
 class Fundable(FundableInterface):
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         super().__init__()
 
     @arc4.abimethod
@@ -188,12 +188,12 @@ class StakeableInterface(ARC4Contract):
     Interface for all abimethods of stakeable contract.
     """
 
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         self.delegate = Account()
         self.stakeable = bool(1)
 
     @arc4.abimethod
-    def set_delegate(self, delegate: arc4.Address) -> None:
+    def set_delegate(self, delegate: arc4.Address) -> None: # pragma: no cover
         """
         Set delegate.
         """
@@ -208,7 +208,7 @@ class StakeableInterface(ARC4Contract):
         vote_lst: arc4.UInt64,
         vote_kd: arc4.UInt64,
         sp_key: Bytes64,
-    ) -> None:
+    ) -> None: # pragma: no cover
         """
         Participate in consensus.
         """
@@ -216,7 +216,7 @@ class StakeableInterface(ARC4Contract):
 
 
 class Stakeable(StakeableInterface, OwnableInterface):
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         # ownable state
         self.owner = Account()
         # stakeable state
@@ -271,11 +271,11 @@ class DeleteableInterface(ARC4Contract):
     Interface for all abimethods of deletable contract.
     """
 
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         self.deletable = bool(1)
 
     @arc4.abimethod
-    def on_delete(self) -> None:
+    def on_delete(self) -> None: # pragma: no cover
         """
         Delete the contract.
         """
@@ -283,11 +283,11 @@ class DeleteableInterface(ARC4Contract):
 
 
 class Deleteable(DeleteableInterface):
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         super().__init__()
 
     @arc4.baremethod(allow_actions=["DeleteApplication"])
-    def on_delete(self) -> None:
+    def on_delete(self) -> None: # pragma: no cover
         ##########################################
         # WARNING: This app can be deleted by the creator (Development)
         ##########################################
@@ -307,7 +307,7 @@ class UpgradeableInterface(ARC4Contract):
     Interface for all abimethods of upgradeable contract.
     """
 
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         self.contract_version = UInt64()
         self.deployment_version = UInt64()
         self.updatable = bool(1)
@@ -315,21 +315,21 @@ class UpgradeableInterface(ARC4Contract):
     @arc4.abimethod
     def set_version(
         self, contract_version: arc4.UInt64, deployment_version: arc4.UInt64
-    ) -> None:
+    ) -> None: # pragma: no cover
         """
         Set contract and deployment version.
         """
         pass
 
     @arc4.abimethod
-    def on_update(self) -> None:
+    def on_update(self) -> None: # pragma: no cover
         """
         On update.
         """
         pass
 
     @arc4.abimethod
-    def approve_update(self, approval: arc4.Bool) -> None:
+    def approve_update(self, approval: arc4.Bool) -> None: # pragma: no cover
         """
         Approve update.
         """
@@ -337,7 +337,7 @@ class UpgradeableInterface(ARC4Contract):
 
 
 class Upgradeable(UpgradeableInterface, OwnableInterface):
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         # ownable state
         self.owner = Account()
         # upgradeable state
@@ -354,7 +354,7 @@ class Upgradeable(UpgradeableInterface, OwnableInterface):
         self.deployment_version = deployment_version.native
 
     @arc4.baremethod(allow_actions=["UpdateApplication"])
-    def on_update(self) -> None:
+    def on_update(self) -> None: 
         ##########################################
         # WARNING: This app can be updated by the creator
         ##########################################
@@ -392,12 +392,12 @@ class DeployableInterface(ARC4Contract):
     Interface for all abimethods of deployable contract.
     """
 
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         self.parent_id = UInt64()
         self.deployer = Account()
 
     @arc4.abimethod(create="require")
-    def on_create(self) -> None:
+    def on_create(self) -> None: # pragma: no cover
         """
         Execute on create.
         """
@@ -405,7 +405,7 @@ class DeployableInterface(ARC4Contract):
 
 
 class Deployable(DeployableInterface):
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         super().__init__()
 
     @arc4.baremethod(create="require")
@@ -437,7 +437,7 @@ class LockableInterface(ARC4Contract):
     - period_limit, period limit
     """
 
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         self.period = UInt64()  # 0
         self.initial = UInt64()  # 0
         self.deadline = UInt64()  # 0
@@ -451,28 +451,28 @@ class LockableInterface(ARC4Contract):
         )  # ex) 2592000
 
     @arc4.abimethod
-    def preconfigure(self, period: arc4.UInt64, deadline: arc4.UInt64) -> None:
+    def preconfigure(self, period: arc4.UInt64, deadline: arc4.UInt64) -> None: # pragma: no cover
         """
         Preconfigure lockup period and deadline.
         """
         pass
 
     @arc4.abimethod
-    def set_vesting_delay(self, vesting_delay: arc4.UInt64) -> None:
+    def set_vesting_delay(self, vesting_delay: arc4.UInt64) -> None: # pragma: no cover
         """
         Set vesting delay. Should be called by creator.
         """
         pass
 
     @arc4.abimethod
-    def set_total(self, funding: arc4.UInt64) -> None:
+    def set_total(self, funding: arc4.UInt64) -> None: # pragma: no cover
         """
         Set total funding. Should be called by creator.
         """
         pass
 
     @arc4.abimethod
-    def set_distribution_count(self, distribution_count: arc4.UInt64) -> None:
+    def set_distribution_count(self, distribution_count: arc4.UInt64) -> None: # pragma: no cover
         """
         Set distribution count. Should be called by creator.
         """
@@ -485,35 +485,35 @@ class LockableInterface(ARC4Contract):
         owner: arc4.Address,
         funder: arc4.Address,
         initial: arc4.UInt64,
-    ) -> None:
+    ) -> None: # pragma: no cover
         """
         Setup lockup. Should be called by creator.
         """
         pass
 
     @arc4.abimethod
-    def configure(self, period: arc4.UInt64) -> None:
+    def configure(self, period: arc4.UInt64) -> None: # pragma: no cover
         """
         Configure lockup period. Should be called by owner.
         """
         pass
 
     @arc4.abimethod
-    def withdraw(self, amount: arc4.UInt64) -> UInt64:
+    def withdraw(self, amount: arc4.UInt64) -> UInt64: # pragma: no cover
         """
         Withdraw funds from contract. Should be called by owner.
         """
         return UInt64()
 
     @arc4.abimethod
-    def close(self) -> None:
+    def close(self) -> None: # pragma: no cover
         """
         Close contract. Should be called by owner or funder.
         """
         pass
 
     @subroutine
-    def calculate_min_balance(self) -> UInt64:
+    def calculate_min_balance(self) -> UInt64: # pragma: no cover
         """
         Calculate minimum balance.
         """
@@ -549,7 +549,7 @@ class LockableInterface(ARC4Contract):
 class Lockable(
     LockableInterface, OwnableInterface, FundableInterface, DeployableInterface
 ):
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         # ownable state
         self.owner = Account()
         # lockable state
@@ -766,12 +766,12 @@ class ReceiverInterface(ARC4Contract):
     Interface for all abimethods of receiver contract.
     """
 
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         self.messenger_id = UInt64()
 
 
 class Receiver(ReceiverInterface):
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         self.messenger_id = TemplateVar[UInt64]("MESSENGER_ID")
 
 
@@ -796,7 +796,7 @@ class MessengerInterface(ARC4Contract):
         vote_lst: arc4.UInt64,
         vote_kd: arc4.UInt64,
         sp_key: Bytes64,
-    ) -> None:
+    ) -> None: # pragma: no cover
         """
         Broastcast partkey information.
         """
@@ -804,7 +804,7 @@ class MessengerInterface(ARC4Contract):
 
 
 class Messenger(MessengerInterface, Upgradeable):
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         # upgradeable state
         self.contract_version = UInt64()  # 0
         self.deployment_version = UInt64()  # 0
@@ -840,7 +840,7 @@ class Messenger(MessengerInterface, Upgradeable):
 class Airdrop(
     Lockable, Ownable, Fundable, Deployable, Stakeable, Upgradeable, Receiver
 ):
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         # deployable state
         self.parent_id = UInt64()
         self.deployer = Account()
@@ -896,7 +896,7 @@ class BaseFactory(Upgradeable):
     Base factory for all factories.
     """
 
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         """
         Initialize factory.
         """
@@ -947,7 +947,7 @@ class AirdropFactory(BaseFactory):
     configuration and funding.
     """
 
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         super().__init__()
 
     @arc4.abimethod
@@ -1004,7 +1004,7 @@ class AirdropFactory(BaseFactory):
 
 
 class StakingFactory(BaseFactory):
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         """
         Factory for staking contract.
         """
@@ -1083,7 +1083,7 @@ class StakingFactory(BaseFactory):
 
 
 class CompensationFactory(BaseFactory):
-    def __init__(self) -> None:
+    def __init__(self) -> None: # pragma: no cover
         """
         Factory for staking contract.
         """

@@ -11,29 +11,36 @@ Implementation of smart contract for staking solution described in document [Sma
 
 ## commands
 
+Import the commands in the shell
+
+```shell
+source commands.sh
+```
+
 ### build all using docker
 
+Build docker image
+
 ```shell
-docker build . -t algokit-builder
+scs-build-image
 ```
  
+Build artifacts
+
 ```shell
-docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder
+scs-build-artifacts
 ```
 
-### build and run script
+Build all
+  
 ```shell
-(docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder && cp -v artifacts/AirdropClient.ts ./scripts/ && cp -v artifacts/AirdropFactoryClient.ts ./scripts/ && cp -v artifacts/StakingFactoryClient.ts ./scripts/ && cp -v artifacts/MessengerClient.ts ./scripts/ && cp -v artifacts/CompensationFactoryClient.ts ./scripts/)
-```
-
-```
-(cd scripts && npx tsc && node deploy.js)
+scs-build-all
 ```
 
 ### unit test
 
 ```shell
-pytest
+scs-pytest
 ```
 
 ### check mab
@@ -41,7 +48,7 @@ pytest
 Run the following command to make sure the mab function in the contract matches the mab function in the simulateion python code.
 
 ```shell
-bash check_mab.sh
+scs-check-mab
 ```
 
 ### simulate
@@ -51,5 +58,13 @@ Generate plot and csv file for all lockup period options
 ![328694992-ce990421-eda1-4d85-8dd4-3202ab5d50c6](https://github.com/NautilusOSS/smart-contract-staking/assets/23183451/6c6cb3fe-ca44-41e5-882c-522e756ff065)
 
 ```
-python simulate.py
+scs-simulate
+```
+
+### GitHub Actions
+
+To run the GitHub Action workflows locally use [act](https://github.com/nektos/act) to simulate the GitHub Actions environment.
+
+```bash
+act -s GITHUB_TOKEN="$(gh auth token)" --container-architecture linux/amd64
 ```

@@ -1,5 +1,4 @@
-import math
-from contract_mab import calculate_mab_pure
+from src.contract_mab import calculate_mab_pure
 
 
 def test_calculate_mab_pure():

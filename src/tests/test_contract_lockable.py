@@ -2,7 +2,7 @@ from collections.abc import Generator
 import pytest
 from algopy_testing import AlgopyTestContext, algopy_testing_context
 import algopy
-from contract import Lockable
+from src.contract import Lockable
 
 zero_address = algopy.arc4.Address(
     "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
@@ -179,6 +179,16 @@ def test_lockable_close(contract: Lockable, context: AlgopyTestContext):
     # TODO close remaineder amount is balance before minus global min balance
     # TODO test outcome of close_remainder_to contract owner
 
+def test_lockable_set_distribution_cound(contract: Lockable, context: AlgopyTestContext):
+    """
+    Test the set_distribution_count function
+    Must be called by owner
+    """
+    assert contract.owner == zero_address
+    assert contract.funder == zero_address
+    new_distribution_count = context.any.arc4.uint64()
+    contract.set_distribution_count(new_distribution_count)
+    assert contract.distribution_count == new_distribution_count
 
 def test_lockable_calculate_min_balance(contract: Lockable, context: AlgopyTestContext):
     """

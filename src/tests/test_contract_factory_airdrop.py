@@ -3,7 +3,7 @@ import pytest
 from algopy_testing import AlgopyTestContext, algopy_testing_context
 from unittest.mock import patch, MagicMock
 import typing
-from contract import AirdropFactory
+from src.contract import AirdropFactory
 
 
 class MockApp:

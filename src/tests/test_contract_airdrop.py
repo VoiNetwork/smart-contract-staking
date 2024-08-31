@@ -4,7 +4,7 @@ from algopy_testing import AlgopyTestContext, algopy_testing_context
 from unittest.mock import MagicMock
 import typing
 import algopy
-from contract import Airdrop
+from src.contract import Airdrop
 
 zero_address = algopy.arc4.Address(
     "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
@@ -68,8 +68,16 @@ def test_airdrop(contract: Airdrop):
 
 # TODO write test
 # when called offline key reg and close out to creator address
-def test_fundable_abort_funding():
-    # see lockable close
-    #   can be called by owner or funder before funding
-    #   close offline to owner
+def test_fundable_abort_funding(contract: Airdrop, context: AlgopyTestContext):
+    with pytest.raises(Exception):
+        contract.abort_funding()
+    contract.funding = algopy.UInt64(1)
+    with pytest.raises(Exception):
+        contract.abort_funding()
+    contract.funding = algopy.UInt64(0)
+    contract.funder = context.default_sender
+    contract.abort_funding()
+    contract.owner = context.default_sender
+    contract.abort_funding()
+
     pass

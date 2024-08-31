@@ -4,7 +4,7 @@ from algopy_testing import AlgopyTestContext, algopy_testing_context
 import algopy
 from unittest.mock import patch, MagicMock
 import typing
-from contract import Fundable
+from src.contract import Fundable
 
 zero_address = algopy.arc4.Address(
     "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
@@ -82,11 +82,12 @@ def test_fundable_grant_funder(contract: Fundable, context: AlgopyTestContext):
 
 # TODO write test
 # when called offline key reg and close out to creator address
-def test_fundable_abort_funding():
-    # see lockable close
-    #   close offline to funder
-    pass
-
+def test_fundable_abort_funding(contract: Fundable, context: AlgopyTestContext):
+    # must be called by funder
+    with pytest.raises(AssertionError):
+        contract.abort_funding()
+    contract.funder = context.default_sender
+    contract.abort_funding()
 
 def test_fundable_reduce_total(contract: Fundable, context: AlgopyTestContext):
     contract.funder = context.default_sender
