@@ -32,7 +32,11 @@ main() {
   do
     now=$( date +%s)
     echo "period:${period}"
+<<<<<<< HEAD:src/scripts/tests/test-contract-staking.sh
     app_id=$( cli factory deploy-staking --amount 1 --period ${period} )
+=======
+    app_id=$( cli factory deploy-staking --amount 0.1 --period ${period} )
+>>>>>>> c07a2d2 (add compensation and commands (#4)):scripts/tests/test-contract-staking.sh
     echo "app_id:${app_id}"
     report_mb ${app_id}
     cli airdrop fill ${app_id}

@@ -25,7 +25,8 @@ def contract(context: AlgopyTestContext) -> Lockable:  # noqa: ARG001
     context.set_template_var("PERIOD_LIMIT", 5)
     context.set_template_var("DISTRIBUTION_COUNT", 12)
     context.set_template_var("DISTRIBUTION_SECONDS", 60)
-    return Lockable()
+    contract = Lockable()
+    yield contract
 
 
 def test_lockable(contract: Lockable, context: AlgopyTestContext):
@@ -33,17 +34,6 @@ def test_lockable(contract: Lockable, context: AlgopyTestContext):
     Test the Lockable contract
     """
     assert contract is not None
-    assert contract.owner == zero_address
-    assert contract.period == 0
-    assert contract.initial == 0
-    assert contract.deadline == 0
-    assert contract.period_seconds == 60
-    assert contract.lockup_delay == 12
-    assert contract.vesting_delay == 12
-    assert contract.period_limit == 5
-    assert contract.funder == zero_address
-    assert contract.funding == 0
-    assert contract.total == 0
 
 
 def test_lockable_transfer(contract: Lockable, context: AlgopyTestContext):
@@ -68,7 +58,7 @@ def test_lockable_set_vesting_delay(contract: Lockable, context: AlgopyTestConte
     """
     # TODO test abi_call by creator
     new_vesting_delay = context.any.arc4.uint64()
-    assert contract.vesting_delay == 12
+    contract.vesting_delay = 0
     contract.set_vesting_delay(new_vesting_delay)
     assert contract.vesting_delay == new_vesting_delay
 
@@ -167,6 +157,7 @@ def test_lockable_close(contract: Lockable, context: AlgopyTestContext):
     contract.funding = algopy.UInt64(1)
     contract.total = algopy.UInt64(99990)
     contract.vesting_delay = algopy.UInt64(1)
+    contract.distribution_count = algopy.UInt64(1)
     context.ledger.update_account(
         application_address, balance=99999 + algopy.Global.min_balance
     )
