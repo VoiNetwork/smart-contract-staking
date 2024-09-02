@@ -4,7 +4,6 @@ import axios from "axios";
 import csv from "csv-parser";
 import { AirdropClient, APP_SPEC as AirdropSpec } from "./AirdropClient.js";
 import {
-  CompensationFactory,
   CompensationFactoryClient,
   APP_SPEC as CompensationFactorySpec,
 } from "./CompensationFactoryClient.js";
@@ -84,34 +83,81 @@ const signSendAndConfirm = async (txns: string[], sk: any) => {
 };
 
 program
-  .command("deploy <type>")
+  .command("deploy")
+  .option("-t, --type <string>", "Specify factory type")
+  .option("-n, --name <string>", "Specify contract name")
+  .option("-s, --period-seconds <number>", "Specify period seconds")
+  .option("-p, --period-limit <number>", "Specify period limit")
+  .option("-v, --vesting-delay <number>", "Specify vesting delay")
+  .option("-l, --lockup-delay <number>", "Specify lockup delay")
+  .option("-m, --messenger-id <number>", "Specify messenger ID")
+  .option("-c, --distribution-count <number>", "Specify distribution count")
+  .option("-d, --distribution-seconds <number>", "Specify distribution seconds")
   .description("Deploy a specific contract type")
-  .action(async (type) => {
+  .action(async (options) => {
     const deployer = {
       addr: addr,
       sk: sk,
     };
-
-    switch (type) {
-      case "compensation-factory": {
-        const appClient = new CompensationFactoryClient(
+    let Client;
+    switch (options.type) {
+      case "airdrop": {
+        Client = AirdropFactoryClient; // impossible airdrop doesn't deploy without factory
+        break;
+      }
+      case "staking": {
+        Client = StakingFactoryClient;
+        break;
+      }
+      case "compensation": {
+        Client = CompensationFactoryClient;
+        break;
+      }
+      case "messenger": {
+        Client = MessengerClient;
+        break;
+      }
+      default:
+        console.error("Unknown deploy type");
+    }
+    const appClient = Client
+      ? new Client(
           {
             resolveBy: "creatorAndName",
             findExistingUsing: indexerClient,
             creatorAddress: deployer.addr,
-            name: "compensation-factory",
+            name: options.name || "",
             sender: deployer,
           },
           algodClient
-        );
-        await appClient.deploy({
-          deployTimeParams: {},
-          onUpdate: "update",
-          onSchemaBreak: "fail",
-        });
-        break;
-      }
-      case "airdrop-factory": {
+        )
+      : null;
+    if (appClient) {
+      await appClient.deploy({
+        deployTimeParams: {
+          PERIOD_SECONDS: options.periodSeconds
+            ? Number(options.periodSeconds)
+            : 1,
+          PERIOD_LIMIT: options.periodLimit ? Number(options.periodLimit) : 1,
+          VESTING_DELAY: options.vestingDelay
+            ? Number(options.vestingDelay)
+            : 1,
+          LOCKUP_DELAY: options.lockupDelay ? Number(options.lockupDelay) : 1,
+          MESSENGER_ID: options.messengerId ? Number(options.messengerId) : 1,
+          DISTRIBUTION_COUNT: options.distributionCount
+            ? Number(options.distributionCount)
+            : 1,
+          DISTRIBUTION_SECONDS: options.distributionSeconds
+            ? Number(options.distributionSeconds)
+            : 1,
+        },
+        onUpdate: "update",
+        onSchemaBreak: "fail",
+      });
+    }
+    /*
+    switch (options.type) {
+      case "airdrop": {
         const appClient = new AirdropFactoryClient(
           {
             resolveBy: "creatorAndName",
@@ -123,13 +169,21 @@ program
           algodClient
         );
         await appClient.deploy({
-          deployTimeParams: {},
+          deployTimeParams: {
+            PERIOD_SECONDS: 1,
+            PERIOD_LIMIT: 1,
+            VESTING_DELAY: 1,
+            LOCKUP_DELAY: 1,
+            MESSENGER_ID: 1,
+            DISTRIBUTION_COUNT: 1,
+            DISTRIBUTION_SECONDS: 1,
+          },
           onUpdate: "update",
           onSchemaBreak: "fail",
         });
         break;
       }
-      case "staking-factory": {
+      case "staking": {
         const appClient = new StakingFactoryClient(
           {
             resolveBy: "creatorAndName",
@@ -141,7 +195,41 @@ program
           algodClient
         );
         await appClient.deploy({
-          deployTimeParams: {},
+          deployTimeParams: {
+            PERIOD_SECONDS: 1,
+            PERIOD_LIMIT: 1,
+            VESTING_DELAY: 1,
+            LOCKUP_DELAY: 1,
+            MESSENGER_ID: 1,
+            DISTRIBUTION_COUNT: 1,
+            DISTRIBUTION_SECONDS: 2,
+          },
+          onUpdate: "update",
+          onSchemaBreak: "fail",
+        });
+        break;
+      }
+      case "compensation": {
+        const appClient = new CompensationFactoryClient(
+          {
+            resolveBy: "creatorAndName",
+            findExistingUsing: indexerClient,
+            creatorAddress: deployer.addr,
+            name: "compensation-factory",
+            sender: deployer,
+          },
+          algodClient
+        );
+        await appClient.deploy({
+          deployTimeParams: {
+            PERIOD_SECONDS: 1,
+            PERIOD_LIMIT: 1,
+            VESTING_DELAY: 1,
+            LOCKUP_DELAY: 1,
+            MESSENGER_ID: 1,
+            DISTRIBUTION_COUNT: 1,
+            DISTRIBUTION_SECONDS: 3,
+          },
           onUpdate: "update",
           onSchemaBreak: "fail",
         });
@@ -153,13 +241,12 @@ program
             resolveBy: "creatorAndName",
             findExistingUsing: indexerClient,
             creatorAddress: deployer.addr,
-            name: "m6",
+            name: "m7",
             sender: deployer,
           },
           algodClient
         );
         await appClient.deploy({
-          deployTimeParams: {},
           onUpdate: "update",
           onSchemaBreak: "fail",
         });
@@ -168,6 +255,7 @@ program
       default:
         console.error("Unknown deploy type");
     }
+    */
   });
 
 program
@@ -291,7 +379,7 @@ factory
     );
     const paymentAmount = 884500 + 100000 + Number(options.amount) * 1e6;
     const owner = options.owner || addr2;
-    ci.setFee(9000);
+    ci.setFee(10000);
     ci.setPaymentAmount(paymentAmount);
     const createR = await ci.create(owner);
     if (createR.success) {
@@ -337,7 +425,7 @@ factory
       ? Number(options.deadline)
       : moment().unix() + 60 * 60 * 24 * 7; // 7 days
     ci.setPaymentAmount(paymentAmount);
-    ci.setFee(8000);
+    ci.setFee(10000);
     const createR = await ci.create(owner, funder, deadline, initial);
     if (createR.success) {
       const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);
@@ -377,7 +465,7 @@ factory
     const delegate = addr3;
     const period = Number(options.period);
     ci.setPaymentAmount(paymentAmount);
-    ci.setFee(8000);
+    ci.setFee(10000);
     const createR = await ci.create(owner, funder, delegate, period);
     if (createR.success) {
       const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);

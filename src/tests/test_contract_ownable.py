@@ -28,6 +28,7 @@ def test_ownable(contract: Ownable, context: AlgopyTestContext):
     assert contract.owner == zero_address
 
 
+# TODO emits ownership transfer event
 def test_ownable_transfer(contract: Ownable, context: AlgopyTestContext):
     """
     Test the transfer function

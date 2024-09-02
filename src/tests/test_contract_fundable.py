@@ -30,7 +30,7 @@ def context() -> Generator[AlgopyTestContext, None, None]:
 
 
 @pytest.fixture()
-def contract(context: AlgopyTestContext) -> Fundable:  # noqa: ARG001
+def contract(context: AlgopyTestContext) -> Fundable:
     return Fundable()
 
 
@@ -66,33 +66,38 @@ def test_fundable_fill(contract: Fundable, context: AlgopyTestContext):
     assert contract.total == 99999
 
 
-def test_fundable_set_funding(contract: Fundable, context: AlgopyTestContext):
-    contract.funder = context.default_sender
-    contract.funding = 0
-    contract.set_funding(algopy.arc4.UInt64(100))
-    assert contract.funding == 100
-
-
 def test_fundable_grant_funder(contract: Fundable, context: AlgopyTestContext):
-    contract.funder = context.default_sender
     new_funder = context.any.arc4.address()
+    with pytest.raises(AssertionError):
+        contract.grant_funder(new_funder)
+    contract.funder = context.default_sender
     contract.grant_funder(new_funder)
     assert contract.funder == new_funder.native
 
 
-# TODO write test
-# when called offline key reg and close out to creator address
+def test_fundable_set_funding(contract: Fundable, context: AlgopyTestContext):
+    assert contract.funding != algopy.UInt64(1)
+    with pytest.raises(AssertionError):
+        contract.set_funding(algopy.arc4.UInt64(1))
+    contract.funder = context.default_sender
+    contract.set_funding(algopy.arc4.UInt64(1))
+    assert contract.funding == 1
+
+
 def test_fundable_abort_funding(contract: Fundable, context: AlgopyTestContext):
-    # must be called by funder
     with pytest.raises(AssertionError):
         contract.abort_funding()
     contract.funder = context.default_sender
     contract.abort_funding()
 
+
 def test_fundable_reduce_total(contract: Fundable, context: AlgopyTestContext):
+    adjustment = algopy.arc4.UInt64(10)
+    with pytest.raises(AssertionError):
+        contract.reduce_total(adjustment)
     contract.funder = context.default_sender
     contract.total = algopy.UInt64(100)
-    contract.reduce_total(algopy.arc4.UInt64(10))
+    contract.reduce_total(adjustment)
     assert contract.total == 100 - 10
     with pytest.raises(AssertionError):
         contract.reduce_total(algopy.arc4.UInt64(100))
