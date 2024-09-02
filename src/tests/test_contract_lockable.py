@@ -19,13 +19,13 @@ def context() -> Generator[AlgopyTestContext, None, None]:
 
 @pytest.fixture()
 def contract(context: AlgopyTestContext) -> Lockable:  # noqa: ARG001
-    context.set_template_var("PERIOD_SECONDS", 60)
-    context.set_template_var("LOCKUP_DELAY", 12)
-    context.set_template_var("VESTING_DELAY", 12)
-    context.set_template_var("PERIOD_LIMIT", 5)
-    context.set_template_var("DISTRIBUTION_COUNT", 12)
-    context.set_template_var("DISTRIBUTION_SECONDS", 60)
     contract = Lockable()
+    contract.period_seconds = algopy.UInt64(60)
+    contract.lockup_delay = algopy.UInt64(12)
+    contract.vesting_delay = algopy.UInt64(12)
+    contract.period_limit = algopy.UInt64(5)
+    contract.distribution_count = algopy.UInt64(12)
+    contract.distribution_seconds = algopy.UInt64(60)
     yield contract
 
 
@@ -36,55 +36,25 @@ def test_lockable(contract: Lockable, context: AlgopyTestContext):
     assert contract is not None
 
 
-def test_lockable_transfer(contract: Lockable, context: AlgopyTestContext):
-    """
-    Test the preconfigure function
-    Must be called before setup by creator
-    """
-    # TODO test abi_call by creator
-    new_period = context.any.arc4.uint64()
-    new_deadline = context.any.arc4.uint64()
-    assert contract.period == 0
-    assert contract.deadline == 0
-    contract.preconfigure(new_period, new_deadline)
-    assert contract.period == new_period
-    assert contract.deadline == new_deadline
-
-
-def test_lockable_set_vesting_delay(contract: Lockable, context: AlgopyTestContext):
-    """
-    Test the set_vesting_delay function
-    Must be called before setup by creator
-    """
-    # TODO test abi_call by creator
-    new_vesting_delay = context.any.arc4.uint64()
-    contract.vesting_delay = 0
-    contract.set_vesting_delay(new_vesting_delay)
-    assert contract.vesting_delay == new_vesting_delay
-
-
-def test_lockable_set_total(contract: Lockable, context: AlgopyTestContext):
-    """
-    Test the set_lockup_delay function
-    Must be called before setup by creator
-    """
-    # TODO test abi_call by creator
-    new_total = context.any.arc4.uint64()
-    assert contract.total == 0
-    contract.set_total(new_total)
-    assert contract.total == new_total
-
-
 def test_lockable_setup(contract: Lockable, context: AlgopyTestContext):
     """
     Test the setup function
     Must be called by creator
     """
-    # TODO test abi_call by creator
     new_deployer = context.any.arc4.address()
     new_owner = context.any.arc4.address()
     new_funder = context.any.arc4.address()
     new_initial = context.any.arc4.uint64()
+
+    contract.owner = context.any.account()
+    with pytest.raises(AssertionError):
+        contract.setup(new_deployer, new_owner, new_funder, new_initial)
+    contract.owner = zero_address
+    contract.funder = context.any.account()
+    with pytest.raises(AssertionError):
+        contract.setup(new_deployer, new_owner, new_funder, new_initial)
+    contract.funder = zero_address
+
     contract.setup(new_deployer, new_owner, new_funder, new_initial)
     assert contract.deployer == new_deployer
     assert contract.owner == new_owner
@@ -97,12 +67,17 @@ def test_lockable_configure(contract: Lockable, context: AlgopyTestContext):
     Test the configure function
     Must be called by owner
     """
-    contract.owner = context.default_sender
-    contract.deadline = context.any.uint64(
-        18446744073709551615
-    )  # HACK to ensure future deadline
-    assert contract.owner == context.default_sender
     new_period = context.any.arc4.uint64(min_value=0, max_value=5)
+
+    with pytest.raises(AssertionError):
+        contract.configure(new_period)
+
+    contract.owner = context.default_sender
+    # ensure future deadline
+    contract.deadline = context.any.uint64(18446744073709551615)
+
+    assert contract.owner == context.default_sender
+
     contract.configure(new_period)
     assert contract.period == new_period
 
@@ -153,6 +128,8 @@ def test_lockable_withdraw(contract: Lockable, context: AlgopyTestContext):
 
 def test_lockable_close(contract: Lockable, context: AlgopyTestContext):
     ## must be called by owner
+    contract.distribution_seconds = 60
+    contract.distribution_count = 18
     contract.owner = context.default_sender
     contract.funding = algopy.UInt64(1)
     contract.total = algopy.UInt64(99990)
@@ -179,16 +156,6 @@ def test_lockable_close(contract: Lockable, context: AlgopyTestContext):
     # TODO close remaineder amount is balance before minus global min balance
     # TODO test outcome of close_remainder_to contract owner
 
-def test_lockable_set_distribution_cound(contract: Lockable, context: AlgopyTestContext):
-    """
-    Test the set_distribution_count function
-    Must be called by owner
-    """
-    assert contract.owner == zero_address
-    assert contract.funder == zero_address
-    new_distribution_count = context.any.arc4.uint64()
-    contract.set_distribution_count(new_distribution_count)
-    assert contract.distribution_count == new_distribution_count
 
 def test_lockable_calculate_min_balance(contract: Lockable, context: AlgopyTestContext):
     """
