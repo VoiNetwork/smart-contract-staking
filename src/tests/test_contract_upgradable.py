@@ -54,12 +54,27 @@ def test_upgradable_approve_update(contract: Upgradeable, context: AlgopyTestCon
     contract.approve_update(algopy.arc4.Bool(0))
     assert contract.updatable == bool(0)
 
+
+def test_upgradable_grant_updater(contract: Upgradeable, context: AlgopyTestContext):
+    """
+    Test the grant_updater function
+    Must be called by creator
+    """
+    # default_sender is creator
+    new_upgrader = context.any.arc4.address()
+    contract.grant_upgrader(new_upgrader)
+    assert contract.upgrader == new_upgrader
+    # in order for a factory deployed contract to be able to call this function
+    # it must be called by an authorized account through the factory
+
+
 # TODO mock update
 def test_upgradable_update(contract: Upgradeable, context: AlgopyTestContext):
     """
     Test the update function
-    Must be called by creator
+    Must be called by updater
     """
-    # TODO test abi_call by creator
-    # TODO test new appApproval
-    # TODO test updatable
+    pass
+    # call contract bare method updating contract with known methods
+    #   call that method
+    # must be updater

@@ -395,6 +395,11 @@ class UpdateApproved(arc4.Struct):
     approval: arc4.Bool
 
 
+class UpgraderGranted(arc4.Struct):
+    previousUpgrader: arc4.Address
+    newUpgrader: arc4.Address
+
+
 class UpgradeableInterface(ARC4Contract):
     """
     Interface for all abimethods of upgradeable contract.
@@ -404,6 +409,7 @@ class UpgradeableInterface(ARC4Contract):
         self.contract_version = UInt64()
         self.deployment_version = UInt64()
         self.updatable = bool(1)
+        self.upgrader = Account()
 
     @arc4.abimethod
     def set_version(
@@ -428,6 +434,18 @@ class UpgradeableInterface(ARC4Contract):
         """
         pass
 
+    @arc4.abimethod
+    def grant_upgrader(self, upgrader: arc4.Address) -> None:  # pragma: no cover
+        """
+        Grant upgrader.
+        """
+        pass
+
+    ##############################################
+    # @arc4.abimethod
+    # def update(self) -> None:
+    #      pass
+    ##############################################
 
 class Upgradeable(UpgradeableInterface, OwnableInterface):
     def __init__(self) -> None:  # pragma: no cover
@@ -437,12 +455,13 @@ class Upgradeable(UpgradeableInterface, OwnableInterface):
         self.contract_version = UInt64()
         self.deployment_version = UInt64()
         self.updatable = bool(1)
+        self.upgrader = Global.creator_address
 
     @arc4.abimethod
     def set_version(
         self, contract_version: arc4.UInt64, deployment_version: arc4.UInt64
     ) -> None:
-        assert Txn.sender == Global.creator_address, "must be creator"
+        assert Txn.sender == self.upgrader, "must be upgrader"
         arc4.emit(VersionUpdated(contract_version, deployment_version))
         self.contract_version = contract_version.native
         self.deployment_version = deployment_version.native
@@ -452,25 +471,21 @@ class Upgradeable(UpgradeableInterface, OwnableInterface):
         ##########################################
         # WARNING: This app can be updated by the creator
         ##########################################
-        assert Txn.sender == Global.creator_address, "must be creator"
+        assert Txn.sender == self.upgrader, "must be upgrader"
         assert self.updatable == UInt64(1), "not approved"
         ##########################################
 
-    ##############################################
-    # function: approve_update
-    # arguments:
-    # - approval, approval status
-    # purpose: approve update
-    # pre-conditions
-    # - only callable by owner
-    # post-conditions:
-    # - updatable set to approval
-    ##############################################
     @arc4.abimethod
     def approve_update(self, approval: arc4.Bool) -> None:
         assert Txn.sender == self.owner, "must be owner"
         arc4.emit(UpdateApproved(arc4.Address(self.owner), approval))
         self.updatable = approval.native
+
+    @arc4.abimethod
+    def grant_upgrader(self, upgrader: arc4.Address) -> None:
+        assert Txn.sender == Global.creator_address, "must be creator"
+        arc4.emit(UpgraderGranted(arc4.Address(self.upgrader), upgrader))
+        self.upgrader = upgrader.native
 
 
 ##################################################
@@ -593,7 +608,7 @@ class LockableInterface(ARC4Contract):
         total: arc4.UInt64,
         funding: arc4.UInt64,
         delegate: arc4.Address,
-    ) -> None:
+    ) -> None:  # pragma: no cover
         """
         Template method.
         """
@@ -867,9 +882,10 @@ class MessengerInterface(ARC4Contract):
 class Messenger(MessengerInterface, Upgradeable):
     def __init__(self) -> None:  # pragma: no cover
         # upgradeable state
-        self.contract_version = UInt64()  # 0
-        self.deployment_version = UInt64()  # 0
-        self.updatable = bool(1)  # 1 (Default unlocked)
+        self.contract_version = UInt64()
+        self.deployment_version = UInt64()
+        self.updatable = bool(1)
+        self.upgrader = Global.creator_address
 
     @arc4.abimethod
     def partkey_broastcast(
@@ -912,6 +928,7 @@ class Airdrop(
         self.contract_version = UInt64()
         self.deployment_version = UInt64()
         self.updatable = bool(1)
+        self.upgrader = Global.creator_address
         # ownable state
         self.owner = Account()
         # lockable state
@@ -1026,6 +1043,11 @@ class Airdrop(
         )
         close_offline_on_delete(self.owner)
 
+    # placeholder for update method
+    @arc4.abimethod
+    def update(self) -> None:
+        pass
+
 
 ##################################################
 # BaseFactory
@@ -1048,18 +1070,11 @@ class BaseFactory(Upgradeable):
         Initialize factory.
         """
         # upgradeable state
-        self.contract_version = UInt64()  # 0
-        self.deployment_version = UInt64()  # 0
-        self.updatable = bool(1)  # 1 (Default unlocked)
+        self.contract_version = UInt64()
+        self.deployment_version = UInt64()
+        self.updatable = bool(1)
+        self.upgrader = Global.creator_address
 
-        ##############################################
-        # @arc4.abimethod
-        # def update(self) -> None:
-        #      pass
-        ##############################################
-        # @arc4.abimethod
-        # def remote_update(self, app_id: arc4.UInt64) -> None:
-        #     pass
         ##############################################
         # @arc4.abimethod
         # def create(self, *args) -> UInt64:
@@ -1072,11 +1087,11 @@ class BaseFactory(Upgradeable):
         Get initial payment.
         """
         payment_amount = require_payment(Txn.sender)
-        mbr_increase = UInt64(884500)
+        mbr_increase = UInt64(1034500)
         min_balance = op.Global.min_balance  # 100000
         assert (
             payment_amount >= mbr_increase + min_balance
-        ), "payment amount accurate"  # 884500 + 100000 = 984500
+        ), "payment amount accurate"  # 1034500 + 100000 = 1134500
         initial = payment_amount - mbr_increase - min_balance
         return initial
 
@@ -1135,7 +1150,12 @@ class AirdropFactory(BaseFactory):
             deadline,
             arc4.UInt64(UInt64(0)),  # total
             arc4.UInt64(UInt64(0)),  # funding
-            arc4.Address(Global.zero_address),
+            arc4.Address(Global.zero_address), # delegate
+            app_id=base_app,
+        )
+        arc4.abi_call(  # inherit upgrader
+            Airdrop.grant_upgrader,
+            Global.creator_address,
             app_id=base_app,
         )
         itxn.Payment(
@@ -1208,6 +1228,11 @@ class StakingFactory(BaseFactory):
             initial,  # total
             arc4.UInt64(UInt64(0)),  # funding
             delegate,
+            app_id=base_app,
+        )
+        arc4.abi_call(  # inherit upgrader
+            Airdrop.grant_upgrader,
+            Global.creator_address,
             app_id=base_app,
         )
         itxn.Payment(
@@ -1285,6 +1310,11 @@ class CompensationFactory(BaseFactory):
             initial,  # total
             Global.latest_timestamp,  # funding
             Global.zero_address,
+            app_id=base_app,
+        )
+        arc4.abi_call(  # inherit upgrader
+            Airdrop.grant_upgrader,
+            Global.creator_address,
             app_id=base_app,
         )
         itxn.Payment(
