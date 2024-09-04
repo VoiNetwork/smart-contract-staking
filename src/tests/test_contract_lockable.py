@@ -124,6 +124,15 @@ def test_lockable_withdraw(contract: Lockable, context: AlgopyTestContext):
     return_value = contract.withdraw(algopy.arc4.UInt64(0))
     assert return_value == algopy.Global.min_balance * 9
     # TODO test with different blocks
+    # TODO add coverage
+    # if self.funding > 0:
+    # min_balance = self.calculate_min_balance()
+    # arc4.emit(Withdrawn(arc4.UInt64(min_balance), amount))
+    # available_balance = get_available_balance()
+    # assert available_balance - amount.native >= min_balance, "balance available"
+    # if amount > 0:
+    #     itxn.Payment(amount=amount.native, receiver=Txn.sender, fee=0).submit()
+    # return min_balance
 
 
 def test_lockable_close(contract: Lockable, context: AlgopyTestContext):

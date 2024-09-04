@@ -93,6 +93,8 @@ program
   .option("-m, --messenger-id <number>", "Specify messenger ID")
   .option("-c, --distribution-count <number>", "Specify distribution count")
   .option("-d, --distribution-seconds <number>", "Specify distribution seconds")
+  .option("-r, --resolver <string>", "Specify resolver")
+  .option("-a --apid <number>", "Specify the application ID")
   .description("Deploy a specific contract type")
   .action(async (options) => {
     const deployer = {
@@ -101,15 +103,15 @@ program
     };
     let Client;
     switch (options.type) {
-      case "airdrop": {
-        Client = AirdropFactoryClient; // impossible airdrop doesn't deploy without factory
+      case "airdrop-factory": {
+        Client = AirdropFactoryClient;
         break;
       }
-      case "staking": {
+      case "staking-factory": {
         Client = StakingFactoryClient;
         break;
       }
-      case "compensation": {
+      case "compensation-factory": {
         Client = CompensationFactoryClient;
         break;
       }
@@ -120,18 +122,14 @@ program
       default:
         console.error("Unknown deploy type");
     }
-    const appClient = Client
-      ? new Client(
-          {
-            resolveBy: "creatorAndName",
-            findExistingUsing: indexerClient,
-            creatorAddress: deployer.addr,
-            name: options.name || "",
-            sender: deployer,
-          },
-          algodClient
-        )
-      : null;
+    const clientParams = {
+      resolveBy: options.resolver || "creatorAndName",
+      findExistingUsing: indexerClient,
+      creatorAddress: deployer.addr,
+      name: options.name || "",
+      sender: deployer,
+    };
+    const appClient = Client ? new Client(clientParams, algodClient) : null;
     if (appClient) {
       await appClient.deploy({
         deployTimeParams: {
@@ -155,107 +153,6 @@ program
         onSchemaBreak: "fail",
       });
     }
-    /*
-    switch (options.type) {
-      case "airdrop": {
-        const appClient = new AirdropFactoryClient(
-          {
-            resolveBy: "creatorAndName",
-            findExistingUsing: indexerClient,
-            creatorAddress: deployer.addr,
-            name: "f8",
-            sender: deployer,
-          },
-          algodClient
-        );
-        await appClient.deploy({
-          deployTimeParams: {
-            PERIOD_SECONDS: 1,
-            PERIOD_LIMIT: 1,
-            VESTING_DELAY: 1,
-            LOCKUP_DELAY: 1,
-            MESSENGER_ID: 1,
-            DISTRIBUTION_COUNT: 1,
-            DISTRIBUTION_SECONDS: 1,
-          },
-          onUpdate: "update",
-          onSchemaBreak: "fail",
-        });
-        break;
-      }
-      case "staking": {
-        const appClient = new StakingFactoryClient(
-          {
-            resolveBy: "creatorAndName",
-            findExistingUsing: indexerClient,
-            creatorAddress: deployer.addr,
-            name: "staking-factory-2",
-            sender: deployer,
-          },
-          algodClient
-        );
-        await appClient.deploy({
-          deployTimeParams: {
-            PERIOD_SECONDS: 1,
-            PERIOD_LIMIT: 1,
-            VESTING_DELAY: 1,
-            LOCKUP_DELAY: 1,
-            MESSENGER_ID: 1,
-            DISTRIBUTION_COUNT: 1,
-            DISTRIBUTION_SECONDS: 2,
-          },
-          onUpdate: "update",
-          onSchemaBreak: "fail",
-        });
-        break;
-      }
-      case "compensation": {
-        const appClient = new CompensationFactoryClient(
-          {
-            resolveBy: "creatorAndName",
-            findExistingUsing: indexerClient,
-            creatorAddress: deployer.addr,
-            name: "compensation-factory",
-            sender: deployer,
-          },
-          algodClient
-        );
-        await appClient.deploy({
-          deployTimeParams: {
-            PERIOD_SECONDS: 1,
-            PERIOD_LIMIT: 1,
-            VESTING_DELAY: 1,
-            LOCKUP_DELAY: 1,
-            MESSENGER_ID: 1,
-            DISTRIBUTION_COUNT: 1,
-            DISTRIBUTION_SECONDS: 3,
-          },
-          onUpdate: "update",
-          onSchemaBreak: "fail",
-        });
-        break;
-      }
-      case "messenger": {
-        const appClient = new MessengerClient(
-          {
-            resolveBy: "creatorAndName",
-            findExistingUsing: indexerClient,
-            creatorAddress: deployer.addr,
-            name: "m7",
-            sender: deployer,
-          },
-          algodClient
-        );
-        await appClient.deploy({
-          onUpdate: "update",
-          onSchemaBreak: "fail",
-        });
-        break;
-      }
-      default:
-        console.error("Unknown deploy type");
-    }
-    */
   });
 
 program
@@ -377,7 +274,7 @@ factory
         sk: new Uint8Array(0),
       }
     );
-    const paymentAmount = 884500 + 100000 + Number(options.amount) * 1e6;
+    const paymentAmount = 1034500 + 100000 + Number(options.amount) * 1e6;
     const owner = options.owner || addr2;
     ci.setFee(10000);
     ci.setPaymentAmount(paymentAmount);
@@ -418,7 +315,7 @@ factory
       }
     );
     const initial = Number(options.initial) * 1e6;
-    const paymentAmount = 884500 + 100000;
+    const paymentAmount = 1034500 + 100000;
     const owner = options.owner || addr2;
     const funder = options.funder || addr;
     const deadline = options.deadline
@@ -459,7 +356,7 @@ factory
     );
 
     const stakingAmount = Number(options.amount) * 1e6;
-    const paymentAmount = stakingAmount + 884500 + 100000;
+    const paymentAmount = stakingAmount + 1034500 + 100000;
     const owner = addr2;
     const funder = addr;
     const delegate = addr3;
@@ -606,6 +503,36 @@ airdrop
       console.log(withdraw.toString());
     } else {
       console.log("0");
+    }
+  });
+
+airdrop
+  .command("update")
+  .description("Update the airdrop contract")
+  .requiredOption("-a, --apid <number>", "Specify the application ID")
+  .option("-d --delete", "Delete the application")
+  .action(async (options) => {
+    const apid = Number(options.apid);
+    await new AirdropClient(
+      {
+        resolveBy: "id",
+        id: apid,
+        sender: {
+          addr,
+          sk,
+        },
+      },
+      algodClient
+    ).appClient.update();
+    const ci = makeCi(apid, addr);
+    ci.setFee(3000);
+    if (options.delete) {
+      ci.setOnComplete(5); // deleteApplicationOC
+    }
+    const updateR = await ci.update();
+    console.log(updateR);
+    if (updateR.success) {
+      await signSendAndConfirm(updateR.txns, sk);
     }
   });
 
