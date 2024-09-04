@@ -1151,8 +1151,6 @@ class AirdropFactory(BaseFactory):
             arc4.UInt64(UInt64(0)),  # total
             arc4.UInt64(UInt64(0)),  # funding
             arc4.Address(Global.zero_address),
-            app_id=base_app,
-        )
         arc4.abi_call(  # inherit upgrader
             Airdrop.grant_upgrader,
             Global.creator_address,
@@ -1266,6 +1264,7 @@ class CompensationFactory(BaseFactory):
         Factory for staking contract.
         """
         super().__init__()
+        self.contract_version = UInt64(1)
 
     @arc4.abimethod
     def create(
