@@ -43,7 +43,7 @@ export const APP_SPEC: AppSpec = {
     },
     "update()void": {
       "call_config": {
-        "delete_application": "CALL"
+        "no_op": "CALL"
       }
     },
     "setup(address,address,address,uint64)void": {

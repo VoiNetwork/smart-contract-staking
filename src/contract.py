@@ -1150,7 +1150,9 @@ class AirdropFactory(BaseFactory):
             deadline,
             arc4.UInt64(UInt64(0)),  # total
             arc4.UInt64(UInt64(0)),  # funding
-            arc4.Address(Global.zero_address),
+            arc4.Address(Global.zero_address), # delegate
+            app_id=base_app,
+        )
         arc4.abi_call(  # inherit upgrader
             Airdrop.grant_upgrader,
             Global.creator_address,
