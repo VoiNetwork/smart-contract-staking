@@ -8,13 +8,26 @@ import * as dotenv from "dotenv";
 import { CONTRACT, abi } from "ulujs";
 import moment from "moment";
 import BigNumber from "bignumber.js";
-import { create } from "domain";
 import axios from "axios";
 dotenv.config({ path: ".env" });
 
-const program = new Command();
+// Usage: deploy-itnp1 [options] [command]
+//
+// Options:
+//   -h, --help             display help for command
+//
+// Commands:
+//   process-csv [options]  Process a CSV file and create airdrop contracts
+//   check [options]        Check that all are set up
+//   fill [options]         Fill the contracts
+//   help [command]         display help for command
+//
+// deploy-itnp1 process-csv
+// deploy-itnps check
+// deploy-itnp1 fill --dryrun true --funding 1629788400
+//
 
-// compute compounded interest using big number
+const program = new Command();
 
 const lookupRate = (period: number) => {
   switch (period) {
@@ -183,7 +196,6 @@ program
   .description("Check that all are set up")
   .option("-f, --file <path>", "Path to the CSV file", "data/itnp1.csv")
   .option("-e, --error-log <path>", "Path to the error log file", "error.log")
-  .option("--funder <address>", "Funder's address", "")
   .action(async (options) => {
     const { CTC_INFO_FACTORY_AIRDROP } = process.env;
     const {
@@ -387,31 +399,3 @@ program
   });
 
 program.parse(process.argv);
-
-// airdrop
-//   .command("fill")
-//   .description("Fill the staking contract")
-//   .requiredOption("-a, --apid <number>", "Specify the application ID")
-//   .requiredOption("-f, --fillAmount <number>", "Specify the amount to fill")
-//   .action(async (options) => {
-//     const ci = makeCi(Number(options.apid), addr);
-//     const paymentAmount = Number(options.fillAmount) * 1e6;
-//     ci.setPaymentAmount(paymentAmount);
-//     const fillR = await ci.fill();
-//     if (fillR.success) {
-//       const res = await signSendAndConfirm(fillR.txns, sk);
-//     }
-//   });
-
-// airdrop
-//   .command("set-funding <apid> <timestamp>")
-//   .description("Set the funding timestamp")
-//   .action(async (apid, timestamp) => {
-//     const ci = makeCi(Number(apid), addr);
-//     const currentTimestamp = moment().unix();
-//     const set_fundingR = await ci.set_funding(currentTimestamp);
-//     console.log(set_fundingR);
-//     if (set_fundingR.success) {
-//       const res = await signSendAndConfirm(set_fundingR.txns, sk);
-//     }
-//   });
