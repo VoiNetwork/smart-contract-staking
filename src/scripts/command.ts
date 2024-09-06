@@ -23,6 +23,7 @@ import algosdk from "algosdk";
 import { CONTRACT } from "ulujs";
 import moment from "moment";
 import * as dotenv from "dotenv";
+import BigNumber from "bignumber.js";
 dotenv.config({ path: ".env" });
 
 const program = new Command();
@@ -84,17 +85,21 @@ const signSendAndConfirm = async (txns: string[], sk: any) => {
 
 program
   .command("deploy")
-  .option("-t, --type <string>", "Specify factory type")
-  .option("-n, --name <string>", "Specify contract name")
-  .option("-s, --period-seconds <number>", "Specify period seconds")
-  .option("-p, --period-limit <number>", "Specify period limit")
-  .option("-v, --vesting-delay <number>", "Specify vesting delay")
-  .option("-l, --lockup-delay <number>", "Specify lockup delay")
-  .option("-m, --messenger-id <number>", "Specify messenger ID")
-  .option("-c, --distribution-count <number>", "Specify distribution count")
-  .option("-d, --distribution-seconds <number>", "Specify distribution seconds")
-  .option("-r, --resolver <string>", "Specify resolver")
-  .option("-a --apid <number>", "Specify the application ID")
+  .requiredOption("-t, --type <string>", "Specify factory type")
+  .requiredOption("-n, --name <string>", "Specify contract name")
+  .requiredOption("-s, --period-seconds <number>", "Specify period seconds")
+  .requiredOption("-p, --period-limit <number>", "Specify period limit")
+  .requiredOption("-v, --vesting-delay <number>", "Specify vesting delay")
+  .requiredOption("-l, --lockup-delay <number>", "Specify lockup delay")
+  .requiredOption("-m, --messenger-id <number>", "Specify messenger ID")
+  .requiredOption(
+    "-c, --distribution-count <number>",
+    "Specify distribution count"
+  )
+  .requiredOption(
+    "-d, --distribution-seconds <number>",
+    "Specify distribution seconds"
+  )
   .description("Deploy a specific contract type")
   .action(async (options) => {
     const deployer = {
@@ -194,11 +199,25 @@ program
     }
   });
 
-program
-  .command("broadcast-message")
+const messenger = new Command("messenger").description(
+  "Manage messenger operations"
+);
+
+messenger
+  .command("broadcast-partkey")
   .description("Broadcast a message using the messenger")
-  .action(async () => {
-    const messengerCtcInfo = 72977126;
+  .requiredOption("-m, --messenger-id <number>", "Specify the messenger ID")
+  .requiredOption("-v, --vote-k <string>", "Specify the vote key")
+  .requiredOption("-s, --sel-k <string>", "Specify the selection key")
+  .requiredOption("-f, --vote-fst <number>", "Specify the vote first")
+  .requiredOption("-l, --vote-lst <number>", "Specify the vote last")
+  .requiredOption("-d, --vote-kd <number>", "Specify the vote key duration")
+  .requiredOption("-k, --sp-key <string>", "Specify the sp key")
+  .action(async (options) => {
+    const ctcInfo = Number(options.messengerId);
+    const voteFst = Number(options.voteFst);
+    const voteLst = Number(options.voteLst);
+    const voteKd = Number(options.voteKd);
     const spec = {
       name: "",
       desc: "",
@@ -220,31 +239,15 @@ program
       ],
     };
 
-    const makeCi = (ctcInfo: number, addr: string) => {
-      return new CONTRACT(ctcInfo, algodClient, indexerClient, spec, {
-        addr,
-        sk: new Uint8Array(0),
-      });
-    };
-
-    const ci = makeCi(messengerCtcInfo, addr);
+    const ci = makeCi(ctcInfo, addr);
     const partkey_broadcastR = await ci.partkey_broastcast(
       addr2,
-      new Uint8Array(
-        Buffer.from("rqzFOfwFPvMCkVxk/NKgj8idbwrsEGwxDbQwmHwtACE=", "base64")
-      ),
-      new Uint8Array(
-        Buffer.from("oxigRtYVOHpCD/qldT814sPYeQGzgUfjBOpbD3NHv0Y=", "base64")
-      ),
-      6558699,
-      9558699,
-      1733,
-      new Uint8Array(
-        Buffer.from(
-          "FxHMlnefM+QUzFEi9jF4moujCSs9iFYPyUX0+yvJgoMmXxTZfFd5Wus2InMW/FAP+mXSeZqBrezUdx88q0VTpw==",
-          "base64"
-        )
-      )
+      new Uint8Array(Buffer.from(options.voteK, "base64")),
+      new Uint8Array(Buffer.from(options.selK, "base64")),
+      voteFst,
+      voteLst,
+      voteKd,
+      new Uint8Array(Buffer.from(options.spKey, "base64"))
     );
 
     await signSendAndConfirm(partkey_broadcastR.txns, sk);
@@ -315,7 +318,7 @@ factory
       }
     );
     const initial = Number(options.initial) * 1e6;
-    const paymentAmount = 1034500 + 100000;
+    const paymentAmount = 1134500 + 100000; // not arbitrary
     const owner = options.owner || addr2;
     const funder = options.funder || addr;
     const deadline = options.deadline
@@ -329,6 +332,50 @@ factory
       console.log(appCallTxn["inner-txns"][0]["application-index"]);
     } else {
       console.error(createR);
+    }
+  });
+
+// update all airdrop contracts
+
+factory
+  .command("update-airdrop")
+  .description("Update all airdrop contracts")
+  .option("-d --delete", "Delete the application")
+  .action(async (options) => {
+    const {
+      data: { accounts },
+    } = await axios.get(
+      `https://arc72-idx.nautilus.sh/v1/scs/accounts?parentId=${CTC_INFO_FACTORY_AIRDROP}&deleted=0`
+    );
+    for await (const account of accounts) {
+      try {
+        const { contractId } = account;
+        console.log(`[${contractId}] updating...`);
+        const apid = Number(contractId);
+        await new AirdropClient(
+          {
+            resolveBy: "id",
+            id: apid,
+            sender: {
+              addr,
+              sk,
+            },
+          },
+          algodClient
+        ).appClient.update();
+        const ci = makeCi(apid, addr);
+        ci.setFee(3000);
+        if (options.delete) {
+          ci.setOnComplete(5); // deleteApplicationOC
+        }
+        const updateR = await ci.update();
+        console.log(updateR);
+        if (updateR.success) {
+          await signSendAndConfirm(updateR.txns, sk);
+        }
+      } catch (e) {
+        console.log(e);
+      }
     }
   });
 
@@ -437,10 +484,12 @@ airdrop
 airdrop
   .command("fill")
   .description("Fill the staking contract")
-  .argument("<apid>", "The application ID for the contract")
-  .action(async (apid) => {
-    const ci = makeCi(Number(apid), addr);
-    ci.setPaymentAmount(1e6);
+  .requiredOption("-a, --apid <number>", "Specify the application ID")
+  .requiredOption("-f, --fillAmount <number>", "Specify the amount to fill")
+  .action(async (options) => {
+    const ci = makeCi(Number(options.apid), addr);
+    const paymentAmount = Number(options.fillAmount) * 1e6;
+    ci.setPaymentAmount(paymentAmount);
     const fillR = await ci.fill();
     if (fillR.success) {
       const res = await signSendAndConfirm(fillR.txns, sk);
@@ -454,6 +503,7 @@ airdrop
     const ci = makeCi(Number(apid), addr);
     const currentTimestamp = moment().unix();
     const set_fundingR = await ci.set_funding(currentTimestamp);
+    console.log(set_fundingR);
     if (set_fundingR.success) {
       const res = await signSendAndConfirm(set_fundingR.txns, sk);
     }
@@ -507,36 +557,6 @@ airdrop
   });
 
 airdrop
-  .command("update")
-  .description("Update the airdrop contract")
-  .requiredOption("-a, --apid <number>", "Specify the application ID")
-  .option("-d --delete", "Delete the application")
-  .action(async (options) => {
-    const apid = Number(options.apid);
-    await new AirdropClient(
-      {
-        resolveBy: "id",
-        id: apid,
-        sender: {
-          addr,
-          sk,
-        },
-      },
-      algodClient
-    ).appClient.update();
-    const ci = makeCi(apid, addr);
-    ci.setFee(3000);
-    if (options.delete) {
-      ci.setOnComplete(5); // deleteApplicationOC
-    }
-    const updateR = await ci.update();
-    console.log(updateR);
-    if (updateR.success) {
-      await signSendAndConfirm(updateR.txns, sk);
-    }
-  });
-
-airdrop
   .command("close")
   .description("Close the airdrop contract")
   .argument("<apid>", "The application ID for the contract")
@@ -550,6 +570,30 @@ airdrop
     }
   });
 
+const app = new Command("app").description("Manage app operations");
+
+app
+  .command("update")
+  .description("Update the airdrop contract")
+  .requiredOption("-a, --apid <number>", "Specify the application ID")
+  .option("-c --client <string>", "Specify the client")
+  .option("-d --delete", "Delete the application")
+  .action(async (options) => {
+    const apid = Number(options.apid);
+    const ci = makeCi(apid, addr);
+    ci.setFee(3000);
+    if (options.delete) {
+      ci.setOnComplete(5); // deleteApplicationOC
+    }
+    const updateR = await ci.update();
+    console.log(updateR);
+    if (updateR.success) {
+      await signSendAndConfirm(updateR.txns, sk);
+    }
+  });
+
+program.addCommand(app);
+program.addCommand(messenger);
 program.addCommand(factory);
 program.addCommand(airdrop);
 program.parse(process.argv);

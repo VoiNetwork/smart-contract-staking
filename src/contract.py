@@ -11,6 +11,7 @@ from algopy import (
     itxn,
     op,
     subroutine,
+    compile_contract,
 )
 from src.contract_mab import calculate_mab_pure
 from src.utils import require_payment, get_available_balance, close_offline_on_delete
@@ -106,11 +107,6 @@ class FunderGranted(arc4.Struct):
 class FundingSet(arc4.Struct):
     old_funding: arc4.UInt64
     funding: arc4.UInt64
-
-
-class FundingAborted(arc4.Struct):
-    owner: arc4.Address
-    funder: arc4.Address
 
 
 class TotalReduced(arc4.Struct):
@@ -217,7 +213,7 @@ class Fundable(FundableInterface):
         #########################################
         assert self.funding == UInt64(0)
         #########################################
-        arc4.emit(FundingAborted(arc4.Address(self.funder), arc4.Address(self.funder)))
+        arc4.emit(Closed(arc4.Address(self.funder), arc4.Address(self.funder)))
         close_offline_on_delete(self.funder)
 
     @arc4.abimethod
@@ -446,6 +442,7 @@ class UpgradeableInterface(ARC4Contract):
     # def update(self) -> None:
     #      pass
     ##############################################
+
 
 class Upgradeable(UpgradeableInterface, OwnableInterface):
     def __init__(self) -> None:  # pragma: no cover
@@ -1036,17 +1033,19 @@ class Airdrop(
         assert self.funding == UInt64(0)
         ##########################################
         arc4.emit(
-            FundingAborted(
+            Closed(
                 arc4.Address(Txn.sender),
                 arc4.Address(self.owner),
             )
         )
         close_offline_on_delete(self.owner)
 
-    # placeholder for update method
-    @arc4.abimethod
+    @arc4.abimethod(allow_actions=[OnCompleteAction.DeleteApplication])
     def update(self) -> None:
-        pass
+        assert Txn.sender == self.upgrader, "must be upgrader"
+        assert self.updatable == UInt64(1), "not approved"
+        arc4.emit(Closed(arc4.Address(self.upgrader), arc4.Address(self.funder)))
+        close_offline_on_delete(self.funder)
 
 
 ##################################################
@@ -1087,7 +1086,7 @@ class BaseFactory(Upgradeable):
         Get initial payment.
         """
         payment_amount = require_payment(Txn.sender)
-        mbr_increase = UInt64(1034500)
+        mbr_increase = UInt64(1134500)
         min_balance = op.Global.min_balance  # 100000
         assert (
             payment_amount >= mbr_increase + min_balance
@@ -1135,7 +1134,8 @@ class AirdropFactory(BaseFactory):
         ##########################################
         self.get_initial_payment()
         ##########################################
-        base_app = arc4.arc4_create(Airdrop).created_app
+        compiled = compile_contract(Airdrop, extra_program_pages=3) # max extra pages
+        base_app = arc4.arc4_create(Airdrop, compiled=compiled).created_app
         arc4.emit(FactoryCreated(arc4.UInt64(base_app.id)))
         arc4.abi_call(
             Airdrop.template,
@@ -1150,7 +1150,7 @@ class AirdropFactory(BaseFactory):
             deadline,
             arc4.UInt64(UInt64(0)),  # total
             arc4.UInt64(UInt64(0)),  # funding
-            arc4.Address(Global.zero_address), # delegate
+            arc4.Address(Global.zero_address),  # delegate
             app_id=base_app,
         )
         arc4.abi_call(  # inherit upgrader
@@ -1178,6 +1178,14 @@ class AirdropFactory(BaseFactory):
         # done
         ##########################################
         return base_app.id
+
+    # TODO remove me later
+    @arc4.abimethod
+    def update(self) -> None:
+        assert Txn.sender == self.upgrader, "must be upgrader"
+        assert self.updatable == UInt64(1), "not approved"
+        available_balance = get_available_balance()
+        itxn.Payment(receiver=Txn.sender, amount=available_balance, fee=0).submit()
 
 
 ##################################################
