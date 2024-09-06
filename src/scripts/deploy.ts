@@ -1,19 +1,19 @@
 import fs from "fs";
 import axios from "axios";
 import csv from "csv-parser";
-import { AirdropClient, APP_SPEC as AirdropSpec } from "./AirdropClient.js";
+import { AirdropClient, APP_SPEC as AirdropSpec } from "./clients/AirdropClient.js";
 import {
   AirdropFactoryClient,
   APP_SPEC as AirdropFactorySpec,
-} from "./AirdropFactoryClient.js";
+} from "./clients/AirdropFactoryClient.js";
 import {
   StakingFactoryClient,
   APP_SPEC as StakingFactorySpec,
-} from "./StakingFactoryClient.js";
+} from "./clients/StakingFactoryClient.js";
 import {
   MessengerClient,
   APP_SPEC as MessengerSpec,
-} from "./MessengerClient.js";
+} from "./clients/MessengerClient.js";
 import algosdk from "algosdk";
 import { CONTRACT } from "ulujs";
 import moment from "moment";

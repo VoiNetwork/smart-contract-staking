@@ -2,31 +2,33 @@ import { Command } from "commander";
 import fs from "fs";
 import axios from "axios";
 import csv from "csv-parser";
-import { AirdropClient, APP_SPEC as AirdropSpec } from "./AirdropClient.js";
+import {
+  AirdropClient,
+  APP_SPEC as AirdropSpec,
+} from "./clients/AirdropClient.js";
 import {
   CompensationFactoryClient,
   APP_SPEC as CompensationFactorySpec,
-} from "./CompensationFactoryClient.js";
+} from "./clients/CompensationFactoryClient.js";
 import {
   AirdropFactoryClient,
   APP_SPEC as AirdropFactorySpec,
-} from "./AirdropFactoryClient.js";
+} from "./clients/AirdropFactoryClient.js";
 import {
   StakingFactoryClient,
   APP_SPEC as StakingFactorySpec,
-} from "./StakingFactoryClient.js";
+} from "./clients/StakingFactoryClient.js";
 import {
   MessengerClient,
   APP_SPEC as MessengerSpec,
-} from "./MessengerClient.js";
+} from "./clients/MessengerClient.js";
 import algosdk from "algosdk";
 import { CONTRACT } from "ulujs";
 import moment from "moment";
 import * as dotenv from "dotenv";
-import BigNumber from "bignumber.js";
 dotenv.config({ path: ".env" });
 
-const program = new Command();
+export const program = new Command();
 
 const {
   MN,
@@ -42,9 +44,9 @@ const mnemonic = MN || "";
 const mnemonic2 = MN2 || "";
 const mnemonic3 = MN3 || "";
 
-const { addr, sk } = algosdk.mnemonicToSecretKey(mnemonic);
-const { addr: addr2, sk: sk2 } = algosdk.mnemonicToSecretKey(mnemonic2);
-const { addr: addr3, sk: sk3 } = algosdk.mnemonicToSecretKey(mnemonic3);
+export const { addr, sk } = algosdk.mnemonicToSecretKey(mnemonic);
+export const { addr: addr2, sk: sk2 } = algosdk.mnemonicToSecretKey(mnemonic2);
+export const { addr: addr3, sk: sk3 } = algosdk.mnemonicToSecretKey(mnemonic3);
 
 const ALGO_SERVER = "https://testnet-api.voi.nodly.io";
 const ALGO_INDEXER_SERVER = "https://testnet-idx.voi.nodly.io";
@@ -83,6 +85,79 @@ const signSendAndConfirm = async (txns: string[], sk: any) => {
   );
 };
 
+type DeployType =
+  | "airdrop-factory"
+  | "staking-factory"
+  | "compensation-factory"
+  | "messenger";
+interface DeployOptions {
+  type: DeployType;
+  name: string;
+  periodSeconds: number;
+  periodLimit: number;
+  vestingDelay: number;
+  lockupDelay: number;
+  messengerId: number;
+  distributionCount: number;
+  distributionSeconds: number;
+}
+export const deploy: any = async (options: DeployOptions) => {
+  const deployer = {
+    addr: addr,
+    sk: sk,
+  };
+  let Client;
+  switch (options.type) {
+    case "airdrop-factory": {
+      Client = AirdropFactoryClient;
+      break;
+    }
+    case "staking-factory": {
+      Client = StakingFactoryClient;
+      break;
+    }
+    case "compensation-factory": {
+      Client = CompensationFactoryClient;
+      break;
+    }
+    case "messenger": {
+      Client = MessengerClient;
+      break;
+    }
+    default:
+      console.error("Unknown deploy type");
+  }
+  const clientParams: any = {
+    resolveBy: "creatorAndName",
+    findExistingUsing: indexerClient,
+    creatorAddress: deployer.addr,
+    name: options.name || "",
+    sender: deployer,
+  };
+  const appClient = Client ? new Client(clientParams, algodClient) : null;
+  if (appClient) {
+    const app = await appClient.deploy({
+      deployTimeParams: {
+        PERIOD_SECONDS: options.periodSeconds
+          ? Number(options.periodSeconds)
+          : 1,
+        PERIOD_LIMIT: options.periodLimit ? Number(options.periodLimit) : 1,
+        VESTING_DELAY: options.vestingDelay ? Number(options.vestingDelay) : 1,
+        LOCKUP_DELAY: options.lockupDelay ? Number(options.lockupDelay) : 1,
+        MESSENGER_ID: options.messengerId ? Number(options.messengerId) : 1,
+        DISTRIBUTION_COUNT: options.distributionCount
+          ? Number(options.distributionCount)
+          : 1,
+        DISTRIBUTION_SECONDS: options.distributionSeconds
+          ? Number(options.distributionSeconds)
+          : 1,
+      },
+      onUpdate: "update",
+      onSchemaBreak: "fail",
+    });
+    return app.appId;
+  }
+};
 program
   .command("deploy")
   .requiredOption("-t, --type <string>", "Specify factory type")
@@ -101,64 +176,7 @@ program
     "Specify distribution seconds"
   )
   .description("Deploy a specific contract type")
-  .action(async (options) => {
-    const deployer = {
-      addr: addr,
-      sk: sk,
-    };
-    let Client;
-    switch (options.type) {
-      case "airdrop-factory": {
-        Client = AirdropFactoryClient;
-        break;
-      }
-      case "staking-factory": {
-        Client = StakingFactoryClient;
-        break;
-      }
-      case "compensation-factory": {
-        Client = CompensationFactoryClient;
-        break;
-      }
-      case "messenger": {
-        Client = MessengerClient;
-        break;
-      }
-      default:
-        console.error("Unknown deploy type");
-    }
-    const clientParams = {
-      resolveBy: options.resolver || "creatorAndName",
-      findExistingUsing: indexerClient,
-      creatorAddress: deployer.addr,
-      name: options.name || "",
-      sender: deployer,
-    };
-    const appClient = Client ? new Client(clientParams, algodClient) : null;
-    if (appClient) {
-      await appClient.deploy({
-        deployTimeParams: {
-          PERIOD_SECONDS: options.periodSeconds
-            ? Number(options.periodSeconds)
-            : 1,
-          PERIOD_LIMIT: options.periodLimit ? Number(options.periodLimit) : 1,
-          VESTING_DELAY: options.vestingDelay
-            ? Number(options.vestingDelay)
-            : 1,
-          LOCKUP_DELAY: options.lockupDelay ? Number(options.lockupDelay) : 1,
-          MESSENGER_ID: options.messengerId ? Number(options.messengerId) : 1,
-          DISTRIBUTION_COUNT: options.distributionCount
-            ? Number(options.distributionCount)
-            : 1,
-          DISTRIBUTION_SECONDS: options.distributionSeconds
-            ? Number(options.distributionSeconds)
-            : 1,
-        },
-        onUpdate: "update",
-        onSchemaBreak: "fail",
-      });
-    }
-  });
+  .action(deploy);
 
 program
   .command("cleanup-airdrop")
@@ -290,6 +308,42 @@ factory
     }
   });
 
+export const deployAirdrop = async (options: any) => {
+  const ctcInfo = Number(CTC_INFO_FACTORY_AIRDROP);
+  const ci = new CONTRACT(
+    ctcInfo,
+    algodClient,
+    indexerClient,
+    {
+      name: "",
+      desc: "",
+      methods: AirdropFactorySpec.contract.methods,
+      events: [],
+    },
+    {
+      addr,
+      sk: new Uint8Array(0),
+    }
+  );
+  const initial = Number(options.initial) * 1e6;
+  const paymentAmount = 1134500 + 100000; // not arbitrary
+  const owner = options.owner || addr2;
+  const funder = options.funder || addr;
+  const deadline = options.deadline
+    ? Number(options.deadline)
+    : moment().unix() + 60 * 60 * 24 * 7; // 7 days
+  ci.setPaymentAmount(paymentAmount);
+  ci.setFee(10000);
+  const createR = await ci.create(owner, funder, deadline, initial);
+  if (createR.success) {
+    const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);
+    const apid = appCallTxn["inner-txns"][0]["application-index"];
+    //console.log(createR);
+    return apid;
+  } else {
+    //console.error(createR);
+  }
+};
 factory
   .command("deploy-airdrop")
   .description("Create an airdrop factory")
@@ -300,40 +354,7 @@ factory
     "-a, --initial <number>",
     "Specify the initial airdrop amount"
   )
-  .action(async (options) => {
-    const ctcInfo = Number(CTC_INFO_FACTORY_AIRDROP);
-    const ci = new CONTRACT(
-      ctcInfo,
-      algodClient,
-      indexerClient,
-      {
-        name: "",
-        desc: "",
-        methods: AirdropFactorySpec.contract.methods,
-        events: [],
-      },
-      {
-        addr,
-        sk: new Uint8Array(0),
-      }
-    );
-    const initial = Number(options.initial) * 1e6;
-    const paymentAmount = 1134500 + 100000; // not arbitrary
-    const owner = options.owner || addr2;
-    const funder = options.funder || addr;
-    const deadline = options.deadline
-      ? Number(options.deadline)
-      : moment().unix() + 60 * 60 * 24 * 7; // 7 days
-    ci.setPaymentAmount(paymentAmount);
-    ci.setFee(10000);
-    const createR = await ci.create(owner, funder, deadline, initial);
-    if (createR.success) {
-      const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);
-      console.log(appCallTxn["inner-txns"][0]["application-index"]);
-    } else {
-      console.error(createR);
-    }
-  });
+  .action(deployAirdrop);
 
 // update all airdrop contracts
 
@@ -470,16 +491,20 @@ airdrop
     console.log(res);
   });
 
+// configure the airdrop contract as default owner addr2
+export const airdropConfigure: any = async (apid: number, period: number) => {
+  const ci = makeCi(apid, addr2);
+  const configureR = await ci.configure(period);
+  if (configureR.success) {
+    await signSendAndConfirm(configureR.txns, sk2);
+    return true;
+  }
+  return false;
+};
 airdrop
   .command("configure <apid> <period>")
   .description("Configure the lockup period")
-  .action(async (apid, period) => {
-    const ci2 = makeCi(Number(apid), addr2);
-    const configureR = await ci2.configure(Number(period));
-    if (configureR.success) {
-      await signSendAndConfirm(configureR.txns, sk2);
-    }
-  });
+  .action(airdropConfigure);
 
 airdrop
   .command("fill")
@@ -572,28 +597,33 @@ airdrop
 
 const app = new Command("app").description("Manage app operations");
 
+interface AppUpdateOptions {
+  apid: number;
+  delete: boolean;
+}
+export const updateApp: any = async (options: AppUpdateOptions) => {
+  const apid = Number(options.apid);
+  const ci = makeCi(apid, addr);
+  ci.setFee(3000);
+  if (options.delete) {
+    ci.setOnComplete(5); // deleteApplicationOC
+  }
+  const updateR = await ci.update();
+  if (updateR.success) {
+    await signSendAndConfirm(updateR.txns, sk);
+    return true;
+  }
+  return false;
+};
 app
   .command("update")
   .description("Update the airdrop contract")
   .requiredOption("-a, --apid <number>", "Specify the application ID")
   .option("-c --client <string>", "Specify the client")
   .option("-d --delete", "Delete the application")
-  .action(async (options) => {
-    const apid = Number(options.apid);
-    const ci = makeCi(apid, addr);
-    ci.setFee(3000);
-    if (options.delete) {
-      ci.setOnComplete(5); // deleteApplicationOC
-    }
-    const updateR = await ci.update();
-    console.log(updateR);
-    if (updateR.success) {
-      await signSendAndConfirm(updateR.txns, sk);
-    }
-  });
+  .action(updateApp);
 
 program.addCommand(app);
 program.addCommand(messenger);
 program.addCommand(factory);
 program.addCommand(airdrop);
-program.parse(process.argv);

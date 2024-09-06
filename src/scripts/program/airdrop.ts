@@ -2,14 +2,14 @@ import { Command } from "commander";
 import fs from "fs";
 import csv from "csv-parser";
 import algosdk from "algosdk";
-import { APP_SPEC as AirdropFactorySpec } from "./AirdropFactoryClient.js";
-import { APP_SPEC as AirdropSpec } from "./AirdropClient.js";
+import { APP_SPEC as AirdropFactorySpec } from "../clients/AirdropFactoryClient.js";
+import { APP_SPEC as AirdropSpec } from "../clients/AirdropClient.js";
 import * as dotenv from "dotenv";
 import { CONTRACT, abi } from "ulujs";
 import moment from "moment";
 import BigNumber from "bignumber.js";
 import axios from "axios";
-dotenv.config({ path: ".env" });
+dotenv.config({ path: "../.env" });
 
 // Usage: deploy-itnp1 [options] [command]
 //
@@ -27,8 +27,6 @@ dotenv.config({ path: ".env" });
 // deploy-itnp1 fill --dryrun true --funding 1629788400
 //
 
-const program = new Command();
-
 const lookupRate = (period: number) => {
   switch (period) {
     case 1:
@@ -43,6 +41,28 @@ const lookupRate = (period: number) => {
       return "0.20";
     default:
       return "0.00";
+  }
+};
+
+const networks = (networkName: string) => {
+  switch (networkName) {
+    case "voimain":
+    case "voitest":
+      return {
+        ALGO_SERVER: "https://testnet-api.voi.nodly.io",
+        ALGO_INDEXER_SERVER: "https://testnet-idx.voi.nodly.io",
+        ARC72_INDEXER_SERVER: "https://arc72-idx.nautilus.sh",
+      };
+    case "custom":
+      return {
+        ALGO_SERVER: process.env.ALGOD_SERVER || "",
+        ALGO_INDEXER_SERVER: process.env.INDEXER_SERVER || "",
+      };
+    default:
+      return {
+        ALGO_SERVER: "https://testnet-api.voi.nodly.io",
+        ALGO_INDEXER_SERVER: "https://testnet-idx.voi.nodly.io",
+      };
   }
 };
 
@@ -64,18 +84,36 @@ const writeErrorToFile = (error: any, filePath: string) => {
   fs.appendFileSync(filePath, errorMessage, "utf8");
 };
 
+const program = new Command();
+
+program
+  .option("-n, --network <name>", "Network name", "voitest")
+  .command("help")
+  .description("display help for command")
+  .action((cmd) => {
+    program.help();
+  });
+
 program
   .command("process-csv")
   .description("Process a CSV file and create airdrop contracts")
-  .option("-f, --file <path>", "Path to the CSV file", "data/itnp1.csv")
-  .option("-e, --error-log <path>", "Path to the error log file", "error.log")
+  .option("-f, --file <path>", "Path to the CSV file", "data/airdrop-itnp1.csv")
+  .option(
+    "-e, --error-log <path>",
+    "Path to the error log file",
+    "tmp/error.log"
+  )
   .option("--funder <address>", "Funder's address", "")
   .option("--deadline <timestamp>", "Deadline as a Unix timestamp", "")
   .action(async (options) => {
+    const parentOptions = program.opts();
+    const { ALGO_SERVER, ALGO_INDEXER_SERVER, ARC72_INDEXER_SERVER } = networks(
+      parentOptions.network
+    );
     const { MN, CTC_INFO_FACTORY_AIRDROP } = process.env;
     const {
       data: { accounts },
-    } = await axios.get(`https://arc72-idx.nautilus.sh/v1/scs/accounts`, {
+    } = await axios.get(`${ARC72_INDEXER_SERVER}/v1/scs/accounts`, {
       params: {
         parentId: CTC_INFO_FACTORY_AIRDROP,
       },
@@ -83,9 +121,6 @@ program
 
     const mnemonic = MN || "";
     const { addr, sk } = algosdk.mnemonicToSecretKey(mnemonic);
-
-    const ALGO_SERVER = "https://testnet-api.voi.nodly.io";
-    const ALGO_INDEXER_SERVER = "https://testnet-idx.voi.nodly.io";
 
     const algodClient = new algosdk.Algodv2(
       process.env.ALGOD_TOKEN || "",
@@ -122,10 +157,8 @@ program
       .on("end", async () => {
         console.log("CSV file successfully processed");
         for (const row of results) {
-          // add summary
-
-          // add conifrmation
-
+          // TODO add summary
+          // TODO add conifrmation
           const initial = BigInt(
             new BigNumber(row.MainnetP0)
               .multipliedBy(new BigNumber(10).pow(6))
@@ -194,13 +227,24 @@ program
 program
   .command("check")
   .description("Check that all are set up")
-  .option("-f, --file <path>", "Path to the CSV file", "data/itnp1.csv")
-  .option("-e, --error-log <path>", "Path to the error log file", "error.log")
+  .option("-f, --file <path>", "Path to the CSV file", "data/airdrop-itnp1.csv")
+  .option(
+    "-e, --error-log <path>",
+    "Path to the error log file",
+    "tmp/error.log"
+  )
+  .option(
+    "-o, --output <path>",
+    "Path to the output file",
+    "tmp/airdrop-itnp1-payload.json"
+  )
   .action(async (options) => {
+    const parentOptions = program.opts();
+    const { ARC72_INDEXER_SERVER } = networks(parentOptions.network);
     const { CTC_INFO_FACTORY_AIRDROP } = process.env;
     const {
       data: { accounts },
-    } = await axios.get(`https://arc72-idx.nautilus.sh/v1/scs/accounts`, {
+    } = await axios.get(`${ARC72_INDEXER_SERVER}/v1/scs/accounts`, {
       params: {
         parentId: CTC_INFO_FACTORY_AIRDROP,
       },
@@ -259,32 +303,37 @@ program
             }`
           );
         }
-        fs.writeFileSync(
-          "itnp1-payload.json",
-          JSON.stringify(contracts, null, 2)
-        );
+        fs.writeFileSync(options.output, JSON.stringify(contracts, null, 2));
       });
   });
-
-// add fill command
 
 program
   .command("fill")
   .description("Fill the contracts")
   .requiredOption("--funding <number>", "Funding timestamp")
-  .option("-f, --file <path>", "Path to the JSON file", "itnp1-payload.json")
-  .option("-e, --error-log <path>", "Path to the error log file", "error.log")
+  .option(
+    "-f, --file <path>",
+    "Path to the JSON file",
+    "tmp/airdrop-itnp1-payload.json"
+  )
+  .option(
+    "-e, --error-log <path>",
+    "Path to the error log file",
+    "tmp/error.log"
+  )
   .option("--dryrun <boolean>", "No dry run")
   .action(async (options) => {
+    const parentOptions = program.opts();
+    const { ALGO_SERVER, ALGO_INDEXER_SERVER } = networks(
+      parentOptions.network
+    );
     const dryrun = (options.dryrun ?? "true") === "true";
     const funding = Number(options.funding);
+    const infile = options.file;
 
     const { MN } = process.env;
     const mnemonic = MN || "";
     const { addr, sk } = algosdk.mnemonicToSecretKey(mnemonic);
-
-    const ALGO_SERVER = "https://testnet-api.voi.nodly.io";
-    const ALGO_INDEXER_SERVER = "https://testnet-idx.voi.nodly.io";
 
     const algodClient = new algosdk.Algodv2(
       process.env.ALGOD_TOKEN || "",
@@ -310,7 +359,7 @@ program
         )
       );
     };
-    const contracts = JSON.parse(fs.readFileSync(options.file, "utf8"));
+    const contracts = JSON.parse(fs.readFileSync(infile, "utf8"));
 
     if (dryrun) {
       console.log("=== DRY RUN ===");
@@ -330,20 +379,19 @@ program
 
       const globalState = appInfo.application.params["global-state"];
 
-      const funding =
+      const globalFunding =
         globalState.find((d: any) => d.key === "ZnVuZGluZw==")?.value?.uint ||
         0;
 
-      const total =
+      const globalTotal =
         globalState.find((d: any) => d.key === "dG90YWw=")?.value?.uint || 0;
 
-      if (funding !== 0) {
+      if (globalFunding !== 0) {
         console.log(
-          `ALREADY FUNDED ${ctcInfo} ${row.Address} ${funding} ${total}`
+          `ALREADY FUNDED ${ctcInfo} ${row.Address} ${globalTotal} ${globalTotal}`
         );
         continue;
       }
-
       const ci = new CONTRACT(ctcInfo, algodClient, indexerClient, abi.custom, {
         addr,
         sk: new Uint8Array(0),
