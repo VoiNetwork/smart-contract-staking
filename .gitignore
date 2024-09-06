@@ -10,3 +10,5 @@ node_modules
 .coverage
 coverage.xml
 htmlcov
+error.log
+*-payload.json

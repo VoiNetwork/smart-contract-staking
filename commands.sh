@@ -4,11 +4,11 @@ scs-build-image() {
 }
 scs-build-artifacts() {
   docker run -v $(pwd):/src -v $(pwd)/artifacts:/artifacts algokit-builder && 
-  cp -v artifacts/AirdropClient.ts ./src/scripts/ && 
-  cp -v artifacts/AirdropFactoryClient.ts ./src/scripts/ && 
-  cp -v artifacts/StakingFactoryClient.ts ./src/scripts/ && 
-  cp -v artifacts/CompensationFactoryClient.ts ./src/scripts/ && 
-  cp -v artifacts/MessengerClient.ts ./src/scripts/
+  cp -v artifacts/AirdropClient.ts ./src/scripts/clients/ && 
+  cp -v artifacts/AirdropFactoryClient.ts ./src/scripts/clients/ && 
+  cp -v artifacts/StakingFactoryClient.ts ./src/scripts/clients/ && 
+  cp -v artifacts/CompensationFactoryClient.ts ./src/scripts/clients/ && 
+  cp -v artifacts/MessengerClient.ts ./src/scripts/clients/
 }
 scs-build-all() {
   scs-build-image && scs-build-artifacts
@@ -53,6 +53,29 @@ scs-test() {
       } ;;
       *) {
         echo "test not found"
+        false
+      } ;;
+    esac
+  )
+}
+scs-program() {
+  (
+    set -e
+    cd src/scripts/program
+    npx tsc 
+    case ${1} in
+      "airdrop") {
+        node ${1}.js ${@:2}
+      } ;;
+      *) {
+        cat << EOF
+scs-program
+
+  execute a program
+
+  USAGE scs-program airdrop [command] [args]
+
+EOF
         false
       } ;;
     esac

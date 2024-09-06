@@ -1,2 +1,2 @@
 #set -e 
-cli() { node ${PWD}/command.js $@; }
+cli() { node ${PWD}/main.js $@; }
