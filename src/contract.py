@@ -1158,6 +1158,11 @@ class AirdropFactory(BaseFactory):
             Global.creator_address,
             app_id=base_app,
         )
+        arc4.abi_call(  # inherit upgrader
+            Airdrop.grant_upgrader,
+            Global.creator_address,
+            app_id=base_app,
+        )
         itxn.Payment(
             receiver=base_app.address, amount=op.Global.min_balance, fee=0  # 100000
         ).submit()
@@ -1266,7 +1271,6 @@ class CompensationFactory(BaseFactory):
         Factory for staking contract.
         """
         super().__init__()
-        self.contract_version = UInt64(1)
 
     @arc4.abimethod
     def create(
