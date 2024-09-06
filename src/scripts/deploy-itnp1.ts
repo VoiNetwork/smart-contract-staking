@@ -394,7 +394,6 @@ program
           `FAILURE ${ctcInfo} ${row.Address} ${row.period} ${row.total} ${customR.error}`
         );
       }
-      //break;
     }
   });
 
