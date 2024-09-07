@@ -58,6 +58,14 @@ scs-test() {
     esac
   )
 }
+scs-mocha() {
+  (
+    set -e
+    cd src/scripts
+    npx tsc
+    npm test
+  )
+}
 scs-program() {
   (
     set -e
