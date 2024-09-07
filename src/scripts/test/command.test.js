@@ -1,10 +1,14 @@
 import { expect } from "chai";
 import {
   airdropConfigure,
+  airdropDeposit,
   airdropFill,
+  airdropGetMb,
   airdropGetState,
   airdropReduceTotal,
   airdropSetFunding,
+  airdropSetVersion,
+  airdropWithdraw,
   deploy,
   deployAirdrop,
   updateApp,
@@ -45,7 +49,7 @@ describe("Test Suite with External Fixtures", function () {
       distributionCount: 12,
       distributionSeconds: seconds,
     });
-    const deadline = moment().add(15, "seconds").unix();
+    const deadline = moment().add(20, "seconds").unix();
     const airdrop = await deployAirdrop({
       apid: airdropFactory,
       initial: 1e6,
@@ -111,13 +115,30 @@ describe("Test Suite with External Fixtures", function () {
     expect(state.distributionCount).to.be.eq(12);
     expect(state.distributionSeconds).to.be.a("number");
     expect(state.distributionSeconds).to.be.eq(1);
+    expect(state.contractVersion).to.be.a("number");
+    expect(state.contractVersion).to.be.eq(0);
+    expect(state.deploymentVersion).to.be.a("number");
+    expect(state.deploymentVersion).to.be.eq(0);
     expect(state.owner).not.to.be.a(state.funder);
   });
 
   // upgrader should be able to set version
 
   it("airdrop upgrader should be able to set version", async function () {
-    // not yet implemented
+    const success = await airdropSetVersion({
+      apid: fixtureData.apps.airdrop,
+      contractVersion: 999,
+      deploymentVersion: 1,
+    });
+    const state = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+    expect(state.contractVersion).to.be.a("number");
+    expect(state.contractVersion).to.be.eq(999);
+    expect(state.deploymentVersion).to.be.a("number");
+    expect(state.deploymentVersion).to.be.eq(1);
   });
 
   // anyone should not be able to configure airdrop
@@ -153,11 +174,11 @@ describe("Test Suite with External Fixtures", function () {
       apid: fixtureData.apps.airdrop,
       period: 1,
     });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
     const { period } = await airdropGetState({
       apid: fixtureData.apps.airdrop,
     });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
     expect(period).to.be.a("number");
     expect(period).to.be.eq(1);
   });
@@ -184,12 +205,74 @@ describe("Test Suite with External Fixtures", function () {
         /transaction [^:]*. logic eval error: assert failed pc=[0-9]+\. Details: app=[0-9]+, pc=[0-9]+, opcodes=.*LatestTimestamp.*assert/;
       expect(err.message).to.match(regex);
     }
-    // expect period to be 1
   });
 
-  // owner should be able to withdraw
+  // owner mb should be equal to available balance (0)
+
+  it("airdrop owner mb should be equal to available balance (0)", async function () {
+    const mb = await airdropGetMb({
+      apid: fixtureData.apps.airdrop,
+    });
+    expect(mb).to.be.a("string");
+    expect(mb).to.be.eq("0");
+  });
+
+  // owner should be able to withdraw (0)
+
+  it("airdrop owner should be able to withdraw (0)", async function () {
+    const success = await airdropWithdraw({
+      apid: fixtureData.apps.airdrop,
+      amount: 0,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+  });
+
+  // owner mb should be equal to total
+
+  it("airdrop owner mb should be equal to total before funding", async function () {
+    const { total } = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    const mb = await airdropGetMb({
+      apid: fixtureData.apps.airdrop,
+    });
+    expect(mb).to.be.a("string");
+    expect(mb).to.be.eq(total);
+  });
 
   // owner should be able to deposit
+
+  it("airdrop owner should be able to deposit", async function () {
+    const success = await airdropDeposit({
+      apid: fixtureData.apps.airdrop,
+      amount: 1,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+  });
+
+  // owner should not be able to withdraw over
+
+  it("airdrop owner should not be able to withdraw over", async function () {
+    const success = await airdropWithdraw({
+      apid: fixtureData.apps.airdrop,
+      amount: 2,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  // owner should be able to withdraw (1)
+
+  it("airdrop owner should be able to withdraw", async function () {
+    const success = await airdropWithdraw({
+      apid: fixtureData.apps.airdrop,
+      amount: 1,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+  });
 
   // owner should be able to participate
 
@@ -238,6 +321,8 @@ describe("Test Suite with External Fixtures", function () {
     // not yet implemented
   });
 
+  // owner mb should be equal to total during lockup
+
   // funder may extend funding if not in past
 
   // funder may fill additional amount
@@ -245,6 +330,10 @@ describe("Test Suite with External Fixtures", function () {
   // owner should not be able to configure after funding
 
   // owner should be able to withdraw unlocked tokens during vesting
+
+  // owner mb should be between 0 and total during vesting
+
+  // owner mb should be equal to 0 after vesting
 
   // owner should be able to withdraw all tokens after vesting
 
