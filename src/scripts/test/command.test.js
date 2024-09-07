@@ -66,7 +66,7 @@ describe("Test Suite with External Fixtures", function () {
 
   after(async function () {
     console.log("Cleaning apps...");
-    // we use update to delete the app in this case
+    // we use update to delete the app in this case 
     // since it is not closed in the following tests
     await updateApp({
       apid: fixtureData.apps.airdrop,
@@ -255,6 +255,7 @@ describe("Test Suite with External Fixtures", function () {
   // [Note] no longer have ownership of contract
 
   // [Note] no longer have funder role
+
 });
 
 // Path 2(A): Abort funding
