@@ -44,8 +44,11 @@ const mnemonic = MN || "";
 const mnemonic2 = MN2 || "";
 const mnemonic3 = MN3 || "";
 
+// funder, upgrader
 export const { addr, sk } = algosdk.mnemonicToSecretKey(mnemonic);
+// owner
 export const { addr: addr2, sk: sk2 } = algosdk.mnemonicToSecretKey(mnemonic2);
+// delegate
 export const { addr: addr3, sk: sk3 } = algosdk.mnemonicToSecretKey(mnemonic3);
 
 const ALGO_SERVER = "https://testnet-api.voi.nodly.io";
@@ -308,8 +311,16 @@ factory
     }
   });
 
-export const deployAirdrop = async (options: any) => {
-  const ctcInfo = Number(CTC_INFO_FACTORY_AIRDROP);
+interface DeployAirdropOptions {
+  apid: number;
+  initial: number;
+  owner?: string;
+  funder?: string;
+  deadline?: number;
+  extraPayment?: number;
+}
+export const deployAirdrop: any = async (options: DeployAirdropOptions) => {
+  const ctcInfo = Number(options.apid || CTC_INFO_FACTORY_AIRDROP);
   const ci = new CONTRACT(
     ctcInfo,
     algodClient,
@@ -326,14 +337,14 @@ export const deployAirdrop = async (options: any) => {
     }
   );
   const initial = Number(options.initial) * 1e6;
-  const paymentAmount = 1134500 + 100000; // not arbitrary
+  const paymentAmount = 1234500 + Number(options.extraPayment || 0);
   const owner = options.owner || addr2;
   const funder = options.funder || addr;
   const deadline = options.deadline
     ? Number(options.deadline)
     : moment().unix() + 60 * 60 * 24 * 7; // 7 days
   ci.setPaymentAmount(paymentAmount);
-  ci.setFee(10000);
+  ci.setFee(8000);
   const createR = await ci.create(owner, funder, deadline, initial);
   if (createR.success) {
     const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);
@@ -425,8 +436,8 @@ factory
 
     const stakingAmount = Number(options.amount) * 1e6;
     const paymentAmount = stakingAmount + 1034500 + 100000;
-    const owner = addr2;
     const funder = addr;
+    const owner = addr2;
     const delegate = addr3;
     const period = Number(options.period);
     ci.setPaymentAmount(paymentAmount);
@@ -439,8 +450,6 @@ factory
       console.error(createR);
     }
   });
-
-const airdrop = new Command("airdrop").description("Manage airdrop operations");
 
 const makeCi = (ctcInfo: number, addr: string) => {
   return new CONTRACT(
@@ -455,17 +464,102 @@ const makeCi = (ctcInfo: number, addr: string) => {
   );
 };
 
+const airdrop = new Command("airdrop").description("Manage airdrop operations");
+
+interface AirdropGetStateOptions {
+  apid: number;
+  name?: string;
+  lazy?: boolean;
+}
+export const airdropGetState: any = async (options: AirdropGetStateOptions) => {
+  const globalState = await new AirdropClient(
+    { resolveBy: "id", id: Number(options.apid) },
+    algodClient
+  ).getGlobalState();
+  if (options.lazy) {
+    return { globalState };
+  }
+  const state = {
+    contractVersion: globalState.contractVersion?.asNumber(),
+    deadline: globalState.deadline?.asNumber(),
+    delegate: algosdk.encodeAddress(
+      globalState.delegate?.asByteArray() || new Uint8Array()
+    ),
+    deployer: algosdk.encodeAddress(
+      globalState.deployer?.asByteArray() || new Uint8Array()
+    ),
+    deploymentVersion: globalState.deploymentVersion?.asNumber(),
+    distributionCount: globalState.distributionCount?.asNumber(),
+    distributionSeconds: globalState.distributionSeconds?.asNumber(),
+    funder: algosdk.encodeAddress(
+      globalState.funder?.asByteArray() || new Uint8Array()
+    ),
+    funding: globalState.funding?.asNumber(),
+    initial: globalState.initial?.asBigInt().toString(),
+    lockupDelay: globalState.lockupDelay?.asNumber(),
+    messengerId: globalState.messengerId?.asNumber(),
+    owner: algosdk.encodeAddress(
+      globalState.owner?.asByteArray() || new Uint8Array()
+    ),
+    parentId: globalState.parentId?.asNumber(),
+    period: globalState.period?.asNumber(),
+    periodLimit: globalState.periodLimit?.asNumber(),
+    periodSeconds: globalState.periodSeconds?.asNumber(),
+    stakeable: globalState.stakeable?.asNumber(),
+    total: globalState.total?.asBigInt().toString(),
+    updatable: globalState.updatable?.asNumber(),
+    upgrader: algosdk.encodeAddress(
+      globalState.upgrader?.asByteArray() || new Uint8Array()
+    ),
+    vestingDelay: globalState.vestingDelay?.asNumber(),
+  };
+  return state;
+};
 airdrop
-  .command("reduce-total <amount>")
-  .description("Reduce the total airdrop amount")
-  .action(async (amount) => {
-    const ci = makeCi(Number(CTC_INFO_AIRDROP), addr);
-    const reduceR = await ci.reduce_total(Number(amount));
-    console.log(reduceR);
-    const res = await signSendAndConfirm(reduceR.txns, sk);
-    console.log(res);
+  .command("get")
+  .description("Get the state of the airdrop contract")
+  .requiredOption("-a, --apid <number>", "Specify the application ID")
+  .action(airdropGetState);
+
+airdrop
+  .command("list")
+  .description("List all airdrop contracts")
+  .action(async () => {
+    const {
+      data: { accounts },
+    } = await axios.get(
+      `https://arc72-idx.nautilus.sh/v1/scs/accounts?parentId=${CTC_INFO_FACTORY_AIRDROP}&deleted=0`
+    );
+    for await (const account of accounts) {
+      console.log(account);
+    }
   });
 
+interface AirdropReduceTotalOptions {
+  apid: number;
+  amount: number;
+  simulate?: boolean;
+}
+export const airdropReduceTotal: any = async (
+  options: AirdropReduceTotalOptions
+) => {
+  const ci = makeCi(Number(options.apid), addr);
+  const reduceR = await ci.reduce_total(Number(options.amount));
+  if (reduceR.success) {
+    await signSendAndConfirm(reduceR.txns, sk);
+    return true;
+  }
+  return false;
+};
+airdrop
+  .command("reduce-total <amount>")
+  .requiredOption("-a, --amount <number>", "Specify the amount to reduce")
+  .action(airdropReduceTotal);
+
+interface AirdropAbortFundingOptions {}
+export const airdropAbortFunding: any = async (
+  options: AirdropAbortFundingOptions
+) => {};
 airdrop
   .command("abort-funding")
   .description("Abort funding for the airdrop")
@@ -474,7 +568,6 @@ airdrop
     ci.setFee(3000);
     ci.setOnComplete(5); // deleteApplicationOC
     const abortR = await ci.abort_funding();
-    console.log(abortR);
     const res = await signSendAndConfirm(abortR.txns, sk);
     console.log(res);
   });
@@ -492,11 +585,21 @@ airdrop
   });
 
 // configure the airdrop contract as default owner addr2
-export const airdropConfigure: any = async (apid: number, period: number) => {
-  const ci = makeCi(apid, addr2);
-  const configureR = await ci.configure(period);
+interface AirdropConfigureOptions {
+  apid: number;
+  period: number;
+  sender?: string;
+  simulate?: boolean;
+}
+export const airdropConfigure: any = async (
+  options: AirdropConfigureOptions
+) => {
+  const ci = makeCi(options.apid, options.sender || addr2);
+  const configureR = await ci.configure(options.period);
   if (configureR.success) {
-    await signSendAndConfirm(configureR.txns, sk2);
+    if (!options.simulate) {
+      await signSendAndConfirm(configureR.txns, sk2);
+    }
     return true;
   }
   return false;
@@ -506,33 +609,56 @@ airdrop
   .description("Configure the lockup period")
   .action(airdropConfigure);
 
+interface AirdropFillOptions {
+  apid: number;
+  amount: number;
+  simulate?: boolean;
+}
+export const airdropFill: any = async (options: AirdropFillOptions) => {
+  const ci = makeCi(Number(options.apid), addr);
+  const paymentAmount = Number(options.amount) * 1e6;
+  ci.setPaymentAmount(paymentAmount);
+  const fillR = await ci.fill();
+  if (fillR.success) {
+    if (!options.simulate) {
+      await signSendAndConfirm(fillR.txns, sk);
+    }
+    return true;
+  }
+  return false;
+};
 airdrop
   .command("fill")
   .description("Fill the staking contract")
   .requiredOption("-a, --apid <number>", "Specify the application ID")
   .requiredOption("-f, --fillAmount <number>", "Specify the amount to fill")
-  .action(async (options) => {
-    const ci = makeCi(Number(options.apid), addr);
-    const paymentAmount = Number(options.fillAmount) * 1e6;
-    ci.setPaymentAmount(paymentAmount);
-    const fillR = await ci.fill();
-    if (fillR.success) {
-      const res = await signSendAndConfirm(fillR.txns, sk);
-    }
-  });
+  .option("-s, --simulate", "Simulate the fill", false)
+  .action(airdropFill);
 
-airdrop
-  .command("set-funding <apid> <timestamp>")
-  .description("Set the funding timestamp")
-  .action(async (apid, timestamp) => {
-    const ci = makeCi(Number(apid), addr);
-    const currentTimestamp = moment().unix();
-    const set_fundingR = await ci.set_funding(currentTimestamp);
-    console.log(set_fundingR);
-    if (set_fundingR.success) {
-      const res = await signSendAndConfirm(set_fundingR.txns, sk);
+interface AirdropSetFundingOptions {
+  apid: number;
+  timestamp: number;
+  simulate?: boolean;
+}
+export const airdropSetFunding: any = async (
+  options: AirdropSetFundingOptions
+) => {
+  const ci = makeCi(Number(options.apid), addr);
+  const set_fundingR = await ci.set_funding(options.timestamp);
+  if (set_fundingR.success) {
+    if (!options.simulate) {
+      await signSendAndConfirm(set_fundingR.txns, sk);
     }
-  });
+    return true;
+  }
+  return false;
+};
+airdrop
+  .command("set-funding")
+  .description("Set the funding timestamp")
+  .requiredOption("-a, --apid <number>", "Specify the application ID")
+  .requiredOption("-t, --timestamp <number>", "Specify the timestamp")
+  .action(airdropSetFunding);
 
 airdrop
   .command("participate")
