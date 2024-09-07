@@ -22,7 +22,7 @@ import {
   MessengerClient,
   APP_SPEC as MessengerSpec,
 } from "./clients/MessengerClient.js";
-import algosdk from "algosdk";
+import algosdk, { waitForConfirmation } from "algosdk";
 import { CONTRACT } from "ulujs";
 import moment from "moment";
 import * as dotenv from "dotenv";
@@ -349,10 +349,10 @@ export const deployAirdrop: any = async (options: DeployAirdropOptions) => {
   if (createR.success) {
     const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);
     const apid = appCallTxn["inner-txns"][0]["application-index"];
-    //console.log(createR);
+    console.log(apid);
     return apid;
   } else {
-    //console.error(createR);
+    console.error(createR);
   }
 };
 factory
@@ -465,6 +465,27 @@ const makeCi = (ctcInfo: number, addr: string) => {
 };
 
 const airdrop = new Command("airdrop").description("Manage airdrop operations");
+
+interface AirdropSetVersionOptions {
+  apid: number;
+  contractVersion: number;
+  deploymentVersion: number;
+  simulate?: boolean;
+}
+export const airdropSetVersion = async (options: AirdropSetVersionOptions) => {
+  const ci = makeCi(options.apid, addr);
+  const setVersionR = await ci.set_version(
+    options.contractVersion,
+    options.deploymentVersion
+  );
+  if (setVersionR.success) {
+    if (!options.simulate) {
+      await signSendAndConfirm(setVersionR.txns, sk);
+    }
+    return true;
+  }
+  return false;
+};
 
 interface AirdropGetStateOptions {
   apid: number;
@@ -688,24 +709,66 @@ airdrop
     console.log(res);
   });
 
+interface AirdropDepositOptions {
+  apid: number;
+  amount: number;
+  address?: string;
+}
+export const airdropDeposit = async (options: AirdropDepositOptions) => {
+  const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+    from: options.address || addr2,
+    to: algosdk.getApplicationAddress(options.apid),
+    amount: Number(options.amount) * 1e6,
+    suggestedParams: await algodClient.getTransactionParams().do(),
+  });
+  const signedTxn = txn.signTxn(sk2);
+  const { txId } = await algodClient.sendRawTransaction(signedTxn).do();
+  const result = await waitForConfirmation(algodClient, txId, 3);
+  return !result["pool-error"];
+};
+
+interface AirdropWithdrawOptions {
+  apid: number;
+  amount: number;
+  address?: string;
+  simulate?: boolean;
+}
+export const airdropWithdraw: any = async (options: AirdropWithdrawOptions) => {
+  const ci = makeCi(Number(options.apid), options.address || addr2);
+  const withdrawAmount = Number(options.amount) * 1e6;
+  ci.setFee(2000);
+  const withdrawR = await ci.withdraw(withdrawAmount);
+  if (withdrawR.success) {
+    if (!options.simulate) {
+      await signSendAndConfirm(withdrawR.txns, sk2);
+    }
+    return true;
+  } else {
+    return false;
+  }
+};
+
+interface AirdropGetMbOptions {
+  apid: number;
+  address: string;
+}
+export const airdropGetMb: any = async (options: AirdropGetMbOptions) => {
+  const ctcInfo = Number(options.apid);
+  const ci = makeCi(ctcInfo, options.address || addr2);
+  ci.setFee(2000);
+  const withdrawR = await ci.withdraw(0);
+  if (withdrawR.success) {
+    const withdraw = withdrawR.returnValue;
+    return withdraw.toString();
+  } else {
+    return "0";
+  }
+};
 airdrop
   .command("get-mb")
   .description("Simulate owner's withdrawal and log 'mab' value")
-  .argument("<apid>", "The application ID for the contract")
-  .action(async (apid) => {
-    const ctcInfo = Number(apid);
-    const ci = makeCi(ctcInfo, addr2);
-    // TODO get owner
-    // Simulate as owner
-    ci.setFee(2000);
-    const withdrawR = await ci.withdraw(0);
-    if (withdrawR.success) {
-      const withdraw = withdrawR.returnValue;
-      console.log(withdraw.toString());
-    } else {
-      console.log("0");
-    }
-  });
+  .option("-a, --apid <number>", "Specify the application ID")
+  .action(airdropGetMb);
 
 airdrop
   .command("close")
