@@ -23,7 +23,7 @@ import {
   APP_SPEC as MessengerSpec,
 } from "./clients/MessengerClient.js";
 import algosdk, { waitForConfirmation } from "algosdk";
-import { CONTRACT } from "ulujs";
+import { CONTRACT, abi } from "ulujs";
 import moment from "moment";
 import * as dotenv from "dotenv";
 dotenv.config({ path: ".env" });
@@ -86,6 +86,17 @@ const signSendAndConfirm = async (txns: string[], sk: any) => {
       algosdk.waitForConfirmation(algodClient, res.txID, 4)
     )
   );
+};
+
+export const getAvailableBalance = async (addr: string) => {
+  const account = await algodClient.accountInformation(addr).do();
+  const minBalance = account["min-balance"];
+  const balance = account.amount;
+  return balance - minBalance;
+};
+
+export const getApplicationAvailableBalance = async (apid: number) => {
+  return await getAvailableBalance(algosdk.getApplicationAddress(apid));
 };
 
 type DeployType =
@@ -349,10 +360,7 @@ export const deployAirdrop: any = async (options: DeployAirdropOptions) => {
   if (createR.success) {
     const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);
     const apid = appCallTxn["inner-txns"][0]["application-index"];
-    console.log(apid);
     return apid;
-  } else {
-    console.error(createR);
   }
 };
 factory
@@ -365,7 +373,10 @@ factory
     "-a, --initial <number>",
     "Specify the initial airdrop amount"
   )
-  .action(deployAirdrop);
+  .action(async (options: DeployAirdropOptions) => {
+    const apid = await deployAirdrop(options);
+    console.log(apid);
+  });
 
 // update all airdrop contracts
 
@@ -465,6 +476,64 @@ const makeCi = (ctcInfo: number, addr: string) => {
 };
 
 const airdrop = new Command("airdrop").description("Manage airdrop operations");
+
+interface AirdropGrantFunderOptions {
+  apid: number;
+  receiver: string;
+  sender?: string;
+  simulate?: boolean;
+}
+export const airdropGrantFunder: any = async (
+  options: AirdropGrantFunderOptions
+) => {
+  const ci = makeCi(options.apid, options.sender || addr);
+  const grantR = await ci.grant_funder(options.receiver || addr2);
+  if (grantR.success) {
+    if (!options.simulate) {
+      await signSendAndConfirm(grantR.txns, sk);
+    }
+    return true;
+  }
+  return false;
+};
+
+interface AirdropTransferOptions {
+  apid: number;
+  receiver: number;
+  sender?: string;
+  simulate?: boolean;
+}
+export const airdropTransfer: any = async (options: AirdropTransferOptions) => {
+  const ci = makeCi(options.apid, options.sender || addr2);
+  const transferR = await ci.transfer(options.receiver || addr);
+  if (transferR.success) {
+    if (!options.simulate) {
+      await signSendAndConfirm(transferR.txns, sk2);
+    }
+    return true;
+  }
+  return false;
+};
+
+interface AirdropSetDelegateOptions {
+  apid: number;
+  delegate: string;
+  simulate?: boolean;
+  sender?: string;
+}
+export const airdropSetDelegate = async (
+  options: AirdropSetDelegateOptions
+) => {
+  const ci = makeCi(options.apid, options.sender || addr2);
+  const setDelegateR = await ci.set_delegate(options.delegate || addr);
+  if (setDelegateR.success) {
+    if (!options.simulate) {
+      await signSendAndConfirm(setDelegateR.txns, sk2);
+    }
+    return true;
+  }
+  return false;
+};
 
 interface AirdropSetVersionOptions {
   apid: number;
@@ -577,21 +646,31 @@ airdrop
   .requiredOption("-a, --amount <number>", "Specify the amount to reduce")
   .action(airdropReduceTotal);
 
-interface AirdropAbortFundingOptions {}
+interface AirdropAbortFundingOptions {
+  apid: number;
+  simulate?: boolean;
+  sender?: string;
+}
 export const airdropAbortFunding: any = async (
   options: AirdropAbortFundingOptions
-) => {};
+) => {
+  const ci = makeCi(Number(options.apid), options.sender || addr);
+  ci.setFee(3000);
+  ci.setOnComplete(5); // deleteApplicationOC
+  const abortR = await ci.abort_funding();
+  if (abortR.success) {
+    if (!options.simulate) {
+      await signSendAndConfirm(abortR.txns, sk);
+    }
+    return true;
+  }
+  return false;
+};
 airdrop
   .command("abort-funding")
   .description("Abort funding for the airdrop")
-  .action(async () => {
-    const ci = makeCi(Number(CTC_INFO_AIRDROP), addr);
-    ci.setFee(3000);
-    ci.setOnComplete(5); // deleteApplicationOC
-    const abortR = await ci.abort_funding();
-    const res = await signSendAndConfirm(abortR.txns, sk);
-    console.log(res);
-  });
+  .option("-a, --apid <number>", "Specify the application ID")
+  .action(airdropAbortFunding);
 
 airdrop
   .command("setup <ownerAddr>")
@@ -634,19 +713,67 @@ interface AirdropFillOptions {
   apid: number;
   amount: number;
   simulate?: boolean;
+  timestamp?: number;
+  sender?: string;
 }
 export const airdropFill: any = async (options: AirdropFillOptions) => {
-  const ci = makeCi(Number(options.apid), addr);
-  const paymentAmount = Number(options.amount) * 1e6;
-  ci.setPaymentAmount(paymentAmount);
-  const fillR = await ci.fill();
-  if (fillR.success) {
-    if (!options.simulate) {
-      await signSendAndConfirm(fillR.txns, sk);
+  const timestamp = options.timestamp || 0;
+  if (timestamp <= 0) {
+    const ci = makeCi(Number(options.apid), options.sender || addr);
+    const paymentAmount = Number(options.amount) * 1e6;
+    ci.setPaymentAmount(paymentAmount);
+    const fillR = await ci.fill();
+    if (fillR.success) {
+      if (!options.simulate) {
+        await signSendAndConfirm(fillR.txns, sk);
+      }
+      return true;
     }
-    return true;
+    return false;
+  } else {
+    const ci = new CONTRACT(
+      Number(options.apid),
+      algodClient,
+      indexerClient,
+      abi.custom,
+      {
+        addr,
+        sk: new Uint8Array(0),
+      }
+    );
+    const builder = new CONTRACT(
+      Number(options.apid),
+      algodClient,
+      indexerClient,
+      makeSpec(AirdropSpec.contract.methods),
+      {
+        addr,
+        sk: new Uint8Array(0),
+      },
+      true,
+      false,
+      true
+    );
+    const buildN = [];
+    buildN.push({
+      ...(await builder.fill()).obj,
+      payment: Number(options.amount) * 1e6,
+    });
+    buildN.push({
+      ...(await builder.set_funding(timestamp)).obj,
+    });
+    ci.setFee(1000);
+    ci.setEnableGroupResourceSharing(true);
+    ci.setExtraTxns(buildN);
+    const customR = await ci.custom();
+    if (customR.success) {
+      if (!options.simulate) {
+        await signSendAndConfirm(customR.txns, sk);
+      }
+      return true;
+    }
+    return false;
   }
-  return false;
 };
 airdrop
   .command("fill")
@@ -654,6 +781,7 @@ airdrop
   .requiredOption("-a, --apid <number>", "Specify the application ID")
   .requiredOption("-f, --fillAmount <number>", "Specify the amount to fill")
   .option("-s, --simulate", "Simulate the fill", false)
+  .option("-g --timestamp <number>", "Funding timestamp")
   .action(airdropFill);
 
 interface AirdropSetFundingOptions {
@@ -681,33 +809,48 @@ airdrop
   .requiredOption("-t, --timestamp <number>", "Specify the timestamp")
   .action(airdropSetFunding);
 
+interface AirdropParticipateOptions {
+  apid: number;
+  vote_k: Uint8Array[];
+  sel_k: Uint8Array[];
+  vote_fst: number;
+  vote_lst: number;
+  vote_kd: number;
+  sp_key: Uint8Array[];
+  address?: string;
+  simulate?: boolean;
+}
+export const airdropParticipate: any = async (
+  options: AirdropParticipateOptions
+) => {
+  const ci = makeCi(Number(options.apid), options.address || addr2);
+  ci.setPaymentAmount(1000);
+  const participateR = await ci.participate(
+    options.vote_k,
+    options.sel_k,
+    options.vote_fst,
+    options.vote_lst,
+    options.vote_kd,
+    options.sp_key
+  );
+  if (participateR.success) {
+    if (!options.simulate) {
+      await signSendAndConfirm(participateR.txns, sk2);
+    }
+    return true;
+  }
+  return false;
+};
 airdrop
   .command("participate")
   .description("Participate in the airdrop")
-  .action(async () => {
-    const ci = makeCi(Number(CTC_INFO_AIRDROP), addr2);
-    ci.setPaymentAmount(1000);
-    const participateR = await ci.participate(
-      new Uint8Array(
-        Buffer.from("rqzFOfwFPvMCkVxk/NKgj8idbwrsEGwxDbQwmHwtACE=", "base64")
-      ),
-      new Uint8Array(
-        Buffer.from("oxigRtYVOHpCD/qldT814sPYeQGzgUfjBOpbD3NHv0Y=", "base64")
-      ),
-      9_777_253,
-      9_777_253 + 1_000_000,
-      1733,
-      new Uint8Array(
-        Buffer.from(
-          "FxHMlnefM+QUzFEi9jF4moujCSs9iFYPyUX0+yvJgoMmXxTZfFd5Wus2InMW/FAP+mXSeZqBrezUdx88q0VTpw==",
-          "base64"
-        )
-      )
-    );
-    console.log(participateR);
-    const res = await signSendAndConfirm(participateR.txns, sk2);
-    console.log(res);
-  });
+  .option("-a, --apid <number>", "Specify the application ID")
+  .option("-k, --vote-k <string>", "Specify the vote key")
+  .option("-s, --sel-k <string>", "Specify the selection key")
+  .option("-f, --vote-fst <number>", "Specify the vote first")
+  .option("-l, --vote-lst <number>", "Specify the vote last")
+  .option("-d, --vote-kd <number>", "Specify the vote key duration")
+  .action(airdropParticipate);
 
 interface AirdropDepositOptions {
   apid: number;
