@@ -63,7 +63,12 @@ scs-mocha() {
     set -e
     cd src/scripts
     npx tsc
-    npm test
+    test ${#} -eq 0 && {
+      npm test
+      true
+    } || {
+      npm run test-${1}
+    }
   )
 }
 scs-program() {

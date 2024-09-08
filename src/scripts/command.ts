@@ -51,6 +51,12 @@ export const { addr: addr2, sk: sk2 } = algosdk.mnemonicToSecretKey(mnemonic2);
 // delegate
 export const { addr: addr3, sk: sk3 } = algosdk.mnemonicToSecretKey(mnemonic3);
 
+export const addressses = {
+  funder: addr,
+  owner: addr2,
+  delegate: addr3,
+};
+
 const ALGO_SERVER = "https://testnet-api.voi.nodly.io";
 const ALGO_INDEXER_SERVER = "https://testnet-idx.voi.nodly.io";
 
@@ -380,16 +386,21 @@ factory
 
 // update all airdrop contracts
 
+interface FactoryUpdateAirdropOptions {
+  apid: number;
+  delete: boolean;
+}
 factory
   .command("update-airdrop")
   .description("Update all airdrop contracts")
+  .option("-a, --apid <number>", "Specify the application ID of factory")
   .option("-d --delete", "Delete the application")
-  .action(async (options) => {
+  .action(async (options: FactoryUpdateAirdropOptions) => {
+    const parentId = options.apid || CTC_INFO_FACTORY_AIRDROP;
+    const url = `https://arc72-idx.nautilus.sh/v1/scs/accounts?parentId=${parentId}&deleted=0`;
     const {
       data: { accounts },
-    } = await axios.get(
-      `https://arc72-idx.nautilus.sh/v1/scs/accounts?parentId=${CTC_INFO_FACTORY_AIRDROP}&deleted=0`
-    );
+    } = await axios.get(url);
     for await (const account of accounts) {
       try {
         const { contractId } = account;
@@ -629,12 +640,13 @@ interface AirdropReduceTotalOptions {
   apid: number;
   amount: number;
   simulate?: boolean;
+  sender?: string;
 }
 export const airdropReduceTotal: any = async (
   options: AirdropReduceTotalOptions
 ) => {
-  const ci = makeCi(Number(options.apid), addr);
-  const reduceR = await ci.reduce_total(Number(options.amount));
+  const ci = makeCi(Number(options.apid), options.sender || addr);
+  const reduceR = await ci.reduce_total(Number(options.amount) * 1e6);
   if (reduceR.success) {
     await signSendAndConfirm(reduceR.txns, sk);
     return true;
@@ -650,6 +662,7 @@ interface AirdropAbortFundingOptions {
   apid: number;
   simulate?: boolean;
   sender?: string;
+  debug?: boolean;
 }
 export const airdropAbortFunding: any = async (
   options: AirdropAbortFundingOptions
@@ -658,6 +671,10 @@ export const airdropAbortFunding: any = async (
   ci.setFee(3000);
   ci.setOnComplete(5); // deleteApplicationOC
   const abortR = await ci.abort_funding();
+  if (options.debug) {
+    console.log(options);
+    console.log(abortR);
+  }
   if (abortR.success) {
     if (!options.simulate) {
       await signSendAndConfirm(abortR.txns, sk);
