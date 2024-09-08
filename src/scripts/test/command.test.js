@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import {
+  addressses,
   airdropAbortFunding,
   airdropConfigure,
   airdropDeposit,
@@ -25,6 +26,7 @@ const baseFixtureData = {
   apps: {
     airdropFactory: 1,
     airdrop: 1,
+    airdrop2: 1,
   },
   context: {
     deadline: 1,
@@ -234,6 +236,46 @@ describe("Fundable Test Suite", function () {
   //   emits TotalReduced event
   //   sets total
 
+  it("fundable anyone should not be able to reduce total", async function () {
+    const success = await airdropReduceTotal({
+      apid: fixtureData.apps.airdrop,
+      amount: 1,
+      sender: addressses.delegate,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  it("fundable funder should not be able to reduce total over", async function () {
+    const { total: totalBefore } = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    const success = await airdropReduceTotal({
+      apid: fixtureData.apps.airdrop,
+      amount: Number(totalBefore) / 1e6 + 1,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  it("fundable funder should be able to reduce total", async function () {
+    const { total: totalBefore } = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    const success = await airdropReduceTotal({
+      apid: fixtureData.apps.airdrop,
+      amount: 1,
+    });
+    const { total: totalAfter } = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    // emits TotalReduced event
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+    expect(totalAfter).to.be.a("string");
+    expect(totalAfter).to.be.eq(String(Number(totalBefore) - 1e6));
+  });
+
   // grant funder
   //   only funder
   //   emits FunderGranted event
@@ -276,12 +318,9 @@ describe("Fundable Test Suite", function () {
   //  emits Closed event
 
   it("fundable anyone should not be able to abort funding", async function () {
-    const { owner } = await airdropGetState({
-      apid: fixtureData.apps.airdrop2,
-    });
     const success = await airdropAbortFunding({
       apid: fixtureData.apps.airdrop2,
-      sender: owner,
+      sender: addressses.delegate,
     });
     expect(success).to.be.a("boolean");
     expect(success).to.be.eq(false);
@@ -294,6 +333,49 @@ describe("Fundable Test Suite", function () {
     // emits Closed event
     expect(success).to.be.a("boolean");
     expect(success).to.be.eq(true);
+  });
+});
+
+// Path : Lockable
+
+describe("Lockable Test Suite", function () {
+  this.timeout(60_000);
+  let fixtureData = baseFixtureData;
+  before(async function () {
+    console.log("Once upon a time...");
+    const seconds = 1;
+    const airdropFactory = await deploy({
+      name: "mocha",
+      type: "airdrop-factory",
+      periodSeconds: seconds,
+      periodLimit: 5,
+      vestingDelay: 1,
+      lockupDelay: 12,
+      messengerId: 1,
+      distributionCount: 12,
+      distributionSeconds: seconds,
+    });
+    const deadline = moment().add(20, "seconds").unix();
+    const airdrop = await deployAirdrop({
+      apid: airdropFactory,
+      initial: 1e6,
+      extraPayment: 1e5, // pay min balance once
+      deadline,
+    });
+    fixtureData.context.deadline = deadline;
+    fixtureData.apps = {
+      airdropFactory,
+      airdrop,
+    };
+  });
+  after(async function () {
+    // we use update to delete the app in this case
+    // since it is not closed in the following tests
+    await updateApp({
+      apid: fixtureData.apps.airdrop,
+      delete: true,
+    });
+    console.log("Happily ever after");
   });
 });
 
@@ -819,25 +901,6 @@ describe("Airdrop Factory Test Suite", function () {
     expect(success).to.be.eq(true);
   });
 
-  // funder should be able to grant new funder
-
-  it("airdrop funder should be able to grant new funder", async function () {
-    const { delegate } = await airdropGetState({
-      apid: fixtureData.apps.airdrop,
-    });
-    const success = await airdropGrantFunder({
-      apid: fixtureData.apps.airdrop,
-      receiver: delegate,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-    const { funder } = await airdropGetState({
-      apid: fixtureData.apps.airdrop,
-    });
-    expect(funder).to.be.a("string");
-    expect(funder).to.be.eq(delegate);
-  });
-
   // anyone should not be able to close contract
 
   // owner should be able to close contract after vesting
@@ -849,6 +912,6 @@ describe("Airdrop Factory Test Suite", function () {
 
 describe("Staking Factory Test Suite", function () {});
 
-// Path : Compensation Factory:0
+// Path : Compensation Factory
 
 describe("Compensation Factory Test Suite", function () {});

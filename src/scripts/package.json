@@ -5,6 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha",
+    "test-ownable": "mocha --grep ownable",
+    "test-fundable": "mocha --grep fundable",
+    "test-airdrop": "mocha --grep airdrop",
     "start": "node index.js"
   },
   "author": "",
