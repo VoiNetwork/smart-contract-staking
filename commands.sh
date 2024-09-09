@@ -22,7 +22,7 @@ scs-simulate() {
 scs-cli() {
   (
     cd src/scripts
-    source tests/utils.sh
+    source demo/utils.sh
     npx tsc
     cli ${@}
   )
@@ -38,18 +38,18 @@ scs-pytest() {
     pytest
   )
 }
-scs-test() {
+scs-demo() {
   (
     cd src/scripts
     case ${1} in
       "airdrop") {
-        bash tests/test-contract-${1}.sh
+        bash demo/test-contract-${1}.sh
       } ;;
       "staking") {
-        bash tests/test-contract-${1}.sh
+        bash demo/test-contract-${1}.sh
       } ;;
       "compensation") {
-        bash tests/test-contract-${1}.sh
+        bash demo/test-contract-${1}.sh
       } ;;
       *) {
         echo "test not found"

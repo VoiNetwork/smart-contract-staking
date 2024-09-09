@@ -317,7 +317,8 @@ export const deployCompensation: any = async (
     }
   );
   const stakeAmount = Number(options.amount) * 1e6;
-  const paymentAmount = stakeAmount + 1134500 + (options.extraPayment || 0);
+  const paymentAmount =
+    stakeAmount + 1234500 + 1e5 + (options.extraPayment || 0);
   const owner = options.owner || addr2;
   ci.setFee(10000);
   ci.setPaymentAmount(paymentAmount);
@@ -345,8 +346,12 @@ interface DeployAirdropOptions {
   funder?: string;
   deadline?: number;
   extraPayment?: number;
+  debug?: boolean;
 }
 export const deployAirdrop: any = async (options: DeployAirdropOptions) => {
+  if (options.debug) {
+    console.log(options);
+  }
   const ctcInfo = Number(options.apid || CTC_INFO_FACTORY_AIRDROP);
   const ci = new CONTRACT(
     ctcInfo,
@@ -364,7 +369,7 @@ export const deployAirdrop: any = async (options: DeployAirdropOptions) => {
     }
   );
   const initial = Number(options.initial) * 1e6;
-  const paymentAmount = 1234500 + Number(options.extraPayment || 0);
+  const paymentAmount = 1234500 + 1e5 + Number(options.extraPayment || 0);
   const owner = options.owner || addr2;
   const funder = options.funder || addr;
   const deadline = options.deadline
@@ -373,6 +378,9 @@ export const deployAirdrop: any = async (options: DeployAirdropOptions) => {
   ci.setPaymentAmount(paymentAmount);
   ci.setFee(8000);
   const createR = await ci.create(owner, funder, deadline, initial);
+  if (options.debug) {
+    console.log(createR);
+  }
   if (createR.success) {
     const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);
     const apid = appCallTxn["inner-txns"][0]["application-index"];
@@ -385,12 +393,17 @@ factory
   .option("-o, --owner <string>", "Specify the owner address")
   .option("-f, --funder <string>", "Specify the funder address")
   .option("-d, --deadline <number>", "Specify the deadline")
+  .option("--debug", "Debug the deployment", false)
   .requiredOption(
     "-a, --initial <number>",
     "Specify the initial airdrop amount"
   )
   .action(async (options: DeployAirdropOptions) => {
     const apid = await deployAirdrop(options);
+    if (!apid) {
+      console.log("Failed to deploy airdrop contract");
+      return;
+    }
     console.log(apid);
   });
 
@@ -475,7 +488,7 @@ export const deployStaking: any = async (options: DeployStakingOptions) => {
   );
   const stakingAmount = Number(options.amount) * 1e6;
   const paymentAmount =
-    stakingAmount + 1134500 + Number(options.extraPayment || 0);
+    stakingAmount + 1234500 + 1e5 + Number(options.extraPayment || 0);
   const owner = options.owner || addr2;
   const funder = options.funder || addr;
   const delegate = options.delegate || addr3;
@@ -484,6 +497,7 @@ export const deployStaking: any = async (options: DeployStakingOptions) => {
   ci.setFee(10000);
   const createR = await ci.create(owner, funder, delegate, period);
   if (options.debug) {
+    console.log(options);
     console.log(createR);
   }
   if (createR.success) {
@@ -496,9 +510,15 @@ factory
   .command("deploy-staking")
   .requiredOption("-a, --amount <number>", "Specify the amount for staking")
   .requiredOption("-p, --period <number>", "Specify the lockup period")
+  .option("--debug", "Debug the deployment", false)
   .description("Create a staking contract")
   .action(async (options: DeployStakingOptions) => {
     const apid = await deployStaking(options);
+    console.log({ apid });
+    if (!apid) {
+      console.log("Failed to deploy staking contract");
+      return;
+    }
     console.log(apid);
   });
 
@@ -777,8 +797,10 @@ export const airdropConfigure: any = async (
   return false;
 };
 airdrop
-  .command("configure <apid> <period>")
+  .command("configure")
   .description("Configure the lockup period")
+  .option("-a, --apid <number>", "Specify the application ID")
+  .option("-p, --period <number>", "Specify the lockup period")
   .action(airdropConfigure);
 
 interface AirdropFillOptions {
