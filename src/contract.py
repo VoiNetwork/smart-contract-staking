@@ -1321,7 +1321,7 @@ class CompensationFactory(BaseFactory):
             Global.latest_timestamp,  # deadline
             initial,  # total
             Global.latest_timestamp,  # funding
-            Global.zero_address,
+            Global.zero_address, # delegate
             app_id=base_app,
         )
         arc4.abi_call(  # inherit upgrader

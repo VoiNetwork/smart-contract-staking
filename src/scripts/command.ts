@@ -1,7 +1,5 @@
 import { Command } from "commander";
-import fs from "fs";
 import axios from "axios";
-import csv from "csv-parser";
 import {
   AirdropClient,
   APP_SPEC as AirdropSpec,
@@ -161,10 +159,10 @@ export const deploy: any = async (options: DeployOptions) => {
         PERIOD_SECONDS: options.periodSeconds
           ? Number(options.periodSeconds)
           : 1,
-        PERIOD_LIMIT: options.periodLimit ? Number(options.periodLimit) : 1,
-        VESTING_DELAY: options.vestingDelay ? Number(options.vestingDelay) : 1,
-        LOCKUP_DELAY: options.lockupDelay ? Number(options.lockupDelay) : 1,
-        MESSENGER_ID: options.messengerId ? Number(options.messengerId) : 1,
+        PERIOD_LIMIT: options.periodLimit ? Number(options.periodLimit) : 0,
+        VESTING_DELAY: options.vestingDelay ? Number(options.vestingDelay) : 0,
+        LOCKUP_DELAY: options.lockupDelay ? Number(options.lockupDelay) : 0,
+        MESSENGER_ID: options.messengerId ? Number(options.messengerId) : 0,
         DISTRIBUTION_COUNT: options.distributionCount
           ? Number(options.distributionCount)
           : 1,
@@ -293,39 +291,51 @@ messenger
 
 const factory = new Command("factory").description("Manage factory operations");
 
+interface DeployCompensationOptions {
+  apid: number;
+  owner: string;
+  amount: number;
+  extraPayment?: number;
+}
+export const deployCompensation: any = async (
+  options: DeployCompensationOptions
+) => {
+  const ctcInfo = Number(options?.apid || CTC_INFO_FACTORY_COMPENSATION);
+  const ci = new CONTRACT(
+    ctcInfo,
+    algodClient,
+    indexerClient,
+    {
+      name: "",
+      desc: "",
+      methods: CompensationFactorySpec.contract.methods,
+      events: [],
+    },
+    {
+      addr: options.owner || addr2,
+      sk: new Uint8Array(0),
+    }
+  );
+  const stakeAmount = Number(options.amount) * 1e6;
+  const paymentAmount = stakeAmount + 1134500 + (options.extraPayment || 0);
+  const owner = options.owner || addr2;
+  ci.setFee(10000);
+  ci.setPaymentAmount(paymentAmount);
+  const createR = await ci.create(owner);
+  if (createR.success) {
+    const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk2);
+    const apid = appCallTxn["inner-txns"][0]["application-index"];
+    return apid;
+  }
+};
 factory
   .command("deploy-compensation")
   .description("Create a compensation factory")
   .option("-o, --owner <string>", "Specify the owner address")
   .option("-a, --amount <number>", "Specify the amount for compensation")
-  .action(async (options) => {
-    const ctcInfo = Number(CTC_INFO_FACTORY_COMPENSATION);
-    const ci = new CONTRACT(
-      ctcInfo,
-      algodClient,
-      indexerClient,
-      {
-        name: "",
-        desc: "",
-        methods: CompensationFactorySpec.contract.methods,
-        events: [],
-      },
-      {
-        addr,
-        sk: new Uint8Array(0),
-      }
-    );
-    const paymentAmount = 1034500 + 100000 + Number(options.amount) * 1e6;
-    const owner = options.owner || addr2;
-    ci.setFee(10000);
-    ci.setPaymentAmount(paymentAmount);
-    const createR = await ci.create(owner);
-    if (createR.success) {
-      const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);
-      console.log(appCallTxn["inner-txns"][0]["application-index"]);
-    } else {
-      console.error(createR);
-    }
+  .action(async (options: DeployCompensationOptions) => {
+    const apid = await deployCompensation(options);
+    console.log(apid);
   });
 
 interface DeployAirdropOptions {
@@ -433,44 +443,63 @@ factory
     }
   });
 
+interface DeployStakingOptions {
+  apid: number;
+  amount: number;
+  owner?: string;
+  funder?: string;
+  delegate?: string;
+  period?: number;
+  extraPayment?: number;
+  debug?: boolean;
+}
+export const deployStaking: any = async (options: DeployStakingOptions) => {
+  if (options.debug) {
+    console.log(options);
+  }
+  const ctcInfo = Number(options.apid || CTC_INFO_FACTORY_STAKING);
+  const ci = new CONTRACT(
+    ctcInfo,
+    algodClient,
+    indexerClient,
+    {
+      name: "",
+      desc: "",
+      methods: StakingFactorySpec.contract.methods,
+      events: [],
+    },
+    {
+      addr,
+      sk: new Uint8Array(0),
+    }
+  );
+  const stakingAmount = Number(options.amount) * 1e6;
+  const paymentAmount =
+    stakingAmount + 1134500 + Number(options.extraPayment || 0);
+  const owner = options.owner || addr2;
+  const funder = options.funder || addr;
+  const delegate = options.delegate || addr3;
+  const period = Number(options.period || 0);
+  ci.setPaymentAmount(paymentAmount);
+  ci.setFee(10000);
+  const createR = await ci.create(owner, funder, delegate, period);
+  if (options.debug) {
+    console.log(createR);
+  }
+  if (createR.success) {
+    const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);
+    const apid = appCallTxn["inner-txns"][0]["application-index"];
+    return apid;
+  }
+};
 factory
   .command("deploy-staking")
   .requiredOption("-a, --amount <number>", "Specify the amount for staking")
   .requiredOption("-p, --period <number>", "Specify the lockup period")
   .description("Create a staking contract")
-  .action(async (options) => {
-    const ctcInfo = Number(CTC_INFO_FACTORY_STAKING);
-    const ci = new CONTRACT(
-      ctcInfo,
-      algodClient,
-      indexerClient,
-      {
-        name: "",
-        desc: "",
-        methods: StakingFactorySpec.contract.methods,
-        events: [],
-      },
-      {
-        addr,
-        sk: new Uint8Array(0),
-      }
-    );
-
-    const stakingAmount = Number(options.amount) * 1e6;
-    const paymentAmount = stakingAmount + 1034500 + 100000;
-    const funder = addr;
-    const owner = addr2;
-    const delegate = addr3;
-    const period = Number(options.period);
-    ci.setPaymentAmount(paymentAmount);
-    ci.setFee(10000);
-    const createR = await ci.create(owner, funder, delegate, period);
-    if (createR.success) {
-      const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);
-      console.log(appCallTxn["inner-txns"][0]["application-index"]);
-    } else {
-      console.error(createR);
-    }
+  .action(async (options: DeployStakingOptions) => {
+    const apid = await deployStaking(options);
+    console.log(apid);
   });
 
 const makeCi = (ctcInfo: number, addr: string) => {
@@ -487,6 +516,26 @@ const makeCi = (ctcInfo: number, addr: string) => {
 };
 
 const airdrop = new Command("airdrop").description("Manage airdrop operations");
+
+interface AirdropApproveUpdateOptions {
+  apid: number;
+  approval: boolean;
+  simulate?: boolean;
+  sender?: string;
+}
+export const airdropApproveUpdate: any = async (
+  options: AirdropApproveUpdateOptions
+) => {
+  const ci = makeCi(options.apid, options.sender || addr2);
+  const approveR = await ci.approve_update(options.approval);
+  if (approveR.success) {
+    if (!options.simulate) {
+      await signSendAndConfirm(approveR.txns, sk2);
+    }
+    return true;
+  }
+  return false;
+};
 
 interface AirdropGrantFunderOptions {
   apid: number;
@@ -550,14 +599,20 @@ interface AirdropSetVersionOptions {
   apid: number;
   contractVersion: number;
   deploymentVersion: number;
+  sender?: string;
   simulate?: boolean;
+  debug?: boolean;
 }
 export const airdropSetVersion = async (options: AirdropSetVersionOptions) => {
-  const ci = makeCi(options.apid, addr);
+  const ci = makeCi(options.apid, options?.sender || addr);
   const setVersionR = await ci.set_version(
     options.contractVersion,
     options.deploymentVersion
   );
+  if (options.debug) {
+    console.log(options);
+    console.log(setVersionR);
+  }
   if (setVersionR.success) {
     if (!options.simulate) {
       await signSendAndConfirm(setVersionR.txns, sk);
@@ -732,14 +787,21 @@ interface AirdropFillOptions {
   simulate?: boolean;
   timestamp?: number;
   sender?: string;
+  debug?: boolean;
 }
 export const airdropFill: any = async (options: AirdropFillOptions) => {
   const timestamp = options.timestamp || 0;
+  if (options.debug) {
+    console.log(options);
+  }
   if (timestamp <= 0) {
     const ci = makeCi(Number(options.apid), options.sender || addr);
     const paymentAmount = Number(options.amount) * 1e6;
     ci.setPaymentAmount(paymentAmount);
     const fillR = await ci.fill();
+    if (options.debug) {
+      console.log(fillR);
+    }
     if (fillR.success) {
       if (!options.simulate) {
         await signSendAndConfirm(fillR.txns, sk);
@@ -783,6 +845,9 @@ export const airdropFill: any = async (options: AirdropFillOptions) => {
     ci.setEnableGroupResourceSharing(true);
     ci.setExtraTxns(buildN);
     const customR = await ci.custom();
+    if (options.debug) {
+      console.log(customR);
+    }
     if (customR.success) {
       if (!options.simulate) {
         await signSendAndConfirm(customR.txns, sk);
@@ -805,12 +870,17 @@ interface AirdropSetFundingOptions {
   apid: number;
   timestamp: number;
   simulate?: boolean;
+  debug?: boolean;
 }
 export const airdropSetFunding: any = async (
   options: AirdropSetFundingOptions
 ) => {
   const ci = makeCi(Number(options.apid), addr);
   const set_fundingR = await ci.set_funding(options.timestamp);
+  if (options.debug) {
+    console.log(options);
+    console.log(set_fundingR);
+  }
   if (set_fundingR.success) {
     if (!options.simulate) {
       await signSendAndConfirm(set_fundingR.txns, sk);
@@ -834,13 +904,14 @@ interface AirdropParticipateOptions {
   vote_lst: number;
   vote_kd: number;
   sp_key: Uint8Array[];
-  address?: string;
+  sender?: string;
   simulate?: boolean;
+  debug?: boolean;
 }
 export const airdropParticipate: any = async (
   options: AirdropParticipateOptions
 ) => {
-  const ci = makeCi(Number(options.apid), options.address || addr2);
+  const ci = makeCi(Number(options.apid), options.sender || addr2);
   ci.setPaymentAmount(1000);
   const participateR = await ci.participate(
     options.vote_k,
@@ -850,6 +921,10 @@ export const airdropParticipate: any = async (
     options.vote_kd,
     options.sp_key
   );
+  if (options.debug) {
+    console.log(options);
+    console.log(participateR);
+  }
   if (participateR.success) {
     if (!options.simulate) {
       await signSendAndConfirm(participateR.txns, sk2);
@@ -890,14 +965,19 @@ export const airdropDeposit = async (options: AirdropDepositOptions) => {
 interface AirdropWithdrawOptions {
   apid: number;
   amount: number;
-  address?: string;
+  sender?: string;
   simulate?: boolean;
+  debug?: boolean;
 }
 export const airdropWithdraw: any = async (options: AirdropWithdrawOptions) => {
-  const ci = makeCi(Number(options.apid), options.address || addr2);
+  const ci = makeCi(Number(options.apid), options.sender || addr2);
   const withdrawAmount = Number(options.amount) * 1e6;
   ci.setFee(2000);
   const withdrawR = await ci.withdraw(withdrawAmount);
+  if (options.debug) {
+    console.log(options);
+    console.log(withdrawR);
+  }
   if (withdrawR.success) {
     if (!options.simulate) {
       await signSendAndConfirm(withdrawR.txns, sk2);
@@ -930,36 +1010,58 @@ airdrop
   .option("-a, --apid <number>", "Specify the application ID")
   .action(airdropGetMb);
 
+interface AirdropCloseOptions {
+  apid: number;
+  simulate?: boolean;
+  sender?: string;
+  debug?: boolean;
+}
+export const airdropClose: any = async (options: AirdropCloseOptions) => {
+  const ci = makeCi(options.apid, options.sender || addr);
+  ci.setFee(3000);
+  ci.setOnComplete(5); // deleteApplicationOC
+  const closeR = await ci.close();
+  if (options.debug) {
+    console.log(options);
+    console.log(closeR);
+  }
+  if (closeR.success) {
+    if (!options.simulate) {
+      await signSendAndConfirm(closeR.txns, sk);
+    }
+    return true;
+  }
+  return false;
+};
 airdrop
   .command("close")
   .description("Close the airdrop contract")
-  .argument("<apid>", "The application ID for the contract")
-  .action(async (apid) => {
-    const ci = makeCi(Number(apid), addr);
-    ci.setFee(3000);
-    ci.setOnComplete(5); // deleteApplicationOC
-    const closeR = await ci.close();
-    if (closeR.success) {
-      await signSendAndConfirm(closeR.txns, sk);
-    }
-  });
+  .option("-a, --apid <number>", "Specify the application ID")
+  .option("-s, --simulate", "Simulate the close", false)
+  .option("-d --debug", "Debug the close")
+  .option("t --sender <string>", "Specify the sender")
+  .action(airdropClose);
 
 const app = new Command("app").description("Manage app operations");
 
 interface AppUpdateOptions {
   apid: number;
   delete: boolean;
+  simulate?: boolean;
+  sender?: string;
 }
 export const updateApp: any = async (options: AppUpdateOptions) => {
   const apid = Number(options.apid);
-  const ci = makeCi(apid, addr);
+  const ci = makeCi(apid, options.sender || addr);
   ci.setFee(3000);
   if (options.delete) {
     ci.setOnComplete(5); // deleteApplicationOC
   }
   const updateR = await ci.update();
   if (updateR.success) {
-    await signSendAndConfirm(updateR.txns, sk);
+    if (!options.simulate) {
+      await signSendAndConfirm(updateR.txns, sk);
+    }
     return true;
   }
   return false;
