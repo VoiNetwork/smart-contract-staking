@@ -2,8 +2,9 @@ import { expect } from "chai";
 import {
   addressses,
   airdropAbortFunding,
+  airdropApproveUpdate,
+  airdropClose,
   airdropConfigure,
-  airdropDeposit,
   airdropFill,
   airdropGetMb,
   airdropGetState,
@@ -17,6 +18,8 @@ import {
   airdropWithdraw,
   deploy,
   deployAirdrop,
+  deployStaking,
+  deployCompensation,
   getApplicationAvailableBalance,
   updateApp,
 } from "../command.js";
@@ -223,7 +226,7 @@ describe("Fundable Test Suite", function () {
     const success = await airdropFill({
       apid: fixtureData.apps.airdrop,
       amount: 1,
-      timestamp: moment().add(10, "seconds").unix(),
+      timestamp: moment().add(20, "seconds").unix(),
       simulate: true,
     });
     expect(success).to.be.a("boolean");
@@ -274,6 +277,39 @@ describe("Fundable Test Suite", function () {
     expect(success).to.be.eq(true);
     expect(totalAfter).to.be.a("string");
     expect(totalAfter).to.be.eq(String(Number(totalBefore) - 1e6));
+  });
+
+  // funder may extend funding if not past
+
+  it("fundable funder may extend funding if not past", async function () {
+    const success = await airdropSetFunding({
+      apid: fixtureData.apps.airdrop,
+      timestamp: moment().add(10, "seconds").unix(),
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+  });
+
+  // funder may not extend funding if in past
+
+  it("fundable funder may not extend funding if in past", async function () {
+    const { funding } = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    while (moment().unix() < funding) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    try {
+      await airdropSetFunding({
+        apid: fixtureData.apps.airdrop,
+        timestamp: moment().add(10, "seconds").unix(),
+      });
+    } catch (err) {
+      //   assert failed pc=[0-9]+. Details: app=[0-9]+, pc=[0-9]+, opcodes=.*LatestTimestamp.*assert/;
+      const regex =
+        /transaction [^:]*. logic eval error: assert failed pc=[0-9]+\. Details: app=[0-9]+, pc=[0-9]+, opcodes=.*b label.*assert/;
+      expect(err.message).to.match(regex);
+    }
   });
 
   // grant funder
@@ -377,6 +413,497 @@ describe("Lockable Test Suite", function () {
     });
     console.log("Happily ever after");
   });
+
+  // configure
+  //   only owner
+  //   must not be funded
+  //   emits Configured event
+  //   sets period
+
+  // anyone should not be able to configure
+
+  it("lockable anyone should not be able to configure", async function () {
+    const success = await airdropConfigure({
+      apid: fixtureData.apps.airdrop,
+      period: 1,
+      sender: addressses.delegate,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  // owner should be able to configure over
+
+  it("lockable owner should be able to configure over", async function () {
+    const success = await airdropConfigure({
+      apid: fixtureData.apps.airdrop,
+      period: 6,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  // owner should be able to configure
+
+  it("lockable owner should be able to configure", async function () {
+    const success = await airdropConfigure({
+      apid: fixtureData.apps.airdrop,
+      period: 1,
+    });
+    const { period } = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    // emits Configured event
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+    expect(period).to.be.a("number");
+    expect(period).to.be.eq(1);
+  });
+
+  // owner should be able to configure more than once
+
+  it("lockable owner should be able to configure more than once", async function () {
+    const success = await airdropConfigure({
+      apid: fixtureData.apps.airdrop,
+      period: 2,
+    });
+    const { period } = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+    expect(period).to.be.a("number");
+    expect(period).to.be.eq(2);
+  });
+
+  // owner should not be able to configure after deadline
+
+  it("lockable owner should not be able to configure after deadline", async function () {
+    while (moment().unix() < fixtureData.context.deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    try {
+      await airdropConfigure({
+        apid: fixtureData.apps.airdrop,
+        period: 1,
+      });
+    } catch (err) {
+      //   assert failed pc=[0-9]+. Details: app=[0-9]+, pc=[0-9]+, opcodes=.*LatestTimestamp.*assert/;
+      const regex =
+        /transaction [^:]*. logic eval error: assert failed pc=[0-9]+\. Details: app=[0-9]+, pc=[0-9]+, opcodes=.*LatestTimestamp.*assert/;
+      expect(err.message).to.match(regex);
+    }
+  });
+
+  // withdraw
+  //  only owner
+  //  emits Withdrawn event
+
+  // owner should be able to withdraw before funding
+
+  // owner should be able to withdraw after funding
+
+  it("lockable owner should be able to withdraw after funding (0)", async function () {
+    // increase total to test withdraw
+    const fillSuccess = await airdropFill({
+      apid: fixtureData.apps.airdrop,
+      amount: 3,
+      timestamp: moment().add(1, "seconds").unix(),
+    });
+    const success = await airdropWithdraw({
+      apid: fixtureData.apps.airdrop,
+      amount: 0,
+    });
+    const { total } = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    // emits Withdrawn event
+    expect(fillSuccess).to.be.a("boolean");
+    expect(fillSuccess).to.be.eq(true);
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+    expect(total).to.be.a("string");
+    expect(total).to.be.eq(String(3e6));
+  });
+
+  // owner should not be able to withdraw over
+
+  it("lockable owner should not be able to withdraw over", async function () {
+    const success = await airdropWithdraw({
+      apid: fixtureData.apps.airdrop,
+      amount: 4,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  // owner should be able to withdraw while vesting
+
+  it("lockable owner should be able to withdraw while vesting", async function () {
+    const { total } = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    while (true) {
+      const mab = await airdropGetMb({
+        apid: fixtureData.apps.airdrop,
+      });
+      if (mab !== total) {
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    const mab = await airdropGetMb({
+      apid: fixtureData.apps.airdrop,
+    });
+    const withdrawAmount = Number(total) - Number(mab);
+    const success = await airdropWithdraw({
+      apid: fixtureData.apps.airdrop,
+      amount: withdrawAmount / 1e6,
+    });
+    const remainingBalance = await getApplicationAvailableBalance(
+      fixtureData.apps.airdrop
+    );
+    // emits Withdrawn event
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+    expect(remainingBalance).to.be.eq(Number(mab));
+  });
+
+  // owner should be able to withdraw all after vesting
+
+  it("lockable owner should be able to withdraw all after vesting", async function () {
+    while (true) {
+      const mab = await airdropGetMb({
+        apid: fixtureData.apps.airdrop,
+      });
+      if (mab === "0") {
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    const availableBalance = await getApplicationAvailableBalance(
+      fixtureData.apps.airdrop
+    );
+    const success = await airdropWithdraw({
+      apid: fixtureData.apps.airdrop,
+      amount: availableBalance / 1e6,
+    });
+    const remainingBalance = await getApplicationAvailableBalance(
+      fixtureData.apps.airdrop
+    );
+    expect(success, "withdraw success").to.be.a("boolean");
+    expect(success, "withdraw success").to.be.eq(true);
+    expect(remainingBalance, "remaining balance").to.be.eq(0);
+  });
+
+  // anyone should not be able to withdraw
+
+  it("lockable anyone should not be able to withdraw", async function () {
+    const success = await airdropWithdraw({
+      apid: fixtureData.apps.airdrop,
+      amount: 0,
+      sender: addressses.delegate,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  // close
+  //  only funder
+  //  must be funded
+  //  must be fully vested
+  //  emits Closed event
+
+  // anyone should not be able to close
+
+  it("lockable anyone should not be able to close", async function () {
+    const success = await airdropAbortFunding({
+      apid: fixtureData.apps.airdrop,
+      sender: addressses.delegate,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  // funder should be able to close
+
+  it("lockable funder should be able to close", async function () {
+    const success = await airdropClose({
+      apid: fixtureData.apps.airdrop,
+      simulate: true,
+    });
+    // emits Closed event
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+  });
+
+  // owner should be able to close
+
+  it("lockable owner should be able to close", async function () {
+    const { owner } = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    const success = await airdropClose({
+      apid: fixtureData.apps.airdrop,
+      sender: owner,
+      simulate: true,
+    });
+    // emits Closed event
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+  });
+});
+
+// Path : Stakeable
+
+describe("Stakable Test Suite", function () {
+  this.timeout(60_000);
+  let fixtureData = baseFixtureData;
+  before(async function () {
+    console.log("Once upon a time...");
+    const seconds = 1;
+    const airdropFactory = await deploy({
+      name: "mocha",
+      type: "airdrop-factory",
+      periodSeconds: seconds,
+      periodLimit: 5,
+      vestingDelay: 1,
+      lockupDelay: 12,
+      messengerId: 1,
+      distributionCount: 12,
+      distributionSeconds: seconds,
+    });
+    const deadline = moment().add(20, "seconds").unix();
+    const airdrop = await deployAirdrop({
+      apid: airdropFactory,
+      initial: 1e6,
+      extraPayment: 1e5, // pay min balance once
+      deadline,
+    });
+    fixtureData.context.deadline = deadline;
+    fixtureData.apps = {
+      airdropFactory,
+      airdrop,
+    };
+  });
+  after(async function () {
+    // we use update to delete the app in this case
+    // since it is not closed in the following tests
+    await updateApp({
+      apid: fixtureData.apps.airdrop,
+      delete: true,
+    });
+    console.log("Happily ever after");
+  });
+  // set_delegate
+  //  only owner or creator
+  //  emits DelegateUpdated event
+  //  sets delegate
+
+  // anyone should not be able to set delegate
+
+  it("stakeable anyone should not be able to set delegate", async function () {
+    const success = await airdropSetDelegate({
+      apid: fixtureData.apps.airdrop,
+      sender: addressses.delegate,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  // owner should be able to set delegate
+
+  it("stakeable owner should be able to set delegate", async function () {
+    const success = await airdropSetDelegate({
+      apid: fixtureData.apps.airdrop,
+      delegate: addressses.delegate,
+    });
+    const { delegate } = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    // emits DelegateUpdated event
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+    expect(delegate).to.be.a("string");
+    expect(delegate).to.be.eq(addressses.delegate);
+  });
+
+  // participate
+  //  only owner or delegate
+  //  emits Participated event
+
+  // anyone should not be able to participate
+
+  it("stakeable anyone should not be able to participate", async function () {
+    const success = await airdropParticipate({
+      apid: fixtureData.apps.airdrop,
+      vote_k: new Uint8Array(32),
+      sel_k: new Uint8Array(32),
+      vote_fst: 0,
+      vote_lst: 0,
+      vote_kd: 0,
+      sp_key: new Uint8Array(64),
+      sender: addressses.funder,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  // owner should be able to participate
+
+  it("stakeable owner should be able to participate", async function () {
+    const success = await airdropParticipate({
+      apid: fixtureData.apps.airdrop,
+      vote_k: new Uint8Array(
+        Buffer.from("rqzFOfwFPvMCkVxk/NKgj8idbwrsEGwxDbQwmHwtACE=", "base64")
+      ),
+      sel_k: new Uint8Array(
+        Buffer.from("oxigRtYVOHpCD/qldT814sPYeQGzgUfjBOpbD3NHv0Y=", "base64")
+      ),
+      vote_fst: 9_777_253,
+      vote_lst: 9_777_253 + 1e6,
+      vote_kd: 1733,
+      sp_key: new Uint8Array(
+        Buffer.from(
+          "FxHMlnefM+QUzFEi9jF4moujCSs9iFYPyUX0+yvJgoMmXxTZfFd5Wus2InMW/FAP+mXSeZqBrezUdx88q0VTpw==",
+          "base64"
+        )
+      ),
+    });
+    // emits Participated event
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+  });
+
+  // delegate should be able to participate
+
+  it("stakeable delegate should be able to participate (non-participation)", async function () {
+    const success = await airdropParticipate({
+      apid: fixtureData.apps.airdrop,
+      vote_k: new Uint8Array(32),
+      sel_k: new Uint8Array(32),
+      vote_fst: 0,
+      vote_lst: 0,
+      vote_kd: 0,
+      sp_key: new Uint8Array(64),
+      sender: addressses.delegate,
+      simulate: true,
+    });
+    // emits Participated event
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+  });
+});
+
+// Path : Upgradeable
+
+describe("Upgradeable Test Suite", function () {
+  this.timeout(60_000);
+  let fixtureData = baseFixtureData;
+  before(async function () {
+    console.log("Once upon a time...");
+    const seconds = 1;
+    const airdropFactory = await deploy({
+      name: "mocha",
+      type: "airdrop-factory",
+      periodSeconds: seconds,
+      periodLimit: 5,
+      vestingDelay: 1,
+      lockupDelay: 12,
+      messengerId: 1,
+      distributionCount: 12,
+      distributionSeconds: seconds,
+    });
+    const deadline = moment().add(20, "seconds").unix();
+    const airdrop = await deployAirdrop({
+      apid: airdropFactory,
+      initial: 1e6,
+      extraPayment: 1e5, // pay min balance once
+      deadline,
+    });
+    fixtureData.context.deadline = deadline;
+    fixtureData.apps = {
+      airdropFactory,
+      airdrop,
+    };
+  });
+  after(async function () {
+    // we use update to delete the app in this case
+    // since it is not closed in the following tests
+    await updateApp({
+      apid: fixtureData.apps.airdrop,
+      delete: true,
+    });
+    console.log("Happily ever after");
+  });
+
+  // anyone should not be able to set version
+
+  it("upgradeable anyone should not be able to set version", async function () {
+    const success = await airdropSetVersion({
+      apid: fixtureData.apps.airdrop,
+      contractVersion: 999,
+      deploymentVersion: 1,
+      sender: addressses.delegate,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  // upgrader should be able to set version
+
+  it("upgradeable upgrader should be able to set version", async function () {
+    const success = await airdropSetVersion({
+      apid: fixtureData.apps.airdrop,
+      contractVersion: 999,
+      deploymentVersion: 1,
+    });
+    const state = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+    expect(state.contractVersion).to.be.a("number");
+    expect(state.contractVersion).to.be.eq(999);
+    expect(state.deploymentVersion).to.be.a("number");
+    expect(state.deploymentVersion).to.be.eq(1);
+  });
+
+  // owner should be able to approve update (false)
+
+  it("upgradeable owner should be able to approve update (false)", async function () {
+    const success = await airdropApproveUpdate({
+      apid: fixtureData.apps.airdrop,
+      approval: false,
+      debug: true,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+  });
+
+  // upgrader may not update if not approved
+
+  it("upgradeable upgrader may not update if not approved", async function () {
+    const success = await updateApp({
+      apid: fixtureData.apps.airdrop,
+      update: true,
+      simulate: true,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  // owner should be able to approve update (true)
+
+  it("upgradeable owner should be able to approve update (true)", async function () {
+    const success = await airdropApproveUpdate({
+      apid: fixtureData.apps.airdrop,
+      approval: true,
+      debug: true,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+  });
 });
 
 // Path : AirDrop
@@ -471,447 +998,245 @@ describe("Airdrop Factory Test Suite", function () {
     expect(state.deploymentVersion).to.be.eq(0);
     expect(state.owner).not.to.be.a(state.funder);
   });
-
-  // upgrader should be able to set version
-
-  it("airdrop upgrader should be able to set version", async function () {
-    const success = await airdropSetVersion({
-      apid: fixtureData.apps.airdrop,
-      contractVersion: 999,
-      deploymentVersion: 1,
-    });
-    const state = await airdropGetState({
-      apid: fixtureData.apps.airdrop,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-    expect(state.contractVersion).to.be.a("number");
-    expect(state.contractVersion).to.be.eq(999);
-    expect(state.deploymentVersion).to.be.a("number");
-    expect(state.deploymentVersion).to.be.eq(1);
-  });
-
-  // anyone should not be able to configure airdrop
-
-  it("airdrop should only be configurable by owner", async function () {
-    const { funder } = await airdropGetState({
-      apid: fixtureData.apps.airdrop,
-    });
-    const success = await airdropConfigure({
-      apid: fixtureData.apps.airdrop,
-      period: 1,
-      sender: funder,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(false);
-  });
-
-  // owner should not be able to configure airdrop beyond limit
-
-  it("airdrop should not be configurable beyond limit", async function () {
-    const success = await airdropConfigure({
-      apid: fixtureData.apps.airdrop,
-      period: 6,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(false);
-  });
-
-  // owner should be able to configure airdrop before deadline
-
-  it("airdrop should be configurable before deadline", async function () {
-    const success = await airdropConfigure({
-      apid: fixtureData.apps.airdrop,
-      period: 1,
-    });
-    const { period } = await airdropGetState({
-      apid: fixtureData.apps.airdrop,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-    expect(period).to.be.a("number");
-    expect(period).to.be.eq(1);
-  });
-
-  // confure should emit Configured event
-
-  it("airdrop should emit Configured event", async function () {});
-
-  // owner should not be able to configure airdrop after deadline
-
-  it("airdrop should not be configurable after deadline", async function () {
-    while (moment().unix() < fixtureData.context.deadline) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-    try {
-      await airdropConfigure({
-        apid: fixtureData.apps.airdrop,
-        period: 1,
-      });
-    } catch (err) {
-      const regex =
-        /transaction [^:]*. logic eval error: assert failed pc=[0-9]+\. Details: app=[0-9]+, pc=[0-9]+, opcodes=.*LatestTimestamp.*assert/;
-      expect(err.message).to.match(regex);
-    }
-  });
-
-  // owner mb should be equal to available balance (0)
-
-  it("airdrop owner mb should be equal to available balance (0)", async function () {
-    const mb = await airdropGetMb({
-      apid: fixtureData.apps.airdrop,
-    });
-    expect(mb).to.be.a("string");
-    expect(mb).to.be.eq("0");
-  });
-
-  // owner should be able to withdraw (0)
-
-  it("airdrop owner should be able to withdraw (0)", async function () {
-    const success = await airdropWithdraw({
-      apid: fixtureData.apps.airdrop,
-      amount: 0,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-  });
-
-  // owner mb should be equal to total
-
-  it("airdrop owner mb should be equal to total before funding", async function () {
-    const { total } = await airdropGetState({
-      apid: fixtureData.apps.airdrop,
-    });
-    const mb = await airdropGetMb({
-      apid: fixtureData.apps.airdrop,
-    });
-    expect(mb).to.be.a("string");
-    expect(mb).to.be.eq(total);
-  });
-
-  // owner should be able to deposit
-
-  it("airdrop owner should be able to deposit", async function () {
-    const success = await airdropDeposit({
-      apid: fixtureData.apps.airdrop,
-      amount: 1,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-  });
-
-  // owner should not be able to withdraw over
-
-  it("airdrop owner should not be able to withdraw over", async function () {
-    const success = await airdropWithdraw({
-      apid: fixtureData.apps.airdrop,
-      amount: 2,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(false);
-  });
-
-  // owner should be able to withdraw (1)
-
-  it("airdrop owner should be able to withdraw", async function () {
-    const success = await airdropWithdraw({
-      apid: fixtureData.apps.airdrop,
-      amount: 1,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-  });
-
-  // owner should be able to participate
-
-  it("airdrop owner should be able to participate", async function () {
-    const success = await airdropParticipate({
-      apid: fixtureData.apps.airdrop,
-      amount: 1,
-      vote_k: new Uint8Array(
-        Buffer.from("rqzFOfwFPvMCkVxk/NKgj8idbwrsEGwxDbQwmHwtACE=", "base64")
-      ),
-      sel_k: new Uint8Array(
-        Buffer.from("oxigRtYVOHpCD/qldT814sPYeQGzgUfjBOpbD3NHv0Y=", "base64")
-      ),
-      vote_fst: 9_777_253,
-      vote_lst: 9_777_253 + 1e6,
-      vote_kd: 1733,
-      sp_key: new Uint8Array(
-        Buffer.from(
-          "FxHMlnefM+QUzFEi9jF4moujCSs9iFYPyUX0+yvJgoMmXxTZfFd5Wus2InMW/FAP+mXSeZqBrezUdx88q0VTpw==",
-          "base64"
-        )
-      ),
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-  });
-
-  // owner should be able to participate (non-participation)
-
-  it("airdrop owner should be able to participate (non-participation)", async function () {
-    const success = await airdropParticipate({
-      apid: fixtureData.apps.airdrop,
-      amount: 0,
-      vote_k: new Uint8Array(32),
-      sel_k: new Uint8Array(32),
-      vote_fst: 0,
-      vote_lst: 0,
-      vote_kd: 0,
-      sp_key: new Uint8Array(64),
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-  });
-
-  // anyone should not be able to participate
-
-  it("airdrop anyone should not be able to participate", async function () {
-    const { funder } = await airdropGetState({
-      apid: fixtureData.apps.airdrop,
-    });
-    const success = await airdropParticipate({
-      apid: fixtureData.apps.airdrop,
-      amount: 1,
-      vote_k: new Uint8Array(
-        Buffer.from("rqzFOfwFPvMCkVxk/NKgj8idbwrsEGwxDbQwmHwtACE=", "base64")
-      ),
-      sel_k: new Uint8Array(
-        Buffer.from("oxigRtYVOHpCD/qldT814sPYeQGzgUfjBOpbD3NHv0Y=", "base64")
-      ),
-      vote_fst: 9_777_253,
-      vote_lst: 9_777_253 + 1e6,
-      vote_kd: 1733,
-      sp_key: new Uint8Array(
-        Buffer.from(
-          "FxHMlnefM+QUzFEi9jF4moujCSs9iFYPyUX0+yvJgoMmXxTZfFd5Wus2InMW/FAP+mXSeZqBrezUdx88q0VTpw==",
-          "base64"
-        )
-      ),
-      sender: funder,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-  });
-
-  // anyone should not be able to set delegate
-
-  it("airdrop only owner should be able to set delegate", async function () {
-    const { funder } = await airdropGetState({
-      apid: fixtureData.apps.airdrop,
-    });
-    const success = await airdropSetDelegate({
-      apid: fixtureData.apps.airdrop,
-      sender: funder,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(false);
-  });
-
-  // owner should be able to set delegate
-
-  it("airdrop owner should be able to set delegate", async function () {
-    const success = await airdropSetDelegate({
-      apid: fixtureData.apps.airdrop,
-    });
-    const { funder, delegate } = await airdropGetState({
-      apid: fixtureData.apps.airdrop,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-    expect(delegate).to.be.a("string");
-    expect(delegate).to.be.eq(funder);
-  });
-
-  // set delegate should emit DelegateUpdated event
-
-  it("airdrop should emit DelegateUpdated event", async function () {});
-
-  // delegate should be able to participate
-
-  it("airdrop delegate should be able to participate", async function () {
-    const { funder } = await airdropGetState({
-      apid: fixtureData.apps.airdrop,
-    });
-    const success = await airdropParticipate({
-      apid: fixtureData.apps.airdrop,
-      amount: 1,
-      vote_k: new Uint8Array(
-        Buffer.from("rqzFOfwFPvMCkVxk/NKgj8idbwrsEGwxDbQwmHwtACE=", "base64")
-      ),
-      sel_k: new Uint8Array(
-        Buffer.from("oxigRtYVOHpCD/qldT814sPYeQGzgUfjBOpbD3NHv0Y=", "base64")
-      ),
-      vote_fst: 9_777_253,
-      vote_lst: 9_777_253 + 1e6,
-      vote_kd: 1733,
-      sp_key: new Uint8Array(
-        Buffer.from(
-          "FxHMlnefM+QUzFEi9jF4moujCSs9iFYPyUX0+yvJgoMmXxTZfFd5Wus2InMW/FAP+mXSeZqBrezUdx88q0VTpw==",
-          "base64"
-        )
-      ),
-      sender: funder,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-  });
-
-  // owner should be able to abort funding
-  //   closed offline to owner
-  //   emits Closed event
-
-  it("airdrop owner should be able to abort funding", async function () {});
-
-  // funder should be able to reduce total
-
-  it("airdrop funder should be able to reduce total (simulate)", async function () {
-    const success = await airdropReduceTotal({
-      apid: fixtureData.apps.airdrop,
-      amount: 1,
-      simulate: true,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-  });
-
-  // funder should be able to set funding
-
-  it("airdrop funder should be able to set funding (simulate)", async function () {
-    const success = await airdropSetFunding({
-      apid: fixtureData.apps.airdrop,
-      timestamp: moment().add(10, "seconds").unix(),
-      simulate: true,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-  });
-
-  // owner mb should be equal to total after funding
-
-  it("airdrop owner mb should be equal to total after funding", async function () {
-    const { total } = await airdropGetState({
-      apid: fixtureData.apps.airdrop,
-    });
-    const mb = await airdropGetMb({
-      apid: fixtureData.apps.airdrop,
-    });
-    expect(mb).to.be.a("string");
-    expect(mb).to.be.eq(total);
-  });
-
-  // funder may extend funding if not in past
-
-  it("airdrop funder may extend funding if not in past", async function () {
-    const success = await airdropSetFunding({
-      apid: fixtureData.apps.airdrop,
-      timestamp: moment().add(10, "seconds").unix(),
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-  });
-
-  // owner mb while vesting should be between 0 and total
-
-  it("airdrop owner mb while vesting should be between 0 and total", async function () {
-    const { total, funding, lockupDelay, periodSeconds } =
-      await airdropGetState({
-        apid: fixtureData.apps.airdrop,
-      });
-    while (moment().unix() < funding + lockupDelay * periodSeconds) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-    const mab = await airdropGetMb({
-      apid: fixtureData.apps.airdrop,
-    });
-    expect(mab).to.be.a("string");
-    expect(Number(mab)).to.be.greaterThanOrEqual(0);
-    expect(Number(mab)).to.be.lessThanOrEqual(Number(total));
-  });
-
-  // funder may not extend funding if not in past
-
-  it("airdrop funder may not extend funding if not in past", async function () {
-    const success = await airdropSetFunding({
-      apid: fixtureData.apps.airdrop,
-      timestamp: moment().add(-10, "seconds").unix(),
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(false);
-  });
-
-  // owner should be able to withdraw unlocked tokens during vesting
-
-  it("airdrop owner should be able to withdraw unlocked tokens during vesting", async function () {
-    const { total, funding, lockupDelay, periodSeconds } =
-      await airdropGetState({
-        apid: fixtureData.apps.airdrop,
-      });
-    const mab = await airdropGetMb({
-      apid: fixtureData.apps.airdrop,
-    });
-    const unlockedTokenAmount = Number(total) - Number(mab);
-    const success = await airdropWithdraw({
-      apid: fixtureData.apps.airdrop,
-      amount: unlockedTokenAmount / 1e6,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-  });
-
-  // owner mb should be equal to 0 after vesting
-
-  it("airdrop owner mb should be equal to 0 after vesting", async function () {
-    const {
-      funding,
-      lockupDelay,
-      periodSeconds,
-      distributionCount,
-      distributionSeconds,
-    } = await airdropGetState({
-      apid: fixtureData.apps.airdrop,
-    });
-    while (
-      moment().unix() <
-      funding +
-        lockupDelay * periodSeconds +
-        distributionCount * distributionSeconds
-    ) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-    const mb = await airdropGetMb({
-      apid: fixtureData.apps.airdrop,
-    });
-    expect(mb).to.be.a("string");
-    expect(mb).to.be.eq("0");
-  });
-
-  // owner should be able to withdraw all tokens after vesting:0
-
-  it("airdrop owner should be able to withdraw all tokens after vesting", async function () {
-    const availableBalance = await getApplicationAvailableBalance(
-      fixtureData.apps.airdrop
-    );
-    const success = await airdropWithdraw({
-      apid: fixtureData.apps.airdrop,
-      amount: Number(availableBalance) / 1e6,
-    });
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-  });
-
-  // anyone should not be able to close contract
-
-  // owner should be able to close contract after vesting
-
-  // funder should be able to close contract after vesting
 });
 
 // Path : Staking Factory
 
-describe("Staking Factory Test Suite", function () {});
+describe("Staking Factory Test Suite", function () {
+  this.timeout(60_000);
+  let fixtureData = baseFixtureData;
+  before(async function () {
+    console.log("Once upon a time...");
+    const seconds = 1;
+    const factory = await deploy({
+      name: "mocha",
+      type: "staking-factory",
+      periodSeconds: seconds,
+      periodLimit: 17,
+      vestingDelay: 0,
+      lockupDelay: 1,
+      messengerId: 1,
+      distributionCount: 1,
+      distributionSeconds: seconds,
+    });
+    const airdrop = await deployStaking({
+      apid: factory,
+      amount: 1,
+      period: 17,
+      extraPayment: 1e5, // pay min balance once
+      delegate: addressses.delegate,
+    });
+    fixtureData.apps = {
+      airdropFactory: factory,
+      airdrop,
+    };
+  });
+  // cleanup after tests esp airdrop
+  // upgrader should be able to update app
+  after(async function () {
+    // we use update to delete the app in this case
+    // since it is not closed in the following tests
+    await updateApp({
+      apid: fixtureData.apps.airdrop,
+      delete: true,
+    });
+    console.log("Happily ever after");
+  });
+
+  // should have apps available
+
+  it("staking and factory apps should be available", function () {
+    expect(fixtureData.apps.airdrop).to.be.a("number");
+    expect(fixtureData.apps.airdropFactory).to.be.a("number");
+  });
+
+  // should be initialized with correct values
+
+  it("staking should be initialized with correct values", async function () {
+    const state = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    expect(state).to.be.an("object");
+    expect(state.total).to.be.a("string");
+    expect(state.total).to.be.eq("1000000");
+    expect(state.initial).to.be.a("string");
+    expect(state.initial).to.be.eq("1000000");
+    expect(state.funding).to.be.a("number");
+    expect(state.funding).to.be.eq(0);
+    expect(state.vestingDelay).to.be.a("number");
+    expect(state.vestingDelay).to.be.eq(0);
+    expect(state.lockupDelay).to.be.a("number");
+    expect(state.lockupDelay).to.be.eq(1);
+    expect(state.deadline).to.be.a("number");
+    expect(state.deadline).to.be.greaterThan(1);
+    expect(state.period).to.be.a("number");
+    expect(state.period).to.be.eq(17);
+    expect(state.periodSeconds).to.be.a("number");
+    expect(state.periodSeconds).to.be.eq(1);
+    expect(state.periodLimit).to.be.a("number");
+    expect(state.periodLimit).to.be.eq(17);
+    expect(state.messengerId).to.be.a("number");
+    expect(state.messengerId).to.be.eq(1);
+    expect(state.distributionCount).to.be.a("number");
+    expect(state.distributionCount).to.be.eq(12); // variable
+    expect(state.distributionSeconds).to.be.a("number");
+    expect(state.distributionSeconds).to.be.eq(1);
+    expect(state.contractVersion).to.be.a("number");
+    expect(state.contractVersion).to.be.eq(0);
+    expect(state.deploymentVersion).to.be.a("number");
+    expect(state.deploymentVersion).to.be.eq(0);
+    expect(state.owner).not.to.be.a(state.funder);
+    expect(state.delegate).to.be.a("string");
+    expect(state.delegate).to.be.eq(addressses.delegate);
+  });
+
+  // should not be able to configure
+
+  it("staking should not be able to configure", async function () {
+    const success = await airdropConfigure({
+      apid: fixtureData.apps.airdrop,
+      period: 1,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  // owner is locked in and can either abort or wait for funding
+  // to be begin the lockup and vesting process
+});
 
 // Path : Compensation Factory
 
-describe("Compensation Factory Test Suite", function () {});
+describe("Compensation Factory Test Suite", function () {
+  this.timeout(60_000);
+  let fixtureData = baseFixtureData;
+  before(async function () {
+    console.log("Once upon a time...");
+    const seconds = 1;
+    const factory = await deploy({
+      name: "mocha",
+      type: "compensation-factory",
+      periodSeconds: seconds,
+      periodLimit: 0,
+      vestingDelay: 0,
+      lockupDelay: 0,
+      messengerId: 1,
+      distributionCount: 12,
+      distributionSeconds: seconds,
+    });
+    const airdrop = await deployCompensation({
+      apid: factory,
+      amount: 1,
+      extraPayment: 1e5, // pay min balance once
+      delegate: addressses.delegate,
+    });
+    fixtureData.apps = {
+      airdropFactory: factory,
+      airdrop,
+    };
+  });
+  // cleanup after tests esp airdrop
+  // upgrader should be able to update app
+  after(async function () {
+    // we use update to delete the app in this case
+    // since it is not closed in the following tests
+    await updateApp({
+      apid: fixtureData.apps.airdrop,
+      delete: true,
+    });
+    console.log("Happily ever after");
+  });
+
+  // should have apps available
+
+  it("compensation and factory apps should be available", function () {
+    expect(fixtureData.apps.airdrop).to.be.a("number");
+    expect(fixtureData.apps.airdropFactory).to.be.a("number");
+  });
+
+  // should be initialized with correct values
+
+  it("compensation should be initialized with correct values", async function () {
+    const state = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    expect(state).to.be.an("object");
+    expect(state.total).to.be.a("string");
+    expect(state.total).to.be.eq("1000000");
+    expect(state.initial).to.be.a("string");
+    expect(state.initial).to.be.eq("1000000");
+    expect(state.funding).to.be.a("number");
+    expect(state.funding).to.be.greaterThan(0);
+    expect(state.vestingDelay).to.be.a("number");
+    expect(state.vestingDelay).to.be.eq(0);
+    expect(state.lockupDelay).to.be.a("number");
+    expect(state.lockupDelay).to.be.eq(0);
+    expect(state.deadline).to.be.a("number");
+    expect(state.deadline).to.be.greaterThan(1);
+    expect(state.period).to.be.a("number");
+    expect(state.period).to.be.eq(0);
+    expect(state.periodSeconds).to.be.a("number");
+    expect(state.periodSeconds).to.be.eq(1);
+    expect(state.periodLimit).to.be.a("number");
+    expect(state.periodLimit).to.be.eq(0);
+    expect(state.messengerId).to.be.a("number");
+    expect(state.messengerId).to.be.eq(1);
+    expect(state.distributionCount).to.be.a("number");
+    expect(state.distributionCount).to.be.eq(12);
+    expect(state.distributionSeconds).to.be.a("number");
+    expect(state.distributionSeconds).to.be.eq(1);
+    expect(state.contractVersion).to.be.a("number");
+    expect(state.contractVersion).to.be.eq(0);
+    expect(state.deploymentVersion).to.be.a("number");
+    expect(state.deploymentVersion).to.be.eq(0);
+    expect(state.owner).not.to.be.a(state.funder);
+    expect(state.delegate).to.be.a("string");
+    expect(state.delegate).to.be.eq(
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
+    );
+  });
+
+  // should not be able to configure
+
+  it("compensation should not be able to configure", async function () {
+    const success = await airdropConfigure({
+      apid: fixtureData.apps.airdrop,
+      period: 1,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  // should not be able to set funding
+
+  it("compensation should not be able to set funding", async function () {
+    const success = await airdropSetFunding({
+      apid: fixtureData.apps.airdrop,
+      timestamp: moment().add(10, "seconds").unix(),
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  // should be able to close after vested
+
+  it("compensation should be able to close after vested", async function () {
+    while (true) {
+      const mab = await airdropGetMb({
+        apid: fixtureData.apps.airdrop,
+      });
+      if (mab === "0") {
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const success = await airdropClose({
+      apid: fixtureData.apps.airdrop,
+      simulate: true,
+      sender: addressses.owner,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+  });
+});
