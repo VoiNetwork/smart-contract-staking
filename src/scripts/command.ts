@@ -194,7 +194,14 @@ program
     "Specify distribution seconds"
   )
   .description("Deploy a specific contract type")
-  .action(deploy);
+  .action(async (options: DeployOptions) => {
+    const apid = await deploy(options);
+    if (!apid) {
+      console.log("Failed to deploy contract");
+      return;
+    }
+    console.log(apid);
+  });
 
 program
   .command("cleanup-airdrop")
@@ -390,12 +397,13 @@ export const deployAirdrop: any = async (options: DeployAirdropOptions) => {
 factory
   .command("deploy-airdrop")
   .description("Create an airdrop factory")
+  .option("-a, --apid <number>", "Specify the application ID")
   .option("-o, --owner <string>", "Specify the owner address")
   .option("-f, --funder <string>", "Specify the funder address")
   .option("-d, --deadline <number>", "Specify the deadline")
   .option("--debug", "Debug the deployment", false)
   .requiredOption(
-    "-a, --initial <number>",
+    "-i, --initial <number>",
     "Specify the initial airdrop amount"
   )
   .action(async (options: DeployAirdropOptions) => {
@@ -412,13 +420,18 @@ factory
 interface FactoryUpdateAirdropOptions {
   apid: number;
   delete: boolean;
+  debug?: boolean;
 }
 factory
   .command("update-airdrop")
   .description("Update all airdrop contracts")
   .option("-a, --apid <number>", "Specify the application ID of factory")
   .option("-d --delete", "Delete the application")
+  .option("--debug", "Debug the deployment", false)
   .action(async (options: FactoryUpdateAirdropOptions) => {
+    if (options.debug) {
+      console.log(options);
+    }
     const parentId = options.apid || CTC_INFO_FACTORY_AIRDROP;
     const url = `https://arc72-idx.nautilus.sh/v1/scs/accounts?parentId=${parentId}&deleted=0`;
     const {
@@ -446,7 +459,9 @@ factory
           ci.setOnComplete(5); // deleteApplicationOC
         }
         const updateR = await ci.update();
-        console.log(updateR);
+        if (options.debug) {
+          console.log(updateR);
+        }
         if (updateR.success) {
           await signSendAndConfirm(updateR.txns, sk);
         }
@@ -782,12 +797,21 @@ interface AirdropConfigureOptions {
   period: number;
   sender?: string;
   simulate?: boolean;
+  debug?: boolean;
 }
 export const airdropConfigure: any = async (
   options: AirdropConfigureOptions
 ) => {
-  const ci = makeCi(options.apid, options.sender || addr2);
-  const configureR = await ci.configure(options.period);
+  if (options.debug) {
+    console.log(options);
+  }
+  const ctcInfo = Number(options.apid);
+  const period = Number(options.period || 0);
+  const ci = makeCi(ctcInfo, options.sender || addr2);
+  const configureR = await ci.configure(period);
+  if (options.debug) {
+    console.log(configureR);
+  }
   if (configureR.success) {
     if (!options.simulate) {
       await signSendAndConfirm(configureR.txns, sk2);
@@ -799,8 +823,9 @@ export const airdropConfigure: any = async (
 airdrop
   .command("configure")
   .description("Configure the lockup period")
-  .option("-a, --apid <number>", "Specify the application ID")
+  .requiredOption("-a, --apid <number>", "Specify the application ID")
   .option("-p, --period <number>", "Specify the lockup period")
+  .option("--debug", "Debug the deployment", false)
   .action(airdropConfigure);
 
 interface AirdropFillOptions {
@@ -812,10 +837,10 @@ interface AirdropFillOptions {
   debug?: boolean;
 }
 export const airdropFill: any = async (options: AirdropFillOptions) => {
-  const timestamp = options.timestamp || 0;
   if (options.debug) {
     console.log(options);
   }
+  const timestamp = Number(options.timestamp || 0)
   if (timestamp <= 0) {
     const ci = makeCi(Number(options.apid), options.sender || addr);
     const paymentAmount = Number(options.amount) * 1e6;
@@ -883,9 +908,10 @@ airdrop
   .command("fill")
   .description("Fill the staking contract")
   .requiredOption("-a, --apid <number>", "Specify the application ID")
-  .requiredOption("-f, --fillAmount <number>", "Specify the amount to fill")
+  .requiredOption("-f, --amount <number>", "Specify the amount to fill")
   .option("-s, --simulate", "Simulate the fill", false)
   .option("-g --timestamp <number>", "Funding timestamp")
+  .option("--debug", "Debug the deployment", false)
   .action(airdropFill);
 
 interface AirdropSetFundingOptions {
@@ -897,10 +923,14 @@ interface AirdropSetFundingOptions {
 export const airdropSetFunding: any = async (
   options: AirdropSetFundingOptions
 ) => {
-  const ci = makeCi(Number(options.apid), addr);
-  const set_fundingR = await ci.set_funding(options.timestamp);
   if (options.debug) {
     console.log(options);
+  }
+  const ctcInfo = Number(options.apid);
+  const timestamp = Number(options.timestamp || 0);
+  const ci = makeCi(ctcInfo, addr);
+  const set_fundingR = await ci.set_funding(timestamp);
+  if (options.debug) {
     console.log(set_fundingR);
   }
   if (set_fundingR.success) {
@@ -916,6 +946,7 @@ airdrop
   .description("Set the funding timestamp")
   .requiredOption("-a, --apid <number>", "Specify the application ID")
   .requiredOption("-t, --timestamp <number>", "Specify the timestamp")
+  .option("--debug", "Debug the deployment", false)
   .action(airdropSetFunding);
 
 interface AirdropParticipateOptions {
@@ -933,7 +964,11 @@ interface AirdropParticipateOptions {
 export const airdropParticipate: any = async (
   options: AirdropParticipateOptions
 ) => {
-  const ci = makeCi(Number(options.apid), options.sender || addr2);
+  if (options.debug) {
+    console.log(options);
+  }
+  const ctcInfo = Number(options.apid);
+  const ci = makeCi(ctcInfo, options.sender || addr2);
   ci.setPaymentAmount(1000);
   const participateR = await ci.participate(
     options.vote_k,
@@ -1013,12 +1048,19 @@ export const airdropWithdraw: any = async (options: AirdropWithdrawOptions) => {
 interface AirdropGetMbOptions {
   apid: number;
   address: string;
+  debug?: boolean;
 }
 export const airdropGetMb: any = async (options: AirdropGetMbOptions) => {
+  if (options.debug) {
+    console.log(options);
+  }
   const ctcInfo = Number(options.apid);
   const ci = makeCi(ctcInfo, options.address || addr2);
   ci.setFee(2000);
   const withdrawR = await ci.withdraw(0);
+  if (options.debug) {
+    console.log(withdrawR);
+  }
   if (withdrawR.success) {
     const withdraw = withdrawR.returnValue;
     return withdraw.toString();
@@ -1030,7 +1072,12 @@ airdrop
   .command("get-mb")
   .description("Simulate owner's withdrawal and log 'mab' value")
   .option("-a, --apid <number>", "Specify the application ID")
-  .action(airdropGetMb);
+  .option("-d, --address <string>", "Specify the address")
+  .option("--debug", "Debug the deployment", false)
+  .action(async (options: AirdropGetMbOptions) => {
+    const mab = await airdropGetMb(options);
+    console.log(mab);
+  });
 
 interface AirdropCloseOptions {
   apid: number;

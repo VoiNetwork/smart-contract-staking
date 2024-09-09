@@ -41,18 +41,19 @@ scs-pytest() {
 scs-demo() {
   (
     cd src/scripts
+    npx tsc
     case ${1} in
       "airdrop") {
-        bash demo/test-contract-${1}.sh
+        bash demo/demo-contract-${1}.sh
       } ;;
       "staking") {
-        bash demo/test-contract-${1}.sh
+        bash demo/demo-contract-${1}.sh
       } ;;
       "compensation") {
-        bash demo/test-contract-${1}.sh
+        bash demo/demo-contract-${1}.sh
       } ;;
       *) {
-        echo "test not found"
+        echo "demo not found"
         false
       } ;;
     esac
