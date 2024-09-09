@@ -47,7 +47,7 @@ scs-cli --help
 ### Deploy airdrop factory contract with default configuration
 
 ```
-scs-cli deploy --period-seconds 2628288 --period-limit 5 --vesting-delay 1 --lockup-delay 12 --period-seconds 3600 --messenger-id 73060985 --distribution-count 12 --distribution-seconds 3600 --type airdrop-factory --name "testnet" 
+scs-cli deploy --period-seconds 2628288 --period-limit 5 --vesting-delay 1 --lockup-delay 12 --period-seconds 1 --messenger-id 73060985 --distribution-count 12 --distribution-seconds 1 --type airdrop-factory --name "airdrop" 
 ```
 
 ### Deploy airdrop contract with default parameters

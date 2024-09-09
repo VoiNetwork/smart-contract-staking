@@ -1086,11 +1086,11 @@ class BaseFactory(Upgradeable):
         Get initial payment.
         """
         payment_amount = require_payment(Txn.sender)
-        mbr_increase = UInt64(1134500)
+        mbr_increase = UInt64(1234500)
         min_balance = op.Global.min_balance  # 100000
         assert (
             payment_amount >= mbr_increase + min_balance
-        ), "payment amount accurate"  # 1034500 + 100000 = 1134500
+        ), "payment amount accurate"  # 1234500 + 100000 = 1334500
         initial = payment_amount - mbr_increase - min_balance
         return initial
 
@@ -1225,7 +1225,8 @@ class StakingFactory(BaseFactory):
         ##########################################
         assert period < 18, "period less than 18"
         ##########################################
-        base_app = arc4.arc4_create(Airdrop).created_app
+        compiled = compile_contract(Airdrop, extra_program_pages=3) # max extra pages
+        base_app = arc4.arc4_create(Airdrop, compiled=compiled).created_app
         arc4.emit(FactoryCreated(arc4.UInt64(base_app.id)))
         arc4.abi_call(  # emit Template
             Airdrop.template,
@@ -1306,7 +1307,8 @@ class CompensationFactory(BaseFactory):
         # owner arg
         # funder Sender
         ##########################################
-        base_app = arc4.arc4_create(Airdrop).created_app
+        compiled = compile_contract(Airdrop, extra_program_pages=3) # max extra pages
+        base_app = arc4.arc4_create(Airdrop, compiled=compiled).created_app
         arc4.emit(FactoryCreated(arc4.UInt64(base_app.id)))
         arc4.abi_call(  # emit Template
             Airdrop.template,

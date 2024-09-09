@@ -80,6 +80,10 @@ scs-cli deploy --name "testnet" --period-seconds 2628288 --period-limit 5 --vest
 | DISTRIBUTION_COUNT   | 1        |
 | DISTRIBUTION_SECONDS | 2628288  |
 
+```
+scs-cli deploy --name "staking" --period-seconds 1 --period-limit 17 --vesting-delay 1 --lockup-delay 1 --period-seconds 1 --messenger-id 73060985 --distribution-count 1 --distribution-seconds 1 --type staking-factory
+```
+
 **Notes**
 
 ```

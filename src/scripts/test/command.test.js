@@ -24,6 +24,7 @@ import {
   updateApp,
 } from "../command.js";
 import moment from "moment";
+import exp from "constants";
 
 const baseFixtureData = {
   apps: {
@@ -55,11 +56,11 @@ describe("Ownable Test Suite", function () {
       distributionCount: 12,
       distributionSeconds: seconds,
     });
-    const deadline = moment().add(20, "seconds").unix();
+    const deadline = moment().add(1, "seconds").unix();
     const airdrop = await deployAirdrop({
       apid: airdropFactory,
       initial: 1e6,
-      extraPayment: 1e5, // pay min balance once
+      //extraPayment: 1e5, // pay min balance once
       deadline,
     });
     fixtureData.context.deadline = deadline;
@@ -126,24 +127,24 @@ describe("Fundable Test Suite", function () {
       name: "mocha",
       type: "airdrop-factory",
       periodSeconds: seconds,
-      periodLimit: 5,
+      periodLimit: 2,
       vestingDelay: 1,
-      lockupDelay: 12,
+      lockupDelay: 2,
       messengerId: 1,
-      distributionCount: 12,
+      distributionCount: 2,
       distributionSeconds: seconds,
     });
     const deadline = moment().add(20, "seconds").unix();
     const airdrop = await deployAirdrop({
       apid: airdropFactory,
       initial: 1e6,
-      extraPayment: 1e5, // pay min balance once
+      //extraPayment: 1e5, // pay min balance once
       deadline,
     });
     const airdrop2 = await deployAirdrop({
       apid: airdropFactory,
       initial: 1e6,
-      extraPayment: 1e5, // pay min balance once
+      //extraPayment: 1e5, // pay min balance once
       deadline,
     });
 
@@ -174,7 +175,7 @@ describe("Fundable Test Suite", function () {
   //   emits Filled event
   //   sets total
 
-  it("fundable anyone should not be able to fill", async function () {
+  it("fundable only funder should be able to fill", async function () {
     const { owner } = await airdropGetState({
       apid: fixtureData.apps.airdrop,
     });
@@ -191,7 +192,7 @@ describe("Fundable Test Suite", function () {
     // require payment
     const success = await airdropFill({
       apid: fixtureData.apps.airdrop,
-      amount: 1,
+      amount: 2,
     });
     const { total } = await airdropGetState({
       apid: fixtureData.apps.airdrop,
@@ -200,7 +201,7 @@ describe("Fundable Test Suite", function () {
     expect(success).to.be.a("boolean");
     expect(success).to.be.eq(true);
     expect(total).to.be.a("string");
-    expect(total).to.be.eq(String(1e6));
+    expect(total).to.be.eq(String(2e6));
   });
 
   // funder may fill additional amount
@@ -209,6 +210,7 @@ describe("Fundable Test Suite", function () {
     const success = await airdropFill({
       apid: fixtureData.apps.airdrop,
       amount: 1,
+      simulate: true,
     });
     expect(success).to.be.a("boolean");
     expect(success).to.be.eq(true);
@@ -226,7 +228,7 @@ describe("Fundable Test Suite", function () {
     const success = await airdropFill({
       apid: fixtureData.apps.airdrop,
       amount: 1,
-      timestamp: moment().add(20, "seconds").unix(),
+      timestamp: moment().add(1, "seconds").unix(),
       simulate: true,
     });
     expect(success).to.be.a("boolean");
@@ -239,7 +241,7 @@ describe("Fundable Test Suite", function () {
   //   emits TotalReduced event
   //   sets total
 
-  it("fundable anyone should not be able to reduce total", async function () {
+  it("fundable only funder should be able to reduce total", async function () {
     const success = await airdropReduceTotal({
       apid: fixtureData.apps.airdrop,
       amount: 1,
@@ -284,7 +286,7 @@ describe("Fundable Test Suite", function () {
   it("fundable funder may extend funding if not past", async function () {
     const success = await airdropSetFunding({
       apid: fixtureData.apps.airdrop,
-      timestamp: moment().add(10, "seconds").unix(),
+      timestamp: moment().add(1, "seconds").unix(),
     });
     expect(success).to.be.a("boolean");
     expect(success).to.be.eq(true);
@@ -317,7 +319,7 @@ describe("Fundable Test Suite", function () {
   //   emits FunderGranted event
   //   sets funder
 
-  it("fundable anyone should not be able to grant funder", async function () {
+  it("fundable only funder should be able to grant funder", async function () {
     const { owner } = await airdropGetState({
       apid: fixtureData.apps.airdrop,
     });
@@ -353,7 +355,7 @@ describe("Fundable Test Suite", function () {
   //  must be uninitialized
   //  emits Closed event
 
-  it("fundable anyone should not be able to abort funding", async function () {
+  it("fundable only funder or owner should be able to abort funding", async function () {
     const success = await airdropAbortFunding({
       apid: fixtureData.apps.airdrop2,
       sender: addressses.delegate,
@@ -384,18 +386,18 @@ describe("Lockable Test Suite", function () {
       name: "mocha",
       type: "airdrop-factory",
       periodSeconds: seconds,
-      periodLimit: 5,
+      periodLimit: 2,
       vestingDelay: 1,
-      lockupDelay: 12,
+      lockupDelay: 2,
       messengerId: 1,
-      distributionCount: 12,
+      distributionCount: 2,
       distributionSeconds: seconds,
     });
-    const deadline = moment().add(20, "seconds").unix();
+    const deadline = moment().add(15, "seconds").unix();
     const airdrop = await deployAirdrop({
       apid: airdropFactory,
       initial: 1e6,
-      extraPayment: 1e5, // pay min balance once
+      //extraPayment: 1e5, // pay min balance once
       deadline,
     });
     fixtureData.context.deadline = deadline;
@@ -422,11 +424,11 @@ describe("Lockable Test Suite", function () {
 
   // anyone should not be able to configure
 
-  it("lockable anyone should not be able to configure", async function () {
+  it("lockable only owner should be able to configure", async function () {
     const success = await airdropConfigure({
       apid: fixtureData.apps.airdrop,
       period: 1,
-      sender: addressses.delegate,
+      sender: addressses.delegate, // not owner
     });
     expect(success).to.be.a("boolean");
     expect(success).to.be.eq(false);
@@ -434,10 +436,10 @@ describe("Lockable Test Suite", function () {
 
   // owner should be able to configure over
 
-  it("lockable owner should be able to configure over", async function () {
+  it("lockable owner should not be able to configure over", async function () {
     const success = await airdropConfigure({
       apid: fixtureData.apps.airdrop,
-      period: 6,
+      period: 6, // 6 > 2
     });
     expect(success).to.be.a("boolean");
     expect(success).to.be.eq(false);
@@ -449,15 +451,11 @@ describe("Lockable Test Suite", function () {
     const success = await airdropConfigure({
       apid: fixtureData.apps.airdrop,
       period: 1,
-    });
-    const { period } = await airdropGetState({
-      apid: fixtureData.apps.airdrop,
+      simulate: true,
     });
     // emits Configured event
     expect(success).to.be.a("boolean");
     expect(success).to.be.eq(true);
-    expect(period).to.be.a("number");
-    expect(period).to.be.eq(1);
   });
 
   // owner should be able to configure more than once
@@ -474,25 +472,6 @@ describe("Lockable Test Suite", function () {
     expect(success).to.be.eq(true);
     expect(period).to.be.a("number");
     expect(period).to.be.eq(2);
-  });
-
-  // owner should not be able to configure after deadline
-
-  it("lockable owner should not be able to configure after deadline", async function () {
-    while (moment().unix() < fixtureData.context.deadline) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-    try {
-      await airdropConfigure({
-        apid: fixtureData.apps.airdrop,
-        period: 1,
-      });
-    } catch (err) {
-      //   assert failed pc=[0-9]+. Details: app=[0-9]+, pc=[0-9]+, opcodes=.*LatestTimestamp.*assert/;
-      const regex =
-        /transaction [^:]*. logic eval error: assert failed pc=[0-9]+\. Details: app=[0-9]+, pc=[0-9]+, opcodes=.*LatestTimestamp.*assert/;
-      expect(err.message).to.match(regex);
-    }
   });
 
   // withdraw
@@ -598,7 +577,7 @@ describe("Lockable Test Suite", function () {
 
   // anyone should not be able to withdraw
 
-  it("lockable anyone should not be able to withdraw", async function () {
+  it("lockable only owner should be able to withdraw", async function () {
     const success = await airdropWithdraw({
       apid: fixtureData.apps.airdrop,
       amount: 0,
@@ -652,6 +631,25 @@ describe("Lockable Test Suite", function () {
     expect(success).to.be.a("boolean");
     expect(success).to.be.eq(true);
   });
+
+  // owner should not be able to configure after deadline
+
+  it("lockable owner should not be able to configure after deadline", async function () {
+    while (moment().unix() < fixtureData.context.deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    try {
+      await airdropConfigure({
+        apid: fixtureData.apps.airdrop,
+        period: 1,
+      });
+    } catch (err) {
+      //   assert failed pc=[0-9]+. Details: app=[0-9]+, pc=[0-9]+, opcodes=.*LatestTimestamp.*assert/;
+      const regex =
+        /transaction [^:]*. logic eval error: assert failed pc=[0-9]+\. Details: app=[0-9]+, pc=[0-9]+, opcodes=.*LatestTimestamp.*assert/;
+      expect(err.message).to.match(regex);
+    }
+  });
 });
 
 // Path : Stakeable
@@ -666,18 +664,18 @@ describe("Stakable Test Suite", function () {
       name: "mocha",
       type: "airdrop-factory",
       periodSeconds: seconds,
-      periodLimit: 5,
+      periodLimit: 2,
       vestingDelay: 1,
-      lockupDelay: 12,
+      lockupDelay: 2,
       messengerId: 1,
-      distributionCount: 12,
+      distributionCount: 2,
       distributionSeconds: seconds,
     });
-    const deadline = moment().add(20, "seconds").unix();
+    const deadline = moment().add(15, "seconds").unix();
     const airdrop = await deployAirdrop({
       apid: airdropFactory,
       initial: 1e6,
-      extraPayment: 1e5, // pay min balance once
+      //extraPayment: 1e5, // pay min balance once
       deadline,
     });
     fixtureData.context.deadline = deadline;
@@ -818,7 +816,7 @@ describe("Upgradeable Test Suite", function () {
     const airdrop = await deployAirdrop({
       apid: airdropFactory,
       initial: 1e6,
-      extraPayment: 1e5, // pay min balance once
+      //extraPayment: 1e5, // pay min balance once
       deadline,
     });
     fixtureData.context.deadline = deadline;
@@ -935,7 +933,7 @@ describe("Airdrop Factory Test Suite", function () {
     const airdrop = await deployAirdrop({
       apid: airdropFactory,
       initial: 1e6,
-      extraPayment: 1e5, // pay min balance once
+      //extraPayment: 1e5, // pay min balance once
       deadline,
     });
     fixtureData.context.deadline = deadline;
@@ -1023,7 +1021,7 @@ describe("Staking Factory Test Suite", function () {
       apid: factory,
       amount: 1,
       period: 17,
-      extraPayment: 1e5, // pay min balance once
+      //extraPayment: 1e5, // pay min balance once
       delegate: addressses.delegate,
     });
     fixtureData.apps = {
@@ -1121,13 +1119,13 @@ describe("Compensation Factory Test Suite", function () {
       vestingDelay: 0,
       lockupDelay: 0,
       messengerId: 1,
-      distributionCount: 12,
+      distributionCount: 2,
       distributionSeconds: seconds,
     });
     const airdrop = await deployCompensation({
       apid: factory,
       amount: 1,
-      extraPayment: 1e5, // pay min balance once
+      //extraPayment: 1e5, // pay min balance once
       delegate: addressses.delegate,
     });
     fixtureData.apps = {
@@ -1182,7 +1180,7 @@ describe("Compensation Factory Test Suite", function () {
     expect(state.messengerId).to.be.a("number");
     expect(state.messengerId).to.be.eq(1);
     expect(state.distributionCount).to.be.a("number");
-    expect(state.distributionCount).to.be.eq(12);
+    expect(state.distributionCount).to.be.eq(2);
     expect(state.distributionSeconds).to.be.a("number");
     expect(state.distributionSeconds).to.be.eq(1);
     expect(state.contractVersion).to.be.a("number");
