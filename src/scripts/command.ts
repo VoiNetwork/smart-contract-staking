@@ -339,8 +339,9 @@ export const deployCompensation: any = async (
 factory
   .command("deploy-compensation")
   .description("Create a compensation factory")
+  .option("-a, --apid <number>", "Specify the application ID")
   .option("-o, --owner <string>", "Specify the owner address")
-  .option("-a, --amount <number>", "Specify the amount for compensation")
+  .option("-b, --amount <number>", "Specify the amount for compensation")
   .action(async (options: DeployCompensationOptions) => {
     const apid = await deployCompensation(options);
     console.log(apid);
@@ -523,15 +524,14 @@ export const deployStaking: any = async (options: DeployStakingOptions) => {
 };
 factory
   .command("deploy-staking")
-  .requiredOption("-a, --amount <number>", "Specify the amount for staking")
+  .requiredOption("-a, --apid <number>", "Specify the application ID")
+  .requiredOption("-b, --amount <number>", "Specify the amount for staking")
   .requiredOption("-p, --period <number>", "Specify the lockup period")
   .option("--debug", "Debug the deployment", false)
   .description("Create a staking contract")
   .action(async (options: DeployStakingOptions) => {
     const apid = await deployStaking(options);
-    console.log({ apid });
-    if (!apid) {
-      console.log("Failed to deploy staking contract");
+    if (!apid) { 
       return;
     }
     console.log(apid);
@@ -840,7 +840,7 @@ export const airdropFill: any = async (options: AirdropFillOptions) => {
   if (options.debug) {
     console.log(options);
   }
-  const timestamp = Number(options.timestamp || 0)
+  const timestamp = Number(options.timestamp || 0);
   if (timestamp <= 0) {
     const ci = makeCi(Number(options.apid), options.sender || addr);
     const paymentAmount = Number(options.amount) * 1e6;
@@ -1086,12 +1086,15 @@ interface AirdropCloseOptions {
   debug?: boolean;
 }
 export const airdropClose: any = async (options: AirdropCloseOptions) => {
-  const ci = makeCi(options.apid, options.sender || addr);
+  if (options.debug) {
+    console.log(options);
+  }
+  const ctcInfo = Number(options.apid);
+  const ci = makeCi(ctcInfo, options.sender || addr);
   ci.setFee(3000);
   ci.setOnComplete(5); // deleteApplicationOC
   const closeR = await ci.close();
   if (options.debug) {
-    console.log(options);
     console.log(closeR);
   }
   if (closeR.success) {

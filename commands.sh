@@ -72,6 +72,12 @@ scs-mocha() {
     }
   )
 }
+scs-plot() {
+  (
+    cd src
+    python plot-staking.py
+  )
+}
 scs-program() {
   (
     set -e

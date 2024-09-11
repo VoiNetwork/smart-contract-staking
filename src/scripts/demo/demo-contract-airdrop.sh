@@ -12,24 +12,39 @@ source ./$( dirname ${0} )/utils.sh
 # close the contract
 ##################################################
 main() {
-  local -i mb
   local -i app_id
-  local mfapid
-  local word
+  local -i mb
+  local config_distribution_count
+  local config_lockup_delay
+  local config_name
+  local config_seconds
+  local config_type
   local fapid
+  local mfapid
+  local period
+  local word
   config_type=airdrop-factory
   config_name=airdrop-demo
   config_seconds=1
-  mfapid=$( cli deploy --period-seconds ${config_seconds} --period-limit 5 --vesting-delay 0 --lockup-delay 12 --messenger-id 73060985 --distribution-count 12 --distribution-seconds ${config_seconds} --type ${config_type} --name ${config_name} )
+  config_lockup_delay=12
+  config_distribution_count=12
+  mfapid=$( cli deploy --period-seconds ${config_seconds} --period-limit 5 --vesting-delay 0 --lockup-delay ${config_lockup_delay} --messenger-id 73060985 --distribution-count ${config_distribution_count} --distribution-seconds ${config_seconds} --type ${config_type} --name ${config_name} )
   for word in $mfapid; do
    fapid="${word}"
   done
-  clear
   echo ===========================================
   echo AIR DROP DEMO
   echo ===========================================
+  cat << EOF
+config_type: ${config_type}
+config_name: ${config_name}
+config_seconds: ${config_seconds}
+config_lockup_delay: ${config_lockup_delay}
+config_distribution_count: ${config_distribution_count}
+factory apid: ${fapid}
+===========================================
+EOF
   sleep 1
-  echo factory apid: ${fapid}
   test ! ${fapid} -le 0 || {
     echo "failed to deploy airdrop factory"
     exit 1
@@ -63,8 +78,13 @@ main() {
     let -i duration=${end}-${start}
     echo "duration:${duration}"
     echo "closing app ${app_id}..."
-    cli airdrop close ${app_id}
+    cli airdrop close --apid ${app_id} 
+    echo "==========================================="
   done
+  echo cleaning up...
+  sleep 10
+  cli factory update-airdrop --apid ${fapid} --delete
+  echo "==========================================="
 }
 main
 ##################################################
