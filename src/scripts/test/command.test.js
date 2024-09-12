@@ -22,9 +22,11 @@ import {
   deployCompensation,
   getApplicationAvailableBalance,
   updateApp,
+  sks,
 } from "../command.js";
 import moment from "moment";
 import exp from "constants";
+import algosdk from "algosdk";
 
 const baseFixtureData = {
   apps: {
@@ -56,7 +58,7 @@ describe("Ownable Test Suite", function () {
       distributionCount: 12,
       distributionSeconds: seconds,
     });
-    const deadline = moment().add(1, "seconds").unix();
+    const deadline = moment().add(60, "seconds").unix();
     const airdrop = await deployAirdrop({
       apid: airdropFactory,
       initial: 1e6,
@@ -79,6 +81,20 @@ describe("Ownable Test Suite", function () {
     console.log("Happily ever after");
   });
 
+  it("ownable creator should not be able to transfer ownership", async function () {
+    const creator = algosdk.getApplicationAddress(
+      fixtureData.apps.airdropFactory
+    );
+    const success = await airdropTransfer({
+      apid: fixtureData.apps.airdrop,
+      receiver: creator,
+      sender: creator,
+      simulate: true,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
   // anyone should not be able to transfer ownership
 
   it("ownable only owner should be able to transfer ownership", async function () {
@@ -97,12 +113,13 @@ describe("Ownable Test Suite", function () {
   // owner should be able to transfer ownership
 
   it("ownable owner should be able to transfer ownership", async function () {
-    const { funder } = await airdropGetState({
+    const { funder, owner: ownerBefore } = await airdropGetState({
       apid: fixtureData.apps.airdrop,
     });
     const success = await airdropTransfer({
       apid: fixtureData.apps.airdrop,
       receiver: funder,
+      sender: ownerBefore,
     });
     const { owner } = await airdropGetState({
       apid: fixtureData.apps.airdrop,
@@ -112,6 +129,24 @@ describe("Ownable Test Suite", function () {
     expect(owner).to.be.a("string");
     expect(owner).to.be.eq(funder);
     //   emits OwnershipTransferred event
+
+    const success2 = await airdropConfigure({
+      apid: fixtureData.apps.airdrop,
+      period: 1,
+      sender: funder,
+      sk: sks.funder,
+    });
+    expect(success2).to.be.a("boolean");
+    expect(success2).to.be.eq(true);
+
+    const success3 = await airdropConfigure({
+      apid: fixtureData.apps.airdrop,
+      period: 1,
+      sender: ownerBefore,
+      sk: sks.owner,
+    });
+    expect(success3).to.be.a("boolean");
+    expect(success3).to.be.eq(false);
   });
 });
 
@@ -175,10 +210,25 @@ describe("Fundable Test Suite", function () {
   //   emits Filled event
   //   sets total
 
-  it("fundable only funder should be able to fill", async function () {
-    const { owner } = await airdropGetState({
+  it("fundable creator should not be able to fill", async function () {
+    const creator = algosdk.getApplicationAddress(
+      fixtureData.apps.airdropFactory
+    );
+    const success = await airdropFill({
+      apid: fixtureData.apps.airdrop,
+      amount: 1,
+      sender: creator,
+      simulate: true,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
+
+  it("fundable owner should not be able to fill", async function () {
+    const { owner, funder, delegate } = await airdropGetState({
       apid: fixtureData.apps.airdrop,
     });
+    console.log({ owner, funder, delegate });
     const success = await airdropFill({
       apid: fixtureData.apps.airdrop,
       amount: 1,
@@ -186,6 +236,16 @@ describe("Fundable Test Suite", function () {
     });
     expect(success).to.be.a("boolean");
     expect(success).to.be.eq(false);
+  });
+
+  it("fundable account should not be able to fill over", async function () {
+    const success2 = await airdropFill({
+      apid: fixtureData.apps.airdrop,
+      amount: 200, // over balance
+      sender: addressses.funder,
+    });
+    expect(success2).to.be.a("boolean");
+    expect(success2).to.be.eq(false);
   });
 
   it("fundable funder should be able to fill", async function () {
@@ -202,6 +262,12 @@ describe("Fundable Test Suite", function () {
     expect(success).to.be.eq(true);
     expect(total).to.be.a("string");
     expect(total).to.be.eq(String(2e6));
+    const success2 = await airdropWithdraw({
+      apid: fixtureData.apps.airdrop,
+      amount: total / 1e6 + 1,
+    });
+    expect(success2).to.be.a("boolean");
+    expect(success2).to.be.eq(false);
   });
 
   // funder may fill additional amount
@@ -421,6 +487,20 @@ describe("Lockable Test Suite", function () {
   //   must not be funded
   //   emits Configured event
   //   sets period
+
+  it("lockable creator should not be able to configure", async function () {
+    const creator = algosdk.getApplicationAddress(
+      fixtureData.apps.airdropFactory
+    );
+    const success = await airdropConfigure({
+      apid: fixtureData.apps.airdrop,
+      period: 1,
+      sender: creator,
+      simulate: true,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(false);
+  });
 
   // anyone should not be able to configure
 

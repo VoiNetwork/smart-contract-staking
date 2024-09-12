@@ -55,6 +55,12 @@ export const addressses = {
   delegate: addr3,
 };
 
+export const sks = {
+  funder: sk,
+  owner: sk2,
+  delegate: sk3,
+};
+
 const ALGO_SERVER = "https://testnet-api.voi.nodly.io";
 const ALGO_INDEXER_SERVER = "https://testnet-idx.voi.nodly.io";
 
@@ -796,6 +802,7 @@ interface AirdropConfigureOptions {
   apid: number;
   period: number;
   sender?: string;
+  sk?: any;
   simulate?: boolean;
   debug?: boolean;
 }
@@ -814,7 +821,7 @@ export const airdropConfigure: any = async (
   }
   if (configureR.success) {
     if (!options.simulate) {
-      await signSendAndConfirm(configureR.txns, sk2);
+      await signSendAndConfirm(configureR.txns, options.sk || sk2);
     }
     return true;
   }

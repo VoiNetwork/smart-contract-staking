@@ -41,5 +41,5 @@ PERIOD_SECONDS = 2628288 = 30.5 days
 Deploy airdrop contract with configuration
 
 ```
-scs-cli deploy --name "testnet" --period-seconds 2628288 --period-limit 5 --vesting-delay 1 --lockup-delay 12 --period-seconds 2628288 --messenger-id 73060985 --distribution-count 12 --distribution-seconds 2628288 --type airdrop-factory
+scs-cli deploy --period-seconds 2628288 --period-limit 5 --vesting-delay 1 --lockup-delay 12 --messenger-id 73060985 --distribution-count 12 --distribution-seconds 2628288 --type airdrop-factory --name airdrop 
 ```
