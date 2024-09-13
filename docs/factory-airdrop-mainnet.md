@@ -27,10 +27,10 @@ Settings for known contract factories and their variable.
 | PERIOD_LIMIT         | 5        |
 | VESTING_DELAY        | 1        |
 | LOCKUP_DELAY         | 12       |
-| PERIOD_SECONDS       | 2628288  |
+| PERIOD_SECONDS       | 2630000  |
 | MESSENGER_ID         | 73060985 |
 | DISTRIBUTION_COUNT   | 12       |
-| DISTRIBUTION_SECONDS | 2628288  |
+| DISTRIBUTION_SECONDS | 2630000  |
 
 owner, funder, deadline, and initial are parameters specified by deployer
 
@@ -41,5 +41,5 @@ PERIOD_SECONDS = 2628288 = 30.5 days
 Deploy airdrop contract with configuration
 
 ```
-scs-cli deploy --period-seconds 2628288 --period-limit 5 --vesting-delay 1 --lockup-delay 12 --messenger-id 73060985 --distribution-count 12 --distribution-seconds 2628288 --type airdrop-factory --name airdrop 
+scs-cli deploy --period-seconds 2630000 --period-limit 5 --vesting-delay 12 --lockup-delay 12 --messenger-id 73060985 --distribution-count 12 --distribution-seconds 2630000 --type airdrop-factory --name airdrop2 --debug
 ```

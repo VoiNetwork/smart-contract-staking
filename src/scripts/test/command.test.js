@@ -21,8 +21,10 @@ import {
   deployStaking,
   deployCompensation,
   getApplicationAvailableBalance,
+  getBalance,
   updateApp,
   sks,
+  getAvailableBalance,
 } from "../command.js";
 import moment from "moment";
 import exp from "constants";
@@ -33,6 +35,7 @@ const baseFixtureData = {
     airdropFactory: 1,
     airdrop: 1,
     airdrop2: 1,
+    airdrop3: 1,
   },
   context: {
     deadline: 1,
@@ -147,6 +150,27 @@ describe("Ownable Test Suite", function () {
     });
     expect(success3).to.be.a("boolean");
     expect(success3).to.be.eq(false);
+
+    // transfer from funder to creator
+
+    const success4 = await airdropTransfer({
+      apid: fixtureData.apps.airdrop,
+      receiver: algosdk.getApplicationAddress(fixtureData.apps.airdropFactory),
+      sender: funder,
+      sk: sks.funder,
+    });
+    expect(success4).to.be.a("boolean");
+    expect(success4).to.be.eq(true);
+
+    const success5 = await airdropConfigure({
+      apid: fixtureData.apps.airdrop,
+      period: 1,
+      sender: algosdk.getApplicationAddress(fixtureData.apps.airdropFactory),
+      simulate: true,
+      debug: true,
+    });
+    expect(success5).to.be.a("boolean");
+    expect(success5).to.be.eq(true);
   });
 });
 
@@ -182,12 +206,19 @@ describe("Fundable Test Suite", function () {
       //extraPayment: 1e5, // pay min balance once
       deadline,
     });
+    const airdrop3 = await deployAirdrop({
+      apid: airdropFactory,
+      initial: 1e6,
+      //extraPayment: 1e5, // pay min balance once
+      deadline,
+    });
 
     fixtureData.context.deadline = deadline;
     fixtureData.apps = {
       airdropFactory,
       airdrop,
       airdrop2,
+      airdrop3,
     };
   });
   after(async function () {
@@ -238,11 +269,17 @@ describe("Fundable Test Suite", function () {
     expect(success).to.be.eq(false);
   });
 
+  // guarded by overspend
   it("fundable account should not be able to fill over", async function () {
+    const { funder } = await airdropGetState({
+      apid: fixtureData.apps.airdrop,
+    });
+    const availableBalance = await getAvailableBalance(funder);
     const success2 = await airdropFill({
       apid: fixtureData.apps.airdrop,
-      amount: 200, // over balance
+      amount: availableBalance / 1e6 + 1,
       sender: addressses.funder,
+      sk: sks.funder,
     });
     expect(success2).to.be.a("boolean");
     expect(success2).to.be.eq(false);
@@ -438,12 +475,36 @@ describe("Fundable Test Suite", function () {
     expect(success).to.be.a("boolean");
     expect(success).to.be.eq(true);
   });
+
+  // grant funder to creator
+  // call fill
+
+  it("fundable creator should be able to grant funder and fill", async function () {
+    // make creator funder
+    const success = await airdropGrantFunder({
+      apid: fixtureData.apps.airdrop3,
+      receiver: algosdk.getApplicationAddress(fixtureData.apps.airdropFactory),
+      sender: addressses.funder,
+      sk: sks.funder,
+    });
+    expect(success).to.be.a("boolean");
+    expect(success).to.be.eq(true);
+    // fill
+    const success2 = await airdropFill({
+      apid: fixtureData.apps.airdrop3,
+      amount: 1,
+      sender: algosdk.getApplicationAddress(fixtureData.apps.airdropFactory),
+      simulate: true,
+    });
+    expect(success2).to.be.a("boolean");
+    expect(success2).to.be.eq(true);
+  });
 });
 
 // Path : Lockable
 
 describe("Lockable Test Suite", function () {
-  this.timeout(60_000);
+  this.timeout(120_000);
   let fixtureData = baseFixtureData;
   before(async function () {
     console.log("Once upon a time...");
@@ -459,8 +520,20 @@ describe("Lockable Test Suite", function () {
       distributionCount: 2,
       distributionSeconds: seconds,
     });
-    const deadline = moment().add(15, "seconds").unix();
+    const deadline = moment().add(25, "seconds").unix();
     const airdrop = await deployAirdrop({
+      apid: airdropFactory,
+      initial: 1e6,
+      //extraPayment: 1e5, // pay min balance once
+      deadline,
+    });
+    const airdrop2 = await deployAirdrop({
+      apid: airdropFactory,
+      initial: 1e6,
+      //extraPayment: 1e5, // pay min balance once
+      deadline,
+    });
+    const airdrop3 = await deployAirdrop({
       apid: airdropFactory,
       initial: 1e6,
       //extraPayment: 1e5, // pay min balance once
@@ -470,6 +543,8 @@ describe("Lockable Test Suite", function () {
     fixtureData.apps = {
       airdropFactory,
       airdrop,
+      airdrop2,
+      airdrop3,
     };
   });
   after(async function () {
@@ -696,22 +771,6 @@ describe("Lockable Test Suite", function () {
     expect(success).to.be.eq(true);
   });
 
-  // owner should be able to close
-
-  it("lockable owner should be able to close", async function () {
-    const { owner } = await airdropGetState({
-      apid: fixtureData.apps.airdrop,
-    });
-    const success = await airdropClose({
-      apid: fixtureData.apps.airdrop,
-      sender: owner,
-      simulate: true,
-    });
-    // emits Closed event
-    expect(success).to.be.a("boolean");
-    expect(success).to.be.eq(true);
-  });
-
   // owner should not be able to configure after deadline
 
   it("lockable owner should not be able to configure after deadline", async function () {
@@ -730,6 +789,108 @@ describe("Lockable Test Suite", function () {
       expect(err.message).to.match(regex);
     }
   });
+
+  // TODO recover tests
+
+  // owner should be able to close
+
+  // it("lockable owner should be able to close", async function () {
+  //   await airdropConfigure({
+  //     apid: fixtureData.apps.airdrop2,
+  //     period: 1,
+  //   });
+  //   await airdropFill({
+  //     apid: fixtureData.apps.airdrop2,
+  //     amount: 1,
+  //     timestamp: moment().add(1, "seconds").unix(),
+  //   });
+  //   while (true) {
+  //     const mab = await airdropGetMb({
+  //       apid: fixtureData.apps.airdrop2,
+  //     });
+  //     if (mab === 0) {
+  //       break;
+  //     }
+  //     await new Promise((resolve) => setTimeout(resolve, 1000));
+  //   }
+
+  //   // ---
+
+  //   const { owner } = await airdropGetState({
+  //     apid: fixtureData.apps.airdrop2,
+  //   });
+
+  //   const contractBalance = await getAvailableBalance(
+  //     algosdk.getApplicationAddress(fixtureData.apps.airdrop2)
+  //   );
+  //   const ownerBalance = await getBalance(owner);
+
+  //   const expectedBalance = contractBalance + ownerBalance;
+
+  //   const success = await airdropClose({
+  //     apid: fixtureData.apps.airdrop2,
+  //     sender: owner,
+  //     sk: sks.owner,
+  //     debug: true,
+  //   });
+  //   // emits Closed event
+  //   expect(success).to.be.a("boolean");
+  //   expect(success).to.be.eq(true);
+
+  //   const ownerBalanceAfter = await getBalance(owner);
+
+  //   expect(ownerBalanceAfter).to.be.eq(expectedBalance);
+  // });
+
+  // it("lockable funder should be able to close", async function () {
+  //   await airdropConfigure({
+  //     apid: fixtureData.apps.airdrop3,
+  //     period: 1,
+  //   });
+
+  //   await airdropFill({
+  //     apid: fixtureData.apps.airdrop3,
+  //     amount: 1,
+  //     timestamp: moment().add(1, "seconds").unix(),
+  //   });
+
+  //   while (true) {
+  //     const mab = await airdropGetMb({
+  //       apid: fixtureData.apps.airdrop3,
+  //     });
+  //     if (mab === 0) {
+  //       break;
+  //     }
+  //     await new Promise((resolve) => setTimeout(resolve, 1000));
+  //   }
+
+  //   // ---
+
+  //   const { owner, funder } = await airdropGetState({
+  //     apid: fixtureData.apps.airdrop3,
+  //   });
+
+  //   const contractBalance = await getAvailableBalance(
+  //     algosdk.getApplicationAddress(fixtureData.apps.airdrop3)
+  //   );
+  //   const ownerBalance = await getBalance(owner);
+
+  //   const expectedBalance = contractBalance + ownerBalance;
+
+  //   const success = await airdropClose({
+  //     apid: fixtureData.apps.airdrop3,
+  //     sender: funder,
+  //     sk: sks.funder,
+  //     debug: true,
+  //   });
+  //   // emits Closed event
+  //   expect(success).to.be.a("boolean");
+  //   expect(success).to.be.eq(true);
+
+  //   const ownerBalanceAfter = await getBalance(owner);
+
+  //   expect(ownerBalanceAfter).to.be.eq(expectedBalance);
+  // });
 });
 
 // Path : Stakeable

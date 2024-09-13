@@ -98,6 +98,11 @@ const signSendAndConfirm = async (txns: string[], sk: any) => {
   );
 };
 
+export const getBalance = async (addr: string) => {
+  const account = await algodClient.accountInformation(addr).do();
+  return account.amount;
+}
+
 export const getAvailableBalance = async (addr: string) => {
   const account = await algodClient.accountInformation(addr).do();
   const minBalance = account["min-balance"];
@@ -124,8 +129,12 @@ interface DeployOptions {
   messengerId: number;
   distributionCount: number;
   distributionSeconds: number;
+  debug?: boolean;
 }
 export const deploy: any = async (options: DeployOptions) => {
+  if(options.debug) {
+    console.log(options);
+  }
   const deployer = {
     addr: addr,
     sk: sk,
@@ -199,6 +208,7 @@ program
     "-d, --distribution-seconds <number>",
     "Specify distribution seconds"
   )
+  .option("--debug", "Debug the deployment", false)
   .description("Deploy a specific contract type")
   .action(async (options: DeployOptions) => {
     const apid = await deploy(options);
@@ -582,6 +592,7 @@ interface AirdropGrantFunderOptions {
   apid: number;
   receiver: string;
   sender?: string;
+  sk?: any;
   simulate?: boolean;
 }
 export const airdropGrantFunder: any = async (
@@ -591,7 +602,7 @@ export const airdropGrantFunder: any = async (
   const grantR = await ci.grant_funder(options.receiver || addr2);
   if (grantR.success) {
     if (!options.simulate) {
-      await signSendAndConfirm(grantR.txns, sk);
+      await signSendAndConfirm(grantR.txns, options.sk || sk);
     }
     return true;
   }
@@ -602,14 +613,22 @@ interface AirdropTransferOptions {
   apid: number;
   receiver: number;
   sender?: string;
+  sk?: any;
   simulate?: boolean;
+  debug?: boolean;
 }
 export const airdropTransfer: any = async (options: AirdropTransferOptions) => {
+  if(options.debug) {
+    console.log(options);
+  }
   const ci = makeCi(options.apid, options.sender || addr2);
   const transferR = await ci.transfer(options.receiver || addr);
+  if(options.debug) {
+    console.log(transferR);
+  }
   if (transferR.success) {
     if (!options.simulate) {
-      await signSendAndConfirm(transferR.txns, sk2);
+      await signSendAndConfirm(transferR.txns, options.sk || sk2);
     }
     return true;
   }
@@ -841,6 +860,7 @@ interface AirdropFillOptions {
   simulate?: boolean;
   timestamp?: number;
   sender?: string;
+  sk?: any;
   debug?: boolean;
 }
 export const airdropFill: any = async (options: AirdropFillOptions) => {
@@ -858,7 +878,7 @@ export const airdropFill: any = async (options: AirdropFillOptions) => {
     }
     if (fillR.success) {
       if (!options.simulate) {
-        await signSendAndConfirm(fillR.txns, sk);
+        await signSendAndConfirm(fillR.txns, options.sk || sk);
       }
       return true;
     }
