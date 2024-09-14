@@ -195,16 +195,16 @@ program
   .command("deploy")
   .requiredOption("-t, --type <string>", "Specify factory type")
   .requiredOption("-n, --name <string>", "Specify contract name")
-  .requiredOption("-s, --period-seconds <number>", "Specify period seconds")
-  .requiredOption("-p, --period-limit <number>", "Specify period limit")
-  .requiredOption("-v, --vesting-delay <number>", "Specify vesting delay")
-  .requiredOption("-l, --lockup-delay <number>", "Specify lockup delay")
-  .requiredOption("-m, --messenger-id <number>", "Specify messenger ID")
-  .requiredOption(
+  .option("-s, --period-seconds <number>", "Specify period seconds")
+  .option("-p, --period-limit <number>", "Specify period limit")
+  .option("-v, --vesting-delay <number>", "Specify vesting delay")
+  .option("-l, --lockup-delay <number>", "Specify lockup delay")
+  .option("-m, --messenger-id <number>", "Specify messenger ID")
+  .option(
     "-c, --distribution-count <number>",
     "Specify distribution count"
   )
-  .requiredOption(
+  .option(
     "-d, --distribution-seconds <number>",
     "Specify distribution seconds"
   )

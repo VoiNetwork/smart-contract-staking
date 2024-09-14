@@ -12,3 +12,4 @@ coverage.xml
 htmlcov
 error.log
 *-payload.json
+*.json
