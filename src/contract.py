@@ -1158,11 +1158,6 @@ class AirdropFactory(BaseFactory):
             Global.creator_address,
             app_id=base_app,
         )
-        arc4.abi_call(  # inherit upgrader
-            Airdrop.grant_upgrader,
-            Global.creator_address,
-            app_id=base_app,
-        )
         itxn.Payment(
             receiver=base_app.address, amount=op.Global.min_balance, fee=0  # 100000
         ).submit()

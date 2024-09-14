@@ -191,7 +191,7 @@ program
               sk: new Uint8Array(0),
             }
           );
-          const paymentAmount = 1134500 + 100000; // min payment (1234500)
+          const paymentAmount = 1234500 + 100000; // min payment (1234500)
           const owner = Address;
           const funder = options.funder || addr; // funder is provided or defaults to deployer
           const deadline = options.deadline
