@@ -16,50 +16,45 @@
 
 Settings for known contract factories and their variable.
 
-### Airdrop Contract
-
-### Mainnet
-
-**Configuration**
+### Staking Contract
 
 | Variable Name        | Value    |
 | -------------------- | -------- |
-| PERIOD_LIMIT         | 5        |
+| PERIOD_LIMIT         | 17       |
 | VESTING_DELAY        | 1        |
-| LOCKUP_DELAY         | 12       |
+| LOCKUP_DELAY         | 1        |
 | PERIOD_SECONDS       | 2630000  |
 | MESSENGER_ID         | 73060985 |
-| DISTRIBUTION_COUNT   | 12       |
+| DISTRIBUTION_COUNT   | 0        |
 | DISTRIBUTION_SECONDS | 2630000  |
 
-owner, funder, deadline, and initial are parameters specified by deployer
+#### Deploy staking factor contract
+
+```
+scs-cli deploy --period-seconds 2630000 --period-limit 17 --vesting-delay 1 --lockup-delay 1 --messenger-id 73060985 --distribution-count 0 --distribution-seconds 2630000 --type staking-factory  --name staking --debug
+```
+
+#### Deploy staking contract 
+
+```
+scs-cli factory deploy-staking --apid 87502365 --amount 1 --period 0 --debug
+```
+
+
+**Notes**
+
+```
+
+owner, funder, delegate, and period are parameters specified by deployer. 
+
+The deployer is not the funder. The deployer is likely the owner. The funder is the address that will fund the contract.
+The delegate is the address that will operate the contract participation.
+
+period is a parameter specified by deployer that determines lockup period
 
 PERIOD_SECONDS = 2628288 = 30.5 days
 
-**Command**
+DISTRIBUTION_COUNT is variable dependent on period
 
-Deploy airdrop factory contract with configuration
-
+period must be greater than 0
 ```
-scs-cli deploy --period-seconds 2630000 --period-limit 5 --vesting-delay 12 --lockup-delay 12 --messenger-id 73060985 --distribution-count 12 --distribution-seconds 2630000 --type airdrop-factory --name airdrop --debug
-```
-
-Deploy airdrop contract
-
-``` 
-scs-cli factory deploy-airdrop --apid <AIRDROP_FACTORY_APID> --initial <AIRDROP_ZERO_LOCKUP_AMOUNT> --debug
-```
-
-
-Fund airdrop contract
-
-```
-scs-cli airdrop fill --apid <AIRDROP_APID> --amount <FILL_AMOUNT> --timestamp <FUNDING_TIMESTAMP> --debug
-```
-
-
-
-
-
-
-

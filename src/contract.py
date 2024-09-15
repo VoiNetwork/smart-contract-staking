@@ -1134,7 +1134,7 @@ class AirdropFactory(BaseFactory):
         ##########################################
         self.get_initial_payment()
         ##########################################
-        compiled = compile_contract(Airdrop, extra_program_pages=3) # max extra pages
+        compiled = compile_contract(Airdrop, extra_program_pages=3)  # max extra pages
         base_app = arc4.arc4_create(Airdrop, compiled=compiled).created_app
         arc4.emit(FactoryCreated(arc4.UInt64(base_app.id)))
         arc4.abi_call(
@@ -1220,17 +1220,17 @@ class StakingFactory(BaseFactory):
         ##########################################
         assert period < 18, "period less than 18"
         ##########################################
-        compiled = compile_contract(Airdrop, extra_program_pages=3) # max extra pages
+        compiled = compile_contract(Airdrop, extra_program_pages=3)  # max extra pages
         base_app = arc4.arc4_create(Airdrop, compiled=compiled).created_app
         arc4.emit(FactoryCreated(arc4.UInt64(base_app.id)))
         arc4.abi_call(  # emit Template
             Airdrop.template,
             arc4.UInt64(TemplateVar[UInt64]("PERIOD_LIMIT")),
-            arc4.UInt64(TemplateVar[UInt64]("VESTING_DELAY")),
+            arc4.UInt64(1),  # vesting delay
             arc4.UInt64(TemplateVar[UInt64]("LOCKUP_DELAY")),
             arc4.UInt64(TemplateVar[UInt64]("PERIOD_SECONDS")),
             arc4.UInt64(TemplateVar[UInt64]("MESSENGER_ID")),
-            arc4.UInt64((period.native + UInt64(2)) * UInt64(2) // UInt64(3)),
+            arc4.UInt64(self.calculate_distibution_count(period.native)),
             arc4.UInt64(TemplateVar[UInt64]("DISTRIBUTION_SECONDS")),
             period,
             Global.latest_timestamp,  # deadline
@@ -1263,6 +1263,16 @@ class StakingFactory(BaseFactory):
         #########################################
         return base_app.id
 
+    @subroutine
+    def calculate_distibution_count(self, period: UInt64) -> UInt64:
+        """
+        Calculate distribution count.
+        """
+        distribution_count = period + UInt64(1)
+        if distribution_count <= UInt64(12):
+            return distribution_count
+        else:
+            return UInt64(12)
 
 ##################################################
 # CompensationFactory
@@ -1302,7 +1312,7 @@ class CompensationFactory(BaseFactory):
         # owner arg
         # funder Sender
         ##########################################
-        compiled = compile_contract(Airdrop, extra_program_pages=3) # max extra pages
+        compiled = compile_contract(Airdrop, extra_program_pages=3)  # max extra pages
         base_app = arc4.arc4_create(Airdrop, compiled=compiled).created_app
         arc4.emit(FactoryCreated(arc4.UInt64(base_app.id)))
         arc4.abi_call(  # emit Template
@@ -1318,7 +1328,7 @@ class CompensationFactory(BaseFactory):
             Global.latest_timestamp,  # deadline
             initial,  # total
             Global.latest_timestamp,  # funding
-            Global.zero_address, # delegate
+            Global.zero_address,  # delegate
             app_id=base_app,
         )
         arc4.abi_call(  # inherit upgrader

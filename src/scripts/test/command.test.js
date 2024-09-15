@@ -27,15 +27,16 @@ import {
   getAvailableBalance,
 } from "../command.js";
 import moment from "moment";
-import exp from "constants";
 import algosdk from "algosdk";
 
 const baseFixtureData = {
   apps: {
     airdropFactory: 1,
+    airdropFactory2: 1,
     airdrop: 1,
     airdrop2: 1,
     airdrop3: 1,
+    appSeries: [],
   },
   context: {
     deadline: 1,
@@ -900,28 +901,62 @@ describe("Stakable Test Suite", function () {
   let fixtureData = baseFixtureData;
   before(async function () {
     console.log("Once upon a time...");
+    // | -------------------- | -------- |
+    // | Variable Name        | Value    |
+    // | -------------------- | -------- |
+    // | PERIOD_LIMIT         | 2        |
+    // | VESTING_DELAY        | 1        |
+    // | LOCKUP_DELAY         | 1        |
+    // | PERIOD_SECONDS       | 1        |
+    // | MESSENGER_ID         | 1        |
+    // | DISTRIBUTION_COUNT   | 2        |
+    // | DISTRIBUTION_SECONDS | 1        |
+    // | -------------------- | -------- |
     const seconds = 1;
     const airdropFactory = await deploy({
       name: "mocha",
       type: "airdrop-factory",
-      periodSeconds: seconds,
       periodLimit: 2,
       vestingDelay: 1,
       lockupDelay: 2,
+      periodSeconds: seconds,
       messengerId: 1,
       distributionCount: 2,
       distributionSeconds: seconds,
+    });
+    // | -------------------- | -------- |
+    // | Variable Name        | Value    |
+    // | -------------------- | -------- |
+    // | PERIOD_LIMIT         | 17       |
+    // | VESTING_DELAY        | 1        |
+    // | LOCKUP_DELAY         | 1        |
+    // | PERIOD_SECONDS       | 2630000  |
+    // | MESSENGER_ID         | 73060985 |
+    // | DISTRIBUTION_COUNT   | 0        |
+    // | DISTRIBUTION_SECONDS | 2630000  |
+    // | -------------------- | -------- |
+    const seconds2 = 2630000; // 1mo seconds
+    const airdropFactory2 = await deploy({
+      name: "mocha3",
+      type: "airdrop-factory",
+      periodLimit: 17,
+      vestingDelay: 1,
+      lockupDelay: 1,
+      periodSeconds: seconds2,
+      messengerId: 73060985,
+      distributionCount: 0, // variable
+      distributionSeconds: seconds2,
     });
     const deadline = moment().add(15, "seconds").unix();
     const airdrop = await deployAirdrop({
       apid: airdropFactory,
       initial: 1e6,
-      //extraPayment: 1e5, // pay min balance once
       deadline,
     });
     fixtureData.context.deadline = deadline;
     fixtureData.apps = {
       airdropFactory,
+      airdropFactory2,
       airdrop,
     };
   });
@@ -930,6 +965,10 @@ describe("Stakable Test Suite", function () {
     // since it is not closed in the following tests
     await updateApp({
       apid: fixtureData.apps.airdrop,
+      delete: true,
+    });
+    await updateApp({
+      apid: fixtureData.apps.airdrop2,
       delete: true,
     });
     console.log("Happily ever after");
@@ -1031,6 +1070,33 @@ describe("Stakable Test Suite", function () {
     // emits Participated event
     expect(success).to.be.a("boolean");
     expect(success).to.be.eq(true);
+  });
+
+  // distribution count should be lockup period and at most 12
+
+  it("stakeable distribution count should be lockup period and at most 12", async function () {
+    const factory = fixtureData.apps.airdropFactory2;
+    for await (const configPeriod of [...Array(18).keys()]) {
+      const airdrop = await deployAirdrop({
+        apid: factory,
+        initial: 1e6,
+        period: configPeriod,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const { distributionCount, vestingDelay, lockupDelay, period } =
+        await airdropGetState({
+          apid: airdrop,
+        });
+      console.log({ distributionCount, vestingDelay, lockupDelay, period });
+      /*
+      expect(distributionCount).to.be.a("number");
+      expect(distributionCount).to.be.eq(Math.min(12, period));
+      expect(vestingDelay).to.be.a("number");
+      expect(vestingDelay).to.be.eq(0);
+      expect(period).to.be.a("number");
+      expect(period).to.be.eq(configPeriod);
+      */
+    }
   });
 });
 
@@ -1241,11 +1307,92 @@ describe("Airdrop Factory Test Suite", function () {
 
 // Path : Staking Factory
 
+describe("Staking Test Suite", function () {
+  this.timeout(120_000);
+  let fixtureData = baseFixtureData;
+  before(async function () {
+    console.log("Once upon a time...");
+    // | -------------------- | -------- |
+    // | Variable Name        | Value    |
+    // | -------------------- | -------- |
+    // | PERIOD_LIMIT         | 17       |
+    // | VESTING_DELAY        | 1        |
+    // | LOCKUP_DELAY         | 1        |
+    // | PERIOD_SECONDS       | 2630000  |
+    // | MESSENGER_ID         | 73060985 |
+    // | DISTRIBUTION_COUNT   | 0        |
+    // | DISTRIBUTION_SECONDS | 2630000  |
+    // | -------------------- | -------- |
+    console.log("There was a factory...");
+    const seconds = 2630000; // 1mo seconds
+    const airdropFactory = await deploy({
+      name: "mocha",
+      type: "staking-factory",
+      periodLimit: 17,
+      vestingDelay: 1,
+      lockupDelay: 1,
+      periodSeconds: seconds,
+      messengerId: 73060985,
+      distributionCount: 0, // variable
+      distributionSeconds: seconds,
+    });
+    process.stdout.write("There was an app series");
+    const appSeries = [];
+    for await (const configPeriod of [...Array(18).keys()]) {
+      process.stdout.write(".");
+      const airdrop = await deployStaking({
+        apid: airdropFactory,
+        amount: 1,
+        period: configPeriod,
+      });
+      appSeries.push(airdrop);
+    }
+    console.log("");
+    const deadline = moment().add(15, "seconds").unix();
+    fixtureData.context.deadline = deadline;
+    fixtureData.apps = {
+      airdropFactory,
+      appSeries,
+    };
+  });
+  after(async function () {
+    // we use update to delete the app in this case
+    // since it is not closed in the following tests
+    for await (const app of fixtureData.apps.appSeries) {
+      console.log("Deleting app", app);
+      await updateApp({
+        apid: app,
+        delete: true,
+      });
+    }
+    console.log("Happily ever after");
+  });
+
+  // distribution count should be lockup period and at most 12
+
+  it("staking distribution count should be lockup period and at most 12", async function () {
+    for await (const app of fixtureData.apps.appSeries) {
+      const { distributionCount, vestingDelay, lockupDelay, period } =
+        await airdropGetState({
+          apid: app,
+        });
+      expect(distributionCount).to.be.a("number");
+      expect(distributionCount).to.be.eq(Math.min(12, period + 1));
+      expect(vestingDelay).to.be.a("number");
+      expect(vestingDelay).to.be.eq(1);
+      expect(lockupDelay).to.be.a("number");
+      expect(lockupDelay).to.be.eq(1);
+      expect(period).to.be.a("number");
+    }
+  });
+});
+
 describe("Staking Factory Test Suite", function () {
   this.timeout(60_000);
   let fixtureData = baseFixtureData;
   before(async function () {
     console.log("Once upon a time...");
+    console.log("There was a factory...");
     const seconds = 1;
     const factory = await deploy({
       name: "mocha",
@@ -1258,11 +1405,11 @@ describe("Staking Factory Test Suite", function () {
       distributionCount: 1,
       distributionSeconds: seconds,
     });
+    console.log("There was a staking contract...");
     const airdrop = await deployStaking({
       apid: factory,
       amount: 1,
       period: 17,
-      //extraPayment: 1e5, // pay min balance once
       delegate: addressses.delegate,
     });
     fixtureData.apps = {
@@ -1303,7 +1450,7 @@ describe("Staking Factory Test Suite", function () {
     expect(state.funding).to.be.a("number");
     expect(state.funding).to.be.eq(0);
     expect(state.vestingDelay).to.be.a("number");
-    expect(state.vestingDelay).to.be.eq(0);
+    expect(state.vestingDelay).to.be.eq(1);
     expect(state.lockupDelay).to.be.a("number");
     expect(state.lockupDelay).to.be.eq(1);
     expect(state.deadline).to.be.a("number");
