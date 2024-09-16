@@ -16,7 +16,7 @@
     "start": "node index.js"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@algorandfoundation/algokit-utils": "^6.0.2",
     "algosdk": "^2.7.0",
