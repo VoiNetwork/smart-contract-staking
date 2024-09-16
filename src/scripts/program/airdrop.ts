@@ -10,7 +10,6 @@ import { CONTRACT, abi } from "ulujs";
 import moment from "moment";
 import BigNumber from "bignumber.js";
 import axios from "axios";
-import cliProgress from "cli-progress";
 dotenv.config({ path: "../.env" });
 
 // Usage: deploy-itnp1 [options] [command]
@@ -121,15 +120,18 @@ program
     program.help();
   });
 
-program.command("check-hash").action(async () => {
-  generateSHA256Hash("data/airdrop-itnp1.csv")
-    .then((hash) => {
-      console.log(`File hash: ${hash}`);
-    })
-    .catch((err) => {
-      console.error(`Error generating hash: ${err}`);
-    });
-});
+program
+  .command("check-hash")
+  .option("-f, --file <path>", "Path to the CSV file", "data/airdrop-itnp1.csv")
+  .action(async () => {
+    generateSHA256Hash("data/airdrop-itnp1.csv")
+      .then((hash) => {
+        console.log(`File hash: ${hash}`);
+      })
+      .catch((err) => {
+        console.error(`Error generating hash: ${err}`);
+      });
+  });
 
 program
   .command("process-csv")
@@ -147,6 +149,7 @@ program
   )
   .option("--funder <address>", "Funder's address", "")
   .option("--deadline <timestamp>", "Deadline as a Unix timestamp", "")
+  .option("--verbose", "Verbose output", false)
   .action(async (options) => {
     console.log("Processing CSV file...");
     const parentOptions = program.opts();
@@ -158,6 +161,8 @@ program
     const { addr, sk } = algosdk.mnemonicToSecretKey(mnemonic);
     console.log("Wait for it...");
     await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    const funder = options.funder || addr;
     const {
       data: { accounts },
     } = await axios.get(`${ARC72_INDEXER_SERVER}/v1/scs/accounts`, {
@@ -166,6 +171,10 @@ program
         funder: options.funder || addr,
       },
     });
+
+    if(options.verbose) {
+      console.log(`FUNDER ${funder}`);
+    }
 
     const algodClient = new algosdk.Algodv2(
       process.env.ALGOD_TOKEN || "",
@@ -201,19 +210,9 @@ program
       })
       .on("end", async () => {
         console.log("CSV file successfully processed");
-        // create a new progress bar instance and use shades_classic theme
-        const bar1 = new cliProgress.SingleBar(
-          {},
-          cliProgress.Presets.shades_classic
-        );
-
-        // start the progress bar with a total value of 200 and start value of 0
-        bar1.start(results.length, 0);
-
         let i = 0;
-        for (const row of results) {
-          // TODO add summary
-          // TODO add conifrmation
+        for await (const row of results) {
+          i += 1;
           const initial = BigInt(
             new BigNumber(row.MainnetP0)
               .multipliedBy(new BigNumber(10).pow(6))
@@ -224,11 +223,11 @@ program
               d.global_owner === row.Address && d.global_initial === initial
           );
           if (account) {
-            writeOutputToFile(
-              `FOUND ${row.Address} ${row.MainnetP0}`,
-              options.outputLog
-            );
-            bar1.update(++i);
+            const msg = `[${i} of ${results.length}] FOUND ${row.Address} ${row.MainnetP0}`;
+            if (options.verbose) {
+              console.log(msg);
+            }
+            writeOutputToFile(msg, options.outputLog);
             continue;
           }
           const { MainnetP0, Address } = row;
@@ -265,23 +264,24 @@ program
           if (createR.success) {
             const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);
             const appId = appCallTxn["inner-txns"][0]["application-index"];
-            writeOutputToFile(
-              `SUCCESS ${MainnetP0} ${Address} ${appId}`,
-              options.outputLog
-            );
+            const msg = `[${i} of ${results.length}] SUCCESS ${MainnetP0} ${Address} ${appId}`;
+            if (options.verbose) {
+              console.log(msg);
+            }
+            writeOutputToFile(msg, options.outputLog);
           } else {
-            writeErrorToFile(
-              `FAILURE ${MainnetP0} ${Address}`,
-              options.errorLog
-            );
+            const msg = `[${i} of ${results.length}] FAILURE ${MainnetP0} ${Address}`;
+            if (options.verbose) {
+              console.error(msg);
+            }
+            writeErrorToFile(msg, options.errorLog);
           }
-          // update the current value in your application..
-          bar1.update(++i);
         }
-        // stop the progress bar
-        bar1.stop();
       })
       .on("error", (e) => {
+        if (options.verbose) {
+          console.error(e);
+        }
         writeErrorToFile(e, options.errorLog);
       });
   });

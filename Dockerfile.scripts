@@ -5,5 +5,6 @@ COPY src/scripts /scripts
 WORKDIR /scripts
 
 RUN npm install
+RUN npx tsc
 
 CMD ["/scripts/docker-run.sh"]

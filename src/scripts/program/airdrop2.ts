@@ -10,7 +10,6 @@ import { CONTRACT, abi } from "ulujs";
 import moment from "moment";
 import BigNumber from "bignumber.js";
 import axios from "axios";
-import cliProgress from "cli-progress";
 dotenv.config({ path: "../.env" });
 
 // Usage: deploy-itnp1 [options] [command]
@@ -121,15 +120,15 @@ program
     program.help();
   });
 
-  program.command("check-hash").action(async () => {
-    generateSHA256Hash("data/airdrop-itnp2.csv")
-      .then((hash) => {
-        console.log(`File hash: ${hash}`);
-      })
-      .catch((err) => {
-        console.error(`Error generating hash: ${err}`);
-      });
-  });
+program.command("check-hash").action(async () => {
+  generateSHA256Hash("data/airdrop-itnp2.csv")
+    .then((hash) => {
+      console.log(`File hash: ${hash}`);
+    })
+    .catch((err) => {
+      console.error(`Error generating hash: ${err}`);
+    });
+});
 
 program
   .command("process-csv")
@@ -147,6 +146,7 @@ program
   )
   .option("--funder <address>", "Funder's address", "")
   .option("--deadline <timestamp>", "Deadline as a Unix timestamp", "")
+  .option("--verbose", "Verbose output", false)
   .action(async (options) => {
     console.log("Processing CSV file for Testnet Phase II Airdrop...");
     const parentOptions = program.opts();
@@ -213,12 +213,6 @@ program
       .on("end", async () => {
         console.log("CSV file successfully processed");
         console.log("Deploying contracts ...");
-        const bar1 = new cliProgress.SingleBar(
-          {},
-          cliProgress.Presets.shades_classic
-        );
-        bar1.start(results.length, 0);
-        let i = 0;
         for (const row of results) {
           const initial = BigInt(
             new BigNumber(row.MainnetP0)
@@ -230,11 +224,11 @@ program
               d.global_owner === row.Address && d.global_initial === initial
           );
           if (account) {
-            writeOutputToFile(
-              `FOUND ${row.Address} ${row.MainnetP0} ${account.contractId}`,
-              options.outputLog
-            );
-            bar1.update(++i);
+            const msg = `FOUND ${row.Address} ${row.MainnetP0} ${account.contractId}`;
+            if (options.verbose) {
+              console.log(msg);
+            }
+            writeOutputToFile(msg, options.outputLog);
             continue;
           }
           const { MainnetP0, Address } = row;
@@ -272,17 +266,18 @@ program
             //const [, appCallTxn] =
             await signSendAndConfirm(createR.txns, sk, false);
             //const appId = appCallTxn["inner-txns"][0]["application-index"];
-            writeOutputToFile(
-              `SUCCESS ${MainnetP0} ${Address}`,
-              options.outputLog
-            );
+            const msg = `SUCCESS ${MainnetP0} ${Address}`;
+            if (options.verbose) {
+              console.log(msg);
+            }
+            writeOutputToFile(msg, options.outputLog);
           } else {
-            writeErrorToFile(
-              `FAILURE ${MainnetP0} ${Address}`,
-              options.errorLog
-            );
+            const msg = `FAILURE ${MainnetP0} ${Address} ${createR.error}`;
+            if (options.verbose) {
+              console.log(msg);
+            }
+            writeErrorToFile(msg, options.errorLog);
           }
-          bar1.update(++i);
         }
       })
       .on("error", (e) => {
