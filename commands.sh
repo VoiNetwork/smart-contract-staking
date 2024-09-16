@@ -84,7 +84,7 @@ scs-program() {
     cd src/scripts/program
     npx tsc 
     case ${1} in
-      airdrop|staking) {
+      airdrop|airdrop2|staking) {
         node ${1}.js ${@:2}
       } ;;
       *) {

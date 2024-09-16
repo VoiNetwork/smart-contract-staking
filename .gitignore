@@ -13,3 +13,4 @@ htmlcov
 error.log
 *-payload.json
 *.json
+*.log

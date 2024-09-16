@@ -1,8 +1,8 @@
 import { Command } from "commander";
-import * as crypto from "crypto";
 import fs from "fs";
 import csv from "csv-parser";
 import algosdk from "algosdk";
+import * as crypto from "crypto";
 import { APP_SPEC as AirdropFactorySpec } from "../clients/AirdropFactoryClient.js";
 import { APP_SPEC as AirdropSpec } from "../clients/AirdropClient.js";
 import * as dotenv from "dotenv";
@@ -101,7 +101,7 @@ const computeCompoundedInterest = (
 
 const writeOutputToFile = (output: any, filePath: string) => {
   const outputMessage = `[${new Date().toISOString()}] ${output}\n`;
-  fs.writeFileSync(filePath, outputMessage, "utf8");
+  fs.appendFileSync(filePath, outputMessage, "utf8");
 };
 
 const writeErrorToFile = (error: any, filePath: string) => {
@@ -121,20 +121,20 @@ program
     program.help();
   });
 
-program.command("check-hash").action(async () => {
-  generateSHA256Hash("data/airdrop-itnp1.csv")
-    .then((hash) => {
-      console.log(`File hash: ${hash}`);
-    })
-    .catch((err) => {
-      console.error(`Error generating hash: ${err}`);
-    });
-});
+  program.command("check-hash").action(async () => {
+    generateSHA256Hash("data/airdrop-itnp2.csv")
+      .then((hash) => {
+        console.log(`File hash: ${hash}`);
+      })
+      .catch((err) => {
+        console.error(`Error generating hash: ${err}`);
+      });
+  });
 
 program
   .command("process-csv")
   .description("Process a CSV file and create airdrop contracts")
-  .option("-f, --file <path>", "Path to the CSV file", "data/airdrop-itnp1.csv")
+  .option("-f, --file <path>", "Path to the CSV file", "data/airdrop-itnp2.csv")
   .option(
     "-l, --output-log <path>",
     "Path to the out log file",
@@ -148,7 +148,7 @@ program
   .option("--funder <address>", "Funder's address", "")
   .option("--deadline <timestamp>", "Deadline as a Unix timestamp", "")
   .action(async (options) => {
-    console.log("Processing CSV file...");
+    console.log("Processing CSV file for Testnet Phase II Airdrop...");
     const parentOptions = program.opts();
     const { ALGO_SERVER, ALGO_INDEXER_SERVER, ARC72_INDEXER_SERVER } = networks(
       parentOptions.network
@@ -156,8 +156,11 @@ program
     const { MN, CTC_INFO_FACTORY_AIRDROP } = process.env;
     const mnemonic = MN || "";
     const { addr, sk } = algosdk.mnemonicToSecretKey(mnemonic);
-    console.log("Wait for it...");
+    console.log("Requesting accounts ...");
     await new Promise((resolve) => setTimeout(resolve, 5000));
+    // get network block
+    // get idx block
+    // wait for idx block to be greater than network block
     const {
       data: { accounts },
     } = await axios.get(`${ARC72_INDEXER_SERVER}/v1/scs/accounts`, {
@@ -179,17 +182,25 @@ program
       process.env.INDEXER_PORT || ""
     );
 
-    const signSendAndConfirm = async (txns: string[], sk: any) => {
+    const signSendAndConfirm = async (
+      txns: string[],
+      sk: any,
+      confirm = true
+    ) => {
       const stxns = txns
         .map((t) => new Uint8Array(Buffer.from(t, "base64")))
         .map(algosdk.decodeUnsignedTransaction)
         .map((t) => algosdk.signTransaction(t, sk));
-      await algodClient.sendRawTransaction(stxns.map((txn) => txn.blob)).do();
-      return await Promise.all(
-        stxns.map((res) =>
-          algosdk.waitForConfirmation(algodClient, res.txID, 4)
-        )
-      );
+      if (confirm) {
+        await algodClient.sendRawTransaction(stxns.map((txn) => txn.blob)).do();
+        return Promise.all(
+          stxns.map((res) =>
+            algosdk.waitForConfirmation(algodClient, res.txID, 4)
+          )
+        );
+      } else {
+        await algodClient.sendRawTransaction(stxns.map((txn) => txn.blob)).do();
+      }
     };
 
     const results: any[] = [];
@@ -201,19 +212,14 @@ program
       })
       .on("end", async () => {
         console.log("CSV file successfully processed");
-        // create a new progress bar instance and use shades_classic theme
+        console.log("Deploying contracts ...");
         const bar1 = new cliProgress.SingleBar(
           {},
           cliProgress.Presets.shades_classic
         );
-
-        // start the progress bar with a total value of 200 and start value of 0
         bar1.start(results.length, 0);
-
         let i = 0;
         for (const row of results) {
-          // TODO add summary
-          // TODO add conifrmation
           const initial = BigInt(
             new BigNumber(row.MainnetP0)
               .multipliedBy(new BigNumber(10).pow(6))
@@ -225,7 +231,7 @@ program
           );
           if (account) {
             writeOutputToFile(
-              `FOUND ${row.Address} ${row.MainnetP0}`,
+              `FOUND ${row.Address} ${row.MainnetP0} ${account.contractId}`,
               options.outputLog
             );
             bar1.update(++i);
@@ -263,10 +269,11 @@ program
             Number(initial)
           );
           if (createR.success) {
-            const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);
-            const appId = appCallTxn["inner-txns"][0]["application-index"];
+            //const [, appCallTxn] =
+            await signSendAndConfirm(createR.txns, sk, false);
+            //const appId = appCallTxn["inner-txns"][0]["application-index"];
             writeOutputToFile(
-              `SUCCESS ${MainnetP0} ${Address} ${appId}`,
+              `SUCCESS ${MainnetP0} ${Address}`,
               options.outputLog
             );
           } else {
@@ -275,11 +282,8 @@ program
               options.errorLog
             );
           }
-          // update the current value in your application..
           bar1.update(++i);
         }
-        // stop the progress bar
-        bar1.stop();
       })
       .on("error", (e) => {
         writeErrorToFile(e, options.errorLog);
