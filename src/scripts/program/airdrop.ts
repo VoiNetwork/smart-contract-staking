@@ -68,6 +68,11 @@ const lookupRate = (period: number) => {
 const networks = (networkName: string) => {
   switch (networkName) {
     case "voimain":
+      return {
+        ALGO_SERVER: "https://api.voi.nodly.io",
+        ALGO_INDEXER_SERVER: "https://idx.voi.nodly.io",
+        ARC72_INDEXER_SERVER: "https://arc72-idx.nautilus.sh",
+      };
     case "voitest":
       return {
         ALGO_SERVER: "https://testnet-api.voi.nodly.io",
@@ -162,17 +167,21 @@ program
     console.log("Wait for it...");
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
+    const parentId = Number(CTC_INFO_FACTORY_AIRDROP);
     const funder = options.funder || addr;
+
     const {
       data: { accounts },
     } = await axios.get(`${ARC72_INDEXER_SERVER}/v1/scs/accounts`, {
       params: {
-        parentId: CTC_INFO_FACTORY_AIRDROP,
-        funder: options.funder || addr,
+        parentId,
+        funder,
       },
     });
 
-    if(options.verbose) {
+    // TODO wait for idx to catch up before running 
+
+    if (options.verbose) {
       console.log(`FUNDER ${funder}`);
     }
 
