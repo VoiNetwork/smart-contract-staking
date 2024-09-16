@@ -4,6 +4,7 @@ COPY src/scripts /scripts
 
 WORKDIR /scripts
 
+RUN apt-get update && apt-get install -y nano
 RUN npm install
 RUN npx tsc
 
