@@ -68,6 +68,11 @@ const lookupRate = (period: number) => {
 const networks = (networkName: string) => {
   switch (networkName) {
     case "voimain":
+      return {
+        ALGO_SERVER: "https://mainnet-api.voi.nodely.dev",
+        ALGO_INDEXER_SERVER: "https://mainnet-idx.voi.nodely.dev",
+        ARC72_INDEXER_SERVER: "https://mainnet-idx.nautilus.sh",
+      };
     case "voitest":
       return {
         ALGO_SERVER: "https://mainnet-api.voi.nodely.dev",
@@ -238,7 +243,7 @@ program
       .on("end", async () => {
         console.log("CSV file successfully processed");
         let i = 0;
-        if(options.dryrun) {
+        if (options.dryrun) {
           console.log("=== DRY RUN ===");
         }
         for await (const row of results) {
