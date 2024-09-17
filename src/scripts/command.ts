@@ -63,6 +63,7 @@ export const sks = {
 
 const ALGO_SERVER = "https://testnet-api.voi.nodly.io";
 const ALGO_INDEXER_SERVER = "https://testnet-idx.voi.nodly.io";
+// TODO add ARC72_INDEXER_SERVER
 
 const algodClient = new algosdk.Algodv2(
   process.env.ALGOD_TOKEN || "",

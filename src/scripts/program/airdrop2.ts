@@ -78,6 +78,7 @@ const networks = (networkName: string) => {
       return {
         ALGO_SERVER: process.env.ALGOD_SERVER || "",
         ALGO_INDEXER_SERVER: process.env.INDEXER_SERVER || "",
+        ARC72_INDEXER_SERVER: process.env.ARC72_INDEXER_SERVER || "",
       };
     default:
       return {
