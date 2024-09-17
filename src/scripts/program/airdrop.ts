@@ -75,9 +75,9 @@ const networks = (networkName: string) => {
       };
     case "voitest":
       return {
-        ALGO_SERVER: "https://mainnet-api.voi.nodely.dev",
-        ALGO_INDEXER_SERVER: "https://mainnet-idx.voi.nodely.dev",
-        ARC72_INDEXER_SERVER: "https://mainnet-idx.nautilus.sh",
+        ALGO_SERVER: "https://testnet-api.voi.nodly.io",
+        ALGO_INDEXER_SERVER: "https://testnet-idx.voi.nodly.io",
+        ARC72_INDEXER_SERVER: "https://arc72-idx.nautilus.sh",
       };
     case "custom":
       return {
@@ -89,6 +89,7 @@ const networks = (networkName: string) => {
       return {
         ALGO_SERVER: "https://testnet-api.voi.nodly.io",
         ALGO_INDEXER_SERVER: "https://testnet-idx.voi.nodly.io",
+        ARC72_INDEXER_SERVER: "https://arc72-idx.nautilus.sh",
       };
   }
 };
