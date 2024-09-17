@@ -68,11 +68,6 @@ const lookupRate = (period: number) => {
 const networks = (networkName: string) => {
   switch (networkName) {
     case "voimain":
-      return {
-        ALGO_SERVER: "https://api.voi.nodly.io",
-        ALGO_INDEXER_SERVER: "https://idx.voi.nodly.io",
-        ARC72_INDEXER_SERVER: "https://arc72-idx.nautilus.sh",
-      };
     case "voitest":
       return {
         ALGO_SERVER: "https://testnet-api.voi.nodly.io",
@@ -83,6 +78,7 @@ const networks = (networkName: string) => {
       return {
         ALGO_SERVER: process.env.ALGOD_SERVER || "",
         ALGO_INDEXER_SERVER: process.env.INDEXER_SERVER || "",
+        ARC72_INDEXER_SERVER: process.env.ARC72_INDEXER_SERVER || "",
       };
     default:
       return {
