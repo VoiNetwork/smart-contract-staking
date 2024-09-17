@@ -63,19 +63,26 @@ export const sks = {
 
 const ALGO_SERVER = "https://testnet-api.voi.nodly.io";
 const ALGO_INDEXER_SERVER = "https://testnet-idx.voi.nodly.io";
-// TODO add ARC72_INDEXER_SERVER
+const ARC72_INDEXER_SERVER = "https://arc72-idx.nautilus.sh";
 
+const algodServerURL = process.env.ALGOD_SERVER || ALGO_SERVER;
 const algodClient = new algosdk.Algodv2(
   process.env.ALGOD_TOKEN || "",
-  process.env.ALGOD_SERVER || ALGO_SERVER,
+  algodServerURL,
   process.env.ALGOD_PORT || ""
 );
 
+const indexerServerURL = process.env.INDEXER_SERVER || ALGO_INDEXER_SERVER;
 const indexerClient = new algosdk.Indexer(
   process.env.INDEXER_TOKEN || "",
-  process.env.INDEXER_SERVER || ALGO_INDEXER_SERVER,
+  indexerServerURL,
   process.env.INDEXER_PORT || ""
 );
+
+const arc72IndexerURL =
+  process.env.ARC72_INDEXER_SERVER || ARC72_INDEXER_SERVER;
+
+console.log({ algodServerURL, indexerServerURL, arc72IndexerURL });
 
 const makeSpec = (methods: any) => {
   return {
@@ -102,7 +109,7 @@ const signSendAndConfirm = async (txns: string[], sk: any) => {
 export const getBalance = async (addr: string) => {
   const account = await algodClient.accountInformation(addr).do();
   return account.amount;
-}
+};
 
 export const getAvailableBalance = async (addr: string) => {
   const account = await algodClient.accountInformation(addr).do();
@@ -133,7 +140,7 @@ interface DeployOptions {
   debug?: boolean;
 }
 export const deploy: any = async (options: DeployOptions) => {
-  if(options.debug) {
+  if (options.debug) {
     console.log(options);
   }
   const deployer = {
@@ -201,14 +208,8 @@ program
   .option("-v, --vesting-delay <number>", "Specify vesting delay")
   .option("-l, --lockup-delay <number>", "Specify lockup delay")
   .option("-m, --messenger-id <number>", "Specify messenger ID")
-  .option(
-    "-c, --distribution-count <number>",
-    "Specify distribution count"
-  )
-  .option(
-    "-d, --distribution-seconds <number>",
-    "Specify distribution seconds"
-  )
+  .option("-c, --distribution-count <number>", "Specify distribution count")
+  .option("-d, --distribution-seconds <number>", "Specify distribution seconds")
   .option("--debug", "Debug the deployment", false)
   .description("Deploy a specific contract type")
   .action(async (options: DeployOptions) => {
@@ -228,7 +229,7 @@ program
     const {
       data: { accounts },
     } = await axios.get(
-      `https://arc72-idx.nautilus.sh/v1/scs/accounts?parentId=${CTC_INFO_FACTORY_AIRDROP}&deleted=0`
+      `${arc72IndexerURL}/v1/scs/accounts?parentId=${CTC_INFO_FACTORY_AIRDROP}&deleted=0`
     );
 
     for await (const account of accounts) {
@@ -451,7 +452,7 @@ factory
       console.log(options);
     }
     const parentId = options.apid || CTC_INFO_FACTORY_AIRDROP;
-    const url = `https://arc72-idx.nautilus.sh/v1/scs/accounts?parentId=${parentId}&deleted=0`;
+    const url = `${arc72IndexerURL}/v1/scs/accounts?parentId=${parentId}&deleted=0`;
     const {
       data: { accounts },
     } = await axios.get(url);
@@ -548,7 +549,7 @@ factory
   .description("Create a staking contract")
   .action(async (options: DeployStakingOptions) => {
     const apid = await deployStaking(options);
-    if (!apid) { 
+    if (!apid) {
       return;
     }
     console.log(apid);
@@ -619,12 +620,12 @@ interface AirdropTransferOptions {
   debug?: boolean;
 }
 export const airdropTransfer: any = async (options: AirdropTransferOptions) => {
-  if(options.debug) {
+  if (options.debug) {
     console.log(options);
   }
   const ci = makeCi(options.apid, options.sender || addr2);
   const transferR = await ci.transfer(options.receiver || addr);
-  if(options.debug) {
+  if (options.debug) {
     console.log(transferR);
   }
   if (transferR.success) {
@@ -745,7 +746,7 @@ airdrop
     const {
       data: { accounts },
     } = await axios.get(
-      `https://arc72-idx.nautilus.sh/v1/scs/accounts?parentId=${CTC_INFO_FACTORY_AIRDROP}&deleted=0`
+      `${arc72IndexerURL}/v1/scs/accounts?parentId=${CTC_INFO_FACTORY_AIRDROP}&deleted=0`
     );
     for await (const account of accounts) {
       console.log(account);

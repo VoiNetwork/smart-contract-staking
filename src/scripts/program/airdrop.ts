@@ -70,9 +70,9 @@ const networks = (networkName: string) => {
     case "voimain":
     case "voitest":
       return {
-        ALGO_SERVER: "https://testnet-api.voi.nodly.io",
-        ALGO_INDEXER_SERVER: "https://testnet-idx.voi.nodly.io",
-        ARC72_INDEXER_SERVER: "https://arc72-idx.nautilus.sh",
+        ALGO_SERVER: "https://mainnet-api.voi.nodely.dev",
+        ALGO_INDEXER_SERVER: "https://mainnet-idx.voi.nodely.dev",
+        ARC72_INDEXER_SERVER: "https://mainnet-idx.nautilus.sh",
       };
     case "custom":
       return {
@@ -151,6 +151,7 @@ program
   .option("--funder <address>", "Funder's address", "")
   .option("--deadline <timestamp>", "Deadline as a Unix timestamp", "")
   .option("--verbose", "Verbose output", false)
+  .option("--dryrun", "Dry run", false)
   .action(async (options) => {
     console.log("Processing CSV file...");
     const parentOptions = program.opts();
@@ -189,7 +190,7 @@ program
       } = await axios.get(`${ARC72_INDEXER_SERVER}/v1/scs/accounts`, {
         params: {
           parentId,
-          funder
+          funder,
         },
       });
       if (!round) {
@@ -237,6 +238,9 @@ program
       .on("end", async () => {
         console.log("CSV file successfully processed");
         let i = 0;
+        if(options.dryrun) {
+          console.log("=== DRY RUN ===");
+        }
         for await (const row of results) {
           i += 1;
           const initial = BigInt(
@@ -287,14 +291,25 @@ program
             deadline,
             Number(initial)
           );
+          if (options.verbose) {
+            console.log(createR);
+          }
           if (createR.success) {
-            const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);
-            const appId = appCallTxn["inner-txns"][0]["application-index"];
-            const msg = `[${i} of ${results.length}] SUCCESS ${MainnetP0} ${Address} ${appId}`;
-            if (options.verbose) {
-              console.log(msg);
+            if (!options.dryrun) {
+              const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk);
+              const appId = appCallTxn["inner-txns"][0]["application-index"];
+              const msg = `[${i} of ${results.length}] SUCCESS ${MainnetP0} ${Address} ${appId}`;
+              if (options.verbose) {
+                console.log(msg);
+              }
+              writeOutputToFile(msg, options.outputLog);
+            } else {
+              const msg = `[${i} of ${results.length}] SUCCESS ${MainnetP0} ${Address} DRYRUN`;
+              if (options.verbose) {
+                console.log(msg);
+              }
+              writeOutputToFile(msg, options.outputLog);
             }
-            writeOutputToFile(msg, options.outputLog);
           } else {
             const msg = `[${i} of ${results.length}] FAILURE ${MainnetP0} ${Address}`;
             if (options.verbose) {

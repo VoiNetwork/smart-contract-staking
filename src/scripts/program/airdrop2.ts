@@ -12,22 +12,6 @@ import BigNumber from "bignumber.js";
 import axios from "axios";
 dotenv.config({ path: "../.env" });
 
-// Usage: deploy-itnp2 [options] [command]
-//
-// Options:
-//   -h, --help             display help for command
-//
-// Commands:
-//   process-csv [options]  Process a CSV file and create airdrop contracts
-//   check [options]        Check that all are set up
-//   fill [options]         Fill the contracts
-//   help [command]         display help for command
-//
-// deploy-itnp2 process-csv
-// deploy-itnp2 check
-// deploy-itnp2 fill --dryrun true --funding 1629788400
-//
-
 function generateSHA256Hash(filePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const hash = crypto.createHash("sha256");
@@ -68,6 +52,11 @@ const lookupRate = (period: number) => {
 const networks = (networkName: string) => {
   switch (networkName) {
     case "voimain":
+      return {
+        ALGO_SERVER: "https://mainnet-api.voi.nodely.dev",
+        ALGO_INDEXER_SERVER: "https://mainnet-idx.voi.nodely.dev",
+        ARC72_INDEXER_SERVER: "https://mainnet-idx.nautilus.sh",
+      };
     case "voitest":
       return {
         ALGO_SERVER: "https://testnet-api.voi.nodly.io",
@@ -84,6 +73,7 @@ const networks = (networkName: string) => {
       return {
         ALGO_SERVER: "https://testnet-api.voi.nodly.io",
         ALGO_INDEXER_SERVER: "https://testnet-idx.voi.nodly.io",
+        ARC72_INDEXER_SERVER: "https://arc72-idx.nautilus.sh",
       };
   }
 };
@@ -148,6 +138,7 @@ program
   .option("--funder <address>", "Funder's address", "")
   .option("--deadline <timestamp>", "Deadline as a Unix timestamp", "")
   .option("--verbose", "Verbose output", false)
+  .option("--dryrun", "Dry run", false)
   .action(async (options) => {
     console.log("Processing CSV file for Testnet Phase II Airdrop...");
     const parentOptions = program.opts();
@@ -157,13 +148,13 @@ program
 
     const algodClient = new algosdk.Algodv2(
       process.env.ALGOD_TOKEN || "",
-      process.env.ALGOD_SERVER || ALGO_SERVER,
+      ALGO_SERVER,
       process.env.ALGOD_PORT || ""
     );
 
     const indexerClient = new algosdk.Indexer(
       process.env.INDEXER_TOKEN || "",
-      process.env.INDEXER_SERVER || ALGO_INDEXER_SERVER,
+      ALGO_INDEXER_SERVER,
       process.env.INDEXER_PORT || ""
     );
 
@@ -173,7 +164,7 @@ program
 
     const { ["last-round"]: lastRound } = await algodClient.status().do();
 
-    console.log(`lastRound: ${lastRound}`)
+    console.log(`lastRound: ${lastRound}`);
 
     console.log("Requesting accounts and catching up...");
 
@@ -199,12 +190,10 @@ program
           lastRound - currentRound
         }`
       );
-      await new Promise((resolve) => setTimeout(resolve, 30_000));
+      await new Promise((resolve) => setTimeout(resolve, 10_000));
     } while (currentRound <= lastRound);
 
     console.log("Accounts received ...");
-
-    return;
 
     const signSendAndConfirm = async (
       txns: string[],
@@ -237,6 +226,11 @@ program
       .on("end", async () => {
         console.log("CSV file successfully processed");
         console.log("Deploying contracts ...");
+        const funder = options.funder || addr; // funder is provided or defaults to deployer
+        console.log(`Funder: "${funder}"`);
+        if(options.dryrun) {
+          console.log("=== DRY RUN ===");
+        }
         for (const row of results) {
           const initial = BigInt(
             new BigNumber(row.MainnetP0)
@@ -268,13 +262,12 @@ program
               events: [],
             },
             {
-              addr,
+              addr: funder,
               sk: new Uint8Array(0),
             }
           );
           const paymentAmount = 1234500 + 100000; // min payment (1234500)
           const owner = Address;
-          const funder = options.funder || addr; // funder is provided or defaults to deployer
           const deadline = options.deadline
             ? Number(options.deadline) // use provided timestamp
             : moment().unix() + 60 * 60 * 24 * 7; // default to now + 7 days
@@ -287,10 +280,14 @@ program
             Number(initial)
           );
           if (createR.success) {
-            //const [, appCallTxn] =
-            await signSendAndConfirm(createR.txns, sk, false);
-            //const appId = appCallTxn["inner-txns"][0]["application-index"];
-            const msg = `SUCCESS ${MainnetP0} ${Address}`;
+            if (!options.dryrun) {
+              //const [, appCallTxn] =
+              await signSendAndConfirm(createR.txns, sk, false);
+              //const appId = appCallTxn["inner-txns"][0]["application-index"];
+            }
+            const msg = !options.dryrun
+              ? `SUCCESS ${MainnetP0} ${Address}`
+              : `SUCCESS ${MainnetP0} ${Address} DRYRUN`;
             if (options.verbose) {
               console.log(msg);
             }
