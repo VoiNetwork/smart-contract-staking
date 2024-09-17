@@ -12,7 +12,7 @@ import BigNumber from "bignumber.js";
 import axios from "axios";
 dotenv.config({ path: "../.env" });
 
-// Usage: deploy-itnp1 [options] [command]
+// Usage: deploy-itnp2 [options] [command]
 //
 // Options:
 //   -h, --help             display help for command
@@ -23,9 +23,9 @@ dotenv.config({ path: "../.env" });
 //   fill [options]         Fill the contracts
 //   help [command]         display help for command
 //
-// deploy-itnp1 process-csv
-// deploy-itnps check
-// deploy-itnp1 fill --dryrun true --funding 1629788400
+// deploy-itnp2 process-csv
+// deploy-itnp2 check
+// deploy-itnp2 fill --dryrun true --funding 1629788400
 //
 
 function generateSHA256Hash(filePath: string): Promise<string> {
@@ -153,22 +153,6 @@ program
     const { ALGO_SERVER, ALGO_INDEXER_SERVER, ARC72_INDEXER_SERVER } = networks(
       parentOptions.network
     );
-    const { MN, CTC_INFO_FACTORY_AIRDROP } = process.env;
-    const mnemonic = MN || "";
-    const { addr, sk } = algosdk.mnemonicToSecretKey(mnemonic);
-    console.log("Requesting accounts ...");
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    // get network block
-    // get idx block
-    // wait for idx block to be greater than network block
-    const {
-      data: { accounts },
-    } = await axios.get(`${ARC72_INDEXER_SERVER}/v1/scs/accounts`, {
-      params: {
-        parentId: CTC_INFO_FACTORY_AIRDROP,
-        funder: options.funder || addr,
-      },
-    });
 
     const algodClient = new algosdk.Algodv2(
       process.env.ALGOD_TOKEN || "",
@@ -181,6 +165,45 @@ program
       process.env.INDEXER_SERVER || ALGO_INDEXER_SERVER,
       process.env.INDEXER_PORT || ""
     );
+
+    const { MN, CTC_INFO_FACTORY_AIRDROP } = process.env;
+    const mnemonic = MN || "";
+    const { addr, sk } = algosdk.mnemonicToSecretKey(mnemonic);
+
+    const { ["last-round"]: lastRound } = await algodClient.status().do();
+
+    console.log(`lastRound: ${lastRound}`)
+
+    console.log("Requesting accounts and catching up...");
+
+    let accounts: any[] = [];
+    let currentRound = 0;
+    do {
+      const {
+        data: { accounts: contractAcounts, ["current-round"]: round },
+      } = await axios.get(`${ARC72_INDEXER_SERVER}/v1/scs/accounts`, {
+        params: {
+          parentId: CTC_INFO_FACTORY_AIRDROP,
+          funder: options.funder || addr,
+        },
+      });
+      if (!round) {
+        await new Promise((resolve) => setTimeout(resolve, 30_000));
+        continue;
+      }
+      accounts = contractAcounts;
+      currentRound = round;
+      console.log(
+        `currentRound: ${currentRound} roundsBehind: ${
+          lastRound - currentRound
+        }`
+      );
+      await new Promise((resolve) => setTimeout(resolve, 30_000));
+    } while (currentRound <= lastRound);
+
+    console.log("Accounts received ...");
+
+    return;
 
     const signSendAndConfirm = async (
       txns: string[],
@@ -288,7 +311,7 @@ program
 program
   .command("check")
   .description("Check that all are set up")
-  .option("-f, --file <path>", "Path to the CSV file", "data/airdrop-itnp1.csv")
+  .option("-f, --file <path>", "Path to the CSV file", "data/airdrop-itnp2.csv")
   .option(
     "-e, --error-log <path>",
     "Path to the error log file",
@@ -297,7 +320,7 @@ program
   .option(
     "-o, --output <path>",
     "Path to the output file",
-    "tmp/airdrop-itnp1-payload.json"
+    "tmp/airdrop-itnp2-payload.json"
   )
   .action(async (options) => {
     const parentOptions = program.opts();
@@ -310,6 +333,7 @@ program
         parentId: CTC_INFO_FACTORY_AIRDROP,
       },
     });
+    console.log(`ACCOUNTS ${accounts.length}`);
     const results: any[] = [];
     fs.createReadStream(options.file)
       .pipe(csv())
@@ -375,7 +399,7 @@ program
   .option(
     "-f, --file <path>",
     "Path to the JSON file",
-    "tmp/airdrop-itnp1-payload.json"
+    "tmp/airdrop-itnp2-payload.json"
   )
   .option(
     "-e, --error-log <path>",

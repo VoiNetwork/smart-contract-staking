@@ -167,24 +167,6 @@ program
     console.log("Wait for it...");
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    const parentId = Number(CTC_INFO_FACTORY_AIRDROP);
-    const funder = options.funder || addr;
-
-    const {
-      data: { accounts },
-    } = await axios.get(`${ARC72_INDEXER_SERVER}/v1/scs/accounts`, {
-      params: {
-        parentId,
-        funder,
-      },
-    });
-
-    // TODO wait for idx to catch up before running 
-
-    if (options.verbose) {
-      console.log(`FUNDER ${funder}`);
-    }
-
     const algodClient = new algosdk.Algodv2(
       process.env.ALGOD_TOKEN || "",
       process.env.ALGOD_SERVER || ALGO_SERVER,
@@ -196,6 +178,45 @@ program
       process.env.INDEXER_SERVER || ALGO_INDEXER_SERVER,
       process.env.INDEXER_PORT || ""
     );
+
+    const { ["last-round"]: lastRound } = await algodClient.status().do();
+    console.log(`lastRound: ${lastRound}`);
+
+    const parentId = Number(CTC_INFO_FACTORY_AIRDROP);
+    const funder = options.funder || addr;
+
+    let accounts: any[] = [];
+    let currentRound = 0;
+    do {
+      const {
+        data: { accounts: contractAcounts, ["current-round"]: round },
+      } = await axios.get(`${ARC72_INDEXER_SERVER}/v1/scs/accounts`, {
+        params: {
+          parentId,
+          funder
+        },
+      });
+      if (!round) {
+        await new Promise((resolve) => setTimeout(resolve, 30_000));
+        continue;
+      }
+      accounts = contractAcounts;
+      currentRound = round;
+      console.log(
+        `currentRound: ${currentRound} roundsBehind: ${
+          lastRound - currentRound
+        }`
+      );
+      await new Promise((resolve) => setTimeout(resolve, 30_000));
+    } while (currentRound <= lastRound);
+
+    console.log("Accounts received ...");
+
+    // TODO wait for idx to catch up before running
+
+    if (options.verbose) {
+      console.log(`FUNDER ${funder}`);
+    }
 
     const signSendAndConfirm = async (txns: string[], sk: any) => {
       const stxns = txns
