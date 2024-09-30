@@ -148,13 +148,13 @@ program
 
     const algodClient = new algosdk.Algodv2(
       process.env.ALGOD_TOKEN || "",
-      ALGO_SERVER,
+      process.env.ALGOD_SERVER || ALGO_SERVER,
       process.env.ALGOD_PORT || ""
     );
 
     const indexerClient = new algosdk.Indexer(
       process.env.INDEXER_TOKEN || "",
-      ALGO_INDEXER_SERVER,
+      process.env.INDEXER_SERVER || ALGO_INDEXER_SERVER,
       process.env.INDEXER_PORT || ""
     );
 
