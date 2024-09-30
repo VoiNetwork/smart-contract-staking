@@ -632,6 +632,13 @@ class LockableInterface(ARC4Contract):
         pass
 
     @arc4.abimethod
+    def set_deadline(self, deadline: arc4.UInt64) -> None:  # pragma: no cover
+        """
+        Set deadline.
+        """
+        pass
+
+    @arc4.abimethod
     def withdraw(self, amount: arc4.UInt64) -> UInt64:  # pragma: no cover
         """
         Withdraw funds from contract. Should be called by owner.
@@ -743,6 +750,15 @@ class Lockable(
         ##########################################
         arc4.emit(Configured(arc4.UInt64(self.period), period))
         self.period = period.native
+
+
+    @arc4.abimethod
+    def set_deadline(self, deadline: arc4.UInt64) -> None:
+        """
+        Set deadline.
+        """
+        assert Txn.sender == self.funder, "must be funder"
+        self.deadline = deadline.native
 
     ##############################################
     # function: withdraw
@@ -1040,8 +1056,19 @@ class Airdrop(
         )
         close_offline_on_delete(self.owner)
 
-    @arc4.abimethod(allow_actions=[OnCompleteAction.DeleteApplication])
+    # update method
+    #  only callable by upgrader
+    #  sets deadline
+    @arc4.abimethod
     def update(self) -> None:
+        assert Txn.sender == self.upgrader, "must be upgrader"
+        assert self.updatable == UInt64(1), "not approved"
+
+    # kill method
+    #  only callable by upgrader
+    #  closes contract offline to funder
+    @arc4.abimethod(allow_actions=[OnCompleteAction.DeleteApplication])
+    def kill(self) -> None:
         assert Txn.sender == self.upgrader, "must be upgrader"
         assert self.updatable == UInt64(1), "not approved"
         arc4.emit(Closed(arc4.Address(self.upgrader), arc4.Address(self.funder)))
@@ -1273,6 +1300,13 @@ class StakingFactory(BaseFactory):
             return distribution_count
         else:
             return UInt64(12)
+
+    @arc4.abimethod
+    def update(self) -> None:
+        assert Txn.sender == self.upgrader, "must be upgrader"
+        assert self.updatable == UInt64(1), "not approved"
+        available_balance = get_available_balance()
+        itxn.Payment(receiver=Txn.sender, amount=available_balance, fee=0).submit()
 
 ##################################################
 # CompensationFactory

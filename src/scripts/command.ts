@@ -440,6 +440,7 @@ interface FactoryUpdateAirdropOptions {
   apid: number;
   delete: boolean;
   debug?: boolean;
+  allow?: boolean;
 }
 factory
   .command("update-airdrop")
@@ -447,7 +448,12 @@ factory
   .option("-a, --apid <number>", "Specify the application ID of factory")
   .option("-d --delete", "Delete the application")
   .option("--debug", "Debug the deployment", false)
+  .option("-b --allow", "Allow the update", false)
   .action(async (options: FactoryUpdateAirdropOptions) => {
+    if (!options.allow) {
+      console.log("Please add --allow to proceed");
+      return;
+    }
     if (options.debug) {
       console.log(options);
     }
@@ -483,6 +489,66 @@ factory
         }
         if (updateR.success) {
           await signSendAndConfirm(updateR.txns, sk);
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  });
+
+interface FactoryUpdateAirdropOptions {
+  apid: number;
+  delete: boolean;
+  debug?: boolean;
+  allow?: boolean;
+}
+factory
+  .command("kill-all")
+  .description("Update all airdrop contracts")
+  .option("-a, --apid <number>", "Specify the application ID of factory")
+  .option("-d --delete", "Delete the application")
+  .option("--debug", "Debug the deployment", false)
+  .option("-b --allow", "Allow the update", false)
+  .action(async (options: FactoryUpdateAirdropOptions) => {
+    if (!options.allow) {
+      console.log("Please add --allow to proceed");
+      return;
+    }
+    if (options.debug) {
+      console.log(options);
+    }
+    const parentId = options.apid || CTC_INFO_FACTORY_AIRDROP;
+    const url = `${arc72IndexerURL}/v1/scs/accounts?parentId=${parentId}&deleted=0`;
+    const {
+      data: { accounts },
+    } = await axios.get(url);
+    for await (const account of accounts) {
+      try {
+        const { contractId } = account;
+        console.log(`[${contractId}] updating...`);
+        const apid = Number(contractId);
+        await new AirdropClient(
+          {
+            resolveBy: "id",
+            id: apid,
+            sender: {
+              addr,
+              sk,
+            },
+          },
+          algodClient
+        ).appClient.update();
+        const ci = makeCi(apid, addr);
+        ci.setFee(3000);
+        if (options.delete) {
+          ci.setOnComplete(5); // deleteApplicationOC
+        }
+        const killR = await ci.kill();
+        if (options.debug) {
+          console.log(killR);
+        }
+        if (killR.success) {
+          await signSendAndConfirm(killR.txns, sk);
         }
       } catch (e) {
         console.log(e);
@@ -567,6 +633,37 @@ const makeCi = (ctcInfo: number, addr: string) => {
     }
   );
 };
+
+// update
+
+factory
+  .command("update")
+  .requiredOption("-a, --apid <number>", "Specify the application ID")
+  .option("--debug", "Debug the deployment", false)
+  .option("--simulate", "Simulate the transaction", false)
+  .description("Call update arc4 contract method")
+  .action(async (options: any) => {
+    const ci = new CONTRACT(
+      Number(options.apid),
+      algodClient,
+      indexerClient,
+      makeSpec(StakingFactorySpec.contract.methods),
+      {
+        addr: addr,
+        sk: sk,
+      }
+    );
+    ci.setFee(2000);
+    const updateR = await ci.update();
+    if (options.debug) {
+      console.log(updateR);
+    }
+    if (updateR.success) {
+      if (!options.simulate) {
+        await signSendAndConfirm(updateR.txns, sk);
+      }
+    }
+  });
 
 const airdrop = new Command("airdrop").description("Manage airdrop operations");
 
@@ -1150,8 +1247,13 @@ interface AppUpdateOptions {
   delete: boolean;
   simulate?: boolean;
   sender?: string;
+  allow?: boolean;
 }
 export const updateApp: any = async (options: AppUpdateOptions) => {
+  if (!options.allow) {
+    console.log("Command not allowed");
+    return false;
+  }
   const apid = Number(options.apid);
   const ci = makeCi(apid, options.sender || addr);
   ci.setFee(3000);
@@ -1173,6 +1275,7 @@ app
   .requiredOption("-a, --apid <number>", "Specify the application ID")
   .option("-c --client <string>", "Specify the client")
   .option("-d --delete", "Delete the application")
+  .option("-b --allow", "Allow the update", false)
   .action(updateApp);
 
 program.addCommand(app);
