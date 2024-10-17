@@ -26,10 +26,12 @@
     "csv-parse": "^5.5.6",
     "csv-parser": "^3.0.0",
     "dotenv": "^16.4.5",
+    "json2csv": "^6.0.0-alpha.2",
     "moment": "^2.30.1",
     "ulujs": "^0.11.10"
   },
   "devDependencies": {
+    "@types/json2csv": "^5.0.7",
     "@types/node": "^20.12.7",
     "chai": "^5.1.1",
     "mocha": "^10.7.3",
