@@ -198,6 +198,7 @@ program
         bonus,
         global_initial: account.global_initial,
         global_total: total,
+        total: total / 1e6,
       });
     }
     fs.writeFileSync(options.output, JSON.stringify(payload, null, 2));
@@ -316,7 +317,7 @@ program
       const buildN = [];
       buildN.push({
         ...(await builder.staker.fill())?.obj,
-        payment: row.global_total
+        payment: row.global_total,
       });
       buildN.push({
         ...(await builder.staker.set_funding(funding))?.obj,

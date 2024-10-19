@@ -1,5 +1,75 @@
 [
   {
+    "contractId": 429288,
+    "contractAddress": "JJNIAUZDUFM4SJFTAE7YPJ7RQVKWVMXWEBORAYAMAUN3YLYRF7L7GN3YUI",
+    "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
+    "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
+    "global_funding": null,
+    "global_owner": "HK5CDOPQVSZE7BBKYMWYAOQZY5PN3X4GRNXU4GWVSKZ2JWT3PIHWVE574Y",
+    "global_period": 18,
+    "week": 3,
+    "bonus": 0.6726643598615917,
+    "global_initial": "554500",
+    "global_total": 927492,
+    "total": 0.927492
+  },
+  {
+    "contractId": 429162,
+    "contractAddress": "EBUQSAU6GARQORVAODDZCG3I56GQICOHG6MEY5BJSTHJJ5S5GPZ562TYRM",
+    "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
+    "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
+    "global_funding": null,
+    "global_owner": "G3MSA75OZEJTCCENOJDLDJK7UD7E2K5DNC7FVHCNOV7E3I4DTXTOWDUIFQ",
+    "global_period": 18,
+    "week": 3,
+    "bonus": 0.6726643598615917,
+    "global_initial": "13400000000",
+    "global_total": 22413702422,
+    "total": 22413.702422
+  },
+  {
+    "contractId": 428934,
+    "contractAddress": "XKTKTIKSPKYPNEVFJ6UCPDK23NHGOU5VGQPKNYWT5QDKHI74VBDZE6LTDQ",
+    "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
+    "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
+    "global_funding": null,
+    "global_owner": "NFZYPGTKBAA2WNR2N4G7HUUA5R3BEXBRLUAPH35FS2ZBMAMEXNKXGFSQNQ",
+    "global_period": 18,
+    "week": 3,
+    "bonus": 0.6726643598615917,
+    "global_initial": "530000000000",
+    "global_total": 886512110727,
+    "total": 886512.110727
+  },
+  {
+    "contractId": 427736,
+    "contractAddress": "25EXJ4ZF7ARA6UZSUNSFN3OIGEY57I7MTOQVGMTXYRAXFBQODASHZHHYIM",
+    "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
+    "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
+    "global_funding": null,
+    "global_owner": "OVDREAWPFXYWMJLDRWI3LHCIIEDTZI7G7LK3AFLZXSBUSC2BPK3QGU7WII",
+    "global_period": 18,
+    "week": 3,
+    "bonus": 0.6726643598615917,
+    "global_initial": "2654500",
+    "global_total": 4440088,
+    "total": 4.440088
+  },
+  {
+    "contractId": 427063,
+    "contractAddress": "2HHCKK7RPQA65HXR74QSP4UJEJH6XWQOR7W6F4IA5WIIGAYPIGHABWZMYA",
+    "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
+    "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
+    "global_funding": null,
+    "global_owner": "SI7F2AZF2747JPYBFAOC5ZIZRZOTEMMYJ65ITDOT535BWRRSIQV3SCHZ54",
+    "global_period": 18,
+    "week": 3,
+    "bonus": 0.6726643598615917,
+    "global_initial": "19331000000",
+    "global_total": 32334274740,
+    "total": 32334.27474
+  },
+  {
     "contractId": 424171,
     "contractAddress": "MESUVWR4TRXMLBGSZBNAEW7EJDPY5CV5PRFBI6KWYTW5PR7MQJKCEDJAKY",
     "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
@@ -10,7 +80,8 @@
     "week": 3,
     "bonus": 0.6726643598615917,
     "global_initial": "1000000",
-    "global_total": 1672664
+    "global_total": 1672664,
+    "total": 1.672664
   },
   {
     "contractId": 423060,
@@ -18,12 +89,13 @@
     "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
     "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
     "global_funding": null,
-    "global_owner": "RTKWX3FTDNNIHMAWHK5SDPKH3VRPPW7OS5ZLWN6RFZODF7E22YOBK2OGPE",
+    "global_owner": "3S5QBFCYMWWVIKKRJZYTVS3UOQ2UWHRBH4TXG3VZA7VQMKN66D2DYJY3MQ",
     "global_period": 18,
     "week": 3,
     "bonus": 0.6726643598615917,
     "global_initial": "1000000",
-    "global_total": 1672664
+    "global_total": 1672664,
+    "total": 1.672664
   },
   {
     "contractId": 422812,
@@ -31,12 +103,13 @@
     "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
     "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
     "global_funding": null,
-    "global_owner": "RTKWX3FTDNNIHMAWHK5SDPKH3VRPPW7OS5ZLWN6RFZODF7E22YOBK2OGPE",
+    "global_owner": "3S5QBFCYMWWVIKKRJZYTVS3UOQ2UWHRBH4TXG3VZA7VQMKN66D2DYJY3MQ",
     "global_period": 18,
     "week": 3,
     "bonus": 0.6726643598615917,
     "global_initial": "1000000",
-    "global_total": 1672664
+    "global_total": 1672664,
+    "total": 1.672664
   },
   {
     "contractId": 422805,
@@ -44,12 +117,13 @@
     "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
     "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
     "global_funding": null,
-    "global_owner": "G3MSA75OZEJTCCENOJDLDJK7UD7E2K5DNC7FVHCNOV7E3I4DTXTOWDUIFQ",
+    "global_owner": "3S5QBFCYMWWVIKKRJZYTVS3UOQ2UWHRBH4TXG3VZA7VQMKN66D2DYJY3MQ",
     "global_period": 18,
     "week": 3,
     "bonus": 0.6726643598615917,
     "global_initial": "1000000",
-    "global_total": 1672664
+    "global_total": 1672664,
+    "total": 1.672664
   },
   {
     "contractId": 422699,
@@ -57,12 +131,13 @@
     "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
     "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
     "global_funding": null,
-    "global_owner": "G3MSA75OZEJTCCENOJDLDJK7UD7E2K5DNC7FVHCNOV7E3I4DTXTOWDUIFQ",
+    "global_owner": "3S5QBFCYMWWVIKKRJZYTVS3UOQ2UWHRBH4TXG3VZA7VQMKN66D2DYJY3MQ",
     "global_period": 18,
     "week": 3,
     "bonus": 0.6726643598615917,
     "global_initial": "10000000",
-    "global_total": 16726644
+    "global_total": 16726644,
+    "total": 16.726644
   },
   {
     "contractId": 422628,
@@ -75,7 +150,8 @@
     "week": 3,
     "bonus": 0.6726643598615917,
     "global_initial": "32000000000",
-    "global_total": 53525259516
+    "global_total": 53525259516,
+    "total": 53525.259516
   },
   {
     "contractId": 422200,
@@ -88,7 +164,8 @@
     "week": 3,
     "bonus": 0.6726643598615917,
     "global_initial": "26252614500",
-    "global_total": 43911812627
+    "global_total": 43911812627,
+    "total": 43911.812627
   },
   {
     "contractId": 422185,
@@ -101,7 +178,8 @@
     "week": 3,
     "bonus": 0.008408304498269898,
     "global_initial": "1050710500",
-    "global_total": 1059545194
+    "global_total": 1059545194,
+    "total": 1059.545194
   },
   {
     "contractId": 422131,
@@ -114,7 +192,8 @@
     "week": 3,
     "bonus": 0.6726643598615917,
     "global_initial": "198758073952",
-    "global_total": 332455546534
+    "global_total": 332455546534,
+    "total": 332455.546534
   },
   {
     "contractId": 422088,
@@ -127,7 +206,8 @@
     "week": 3,
     "bonus": 0.0009342560553633217,
     "global_initial": "400000000",
-    "global_total": 400373702
+    "global_total": 400373702,
+    "total": 400.373702
   },
   {
     "contractId": 421840,
@@ -140,7 +220,8 @@
     "week": 3,
     "bonus": 0.6726643598615917,
     "global_initial": "35253000000",
-    "global_total": 58966436678
+    "global_total": 58966436678,
+    "total": 58966.436678
   },
   {
     "contractId": 421766,
@@ -153,7 +234,8 @@
     "week": 3,
     "bonus": 0.6726643598615917,
     "global_initial": "680976159500",
-    "global_total": 1139044551911
+    "global_total": 1139044551911,
+    "total": 1139044.551911
   },
   {
     "contractId": 420940,
@@ -166,7 +248,8 @@
     "week": 3,
     "bonus": 0.6726643598615917,
     "global_initial": "1000000",
-    "global_total": 1672664
+    "global_total": 1672664,
+    "total": 1.672664
   },
   {
     "contractId": 420754,
@@ -179,7 +262,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "450000000",
-    "global_total": 853598616
+    "global_total": 853598616,
+    "total": 853.598616
   },
   {
     "contractId": 420650,
@@ -192,7 +276,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "630500000000",
-    "global_total": 1195986505190
+    "global_total": 1195986505190,
+    "total": 1195986.50519
   },
   {
     "contractId": 420556,
@@ -205,7 +290,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "553500",
-    "global_total": 1049926
+    "global_total": 1049926,
+    "total": 1.049926
   },
   {
     "contractId": 420494,
@@ -218,7 +304,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "28000000000",
-    "global_total": 53112802768
+    "global_total": 53112802768,
+    "total": 53112.802768
   },
   {
     "contractId": 420478,
@@ -231,7 +318,8 @@
     "week": 2,
     "bonus": 0.0012456747404844292,
     "global_initial": "4149000000",
-    "global_total": 4154168304
+    "global_total": 4154168304,
+    "total": 4154.168304
   },
   {
     "contractId": 420455,
@@ -244,7 +332,8 @@
     "week": 2,
     "bonus": 0.46782006920415226,
     "global_initial": "20000000000",
-    "global_total": 29356401384
+    "global_total": 29356401384,
+    "total": 29356.401384
   },
   {
     "contractId": 420282,
@@ -257,7 +346,8 @@
     "week": 2,
     "bonus": 0.0012456747404844292,
     "global_initial": "551500",
-    "global_total": 552187
+    "global_total": 552187,
+    "total": 0.552187
   },
   {
     "contractId": 420272,
@@ -270,7 +360,8 @@
     "week": 2,
     "bonus": 0.004982698961937717,
     "global_initial": "554500",
-    "global_total": 557263
+    "global_total": 557263,
+    "total": 0.557263
   },
   {
     "contractId": 417234,
@@ -283,7 +374,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "1000000000",
-    "global_total": 1896885813
+    "global_total": 1896885813,
+    "total": 1896.885813
   },
   {
     "contractId": 417216,
@@ -296,7 +388,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "9800000000",
-    "global_total": 18589480969
+    "global_total": 18589480969,
+    "total": 18589.480969
   },
   {
     "contractId": 417145,
@@ -309,7 +402,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "8100000000",
-    "global_total": 15364775087
+    "global_total": 15364775087,
+    "total": 15364.775087
   },
   {
     "contractId": 416963,
@@ -322,7 +416,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "27013000000",
-    "global_total": 51240576471
+    "global_total": 51240576471,
+    "total": 51240.576471
   },
   {
     "contractId": 415341,
@@ -335,7 +430,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "553500",
-    "global_total": 1049926
+    "global_total": 1049926,
+    "total": 1.049926
   },
   {
     "contractId": 415334,
@@ -348,7 +444,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "553500",
-    "global_total": 1049926
+    "global_total": 1049926,
+    "total": 1.049926
   },
   {
     "contractId": 415327,
@@ -361,7 +458,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "553500",
-    "global_total": 1049926
+    "global_total": 1049926,
+    "total": 1.049926
   },
   {
     "contractId": 415320,
@@ -374,7 +472,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "553500",
-    "global_total": 1049926
+    "global_total": 1049926,
+    "total": 1.049926
   },
   {
     "contractId": 415313,
@@ -387,7 +486,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "553500",
-    "global_total": 1049926
+    "global_total": 1049926,
+    "total": 1.049926
   },
   {
     "contractId": 415306,
@@ -400,7 +500,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "553500",
-    "global_total": 1049926
+    "global_total": 1049926,
+    "total": 1.049926
   },
   {
     "contractId": 415292,
@@ -413,7 +514,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415285,
@@ -426,7 +528,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415277,
@@ -439,7 +542,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415270,
@@ -452,7 +556,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415263,
@@ -465,7 +570,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415256,
@@ -478,7 +584,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415249,
@@ -491,7 +598,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415242,
@@ -504,7 +612,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415235,
@@ -517,7 +626,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415228,
@@ -530,7 +640,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415221,
@@ -543,7 +654,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415213,
@@ -556,7 +668,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415206,
@@ -569,7 +682,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415199,
@@ -582,7 +696,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415192,
@@ -595,7 +710,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415185,
@@ -608,7 +724,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415178,
@@ -621,7 +738,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415171,
@@ -634,7 +752,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415164,
@@ -647,7 +766,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415157,
@@ -660,7 +780,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415149,
@@ -673,7 +794,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415142,
@@ -686,7 +808,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415135,
@@ -699,7 +822,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415128,
@@ -712,7 +836,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415121,
@@ -725,7 +850,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415114,
@@ -738,7 +864,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415106,
@@ -751,7 +878,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415099,
@@ -764,7 +892,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415092,
@@ -777,7 +906,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415085,
@@ -790,7 +920,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415078,
@@ -803,7 +934,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415071,
@@ -816,7 +948,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415052,
@@ -829,7 +962,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415045,
@@ -842,7 +976,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415038,
@@ -855,7 +990,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415031,
@@ -868,7 +1004,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415023,
@@ -881,7 +1018,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415016,
@@ -894,7 +1032,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415009,
@@ -907,7 +1046,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 415002,
@@ -920,7 +1060,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414995,
@@ -933,7 +1074,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414988,
@@ -946,7 +1088,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414981,
@@ -959,7 +1102,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414974,
@@ -972,7 +1116,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414967,
@@ -985,7 +1130,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414960,
@@ -998,7 +1144,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414953,
@@ -1011,7 +1158,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414946,
@@ -1024,7 +1172,8 @@
     "week": 2,
     "bonus": 0.0012456747404844292,
     "global_initial": "552500",
-    "global_total": 553188
+    "global_total": 553188,
+    "total": 0.553188
   },
   {
     "contractId": 414939,
@@ -1037,7 +1186,8 @@
     "week": 2,
     "bonus": 0.0012456747404844292,
     "global_initial": "552500",
-    "global_total": 553188
+    "global_total": 553188,
+    "total": 0.553188
   },
   {
     "contractId": 414932,
@@ -1050,7 +1200,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414925,
@@ -1063,7 +1214,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414918,
@@ -1076,7 +1228,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414911,
@@ -1089,7 +1242,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414904,
@@ -1102,7 +1256,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414852,
@@ -1115,7 +1270,8 @@
     "week": 2,
     "bonus": 0.0012456747404844292,
     "global_initial": "553500",
-    "global_total": 554189
+    "global_total": 554189,
+    "total": 0.554189
   },
   {
     "contractId": 414845,
@@ -1128,7 +1284,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414838,
@@ -1141,7 +1298,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414831,
@@ -1154,7 +1312,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414824,
@@ -1167,7 +1326,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414817,
@@ -1180,7 +1340,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414810,
@@ -1193,7 +1354,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414803,
@@ -1206,7 +1368,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414796,
@@ -1219,7 +1382,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414789,
@@ -1232,7 +1396,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414782,
@@ -1245,7 +1410,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414775,
@@ -1258,7 +1424,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414767,
@@ -1271,7 +1438,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414760,
@@ -1284,7 +1452,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414753,
@@ -1297,7 +1466,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414746,
@@ -1310,7 +1480,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414739,
@@ -1323,7 +1494,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414732,
@@ -1336,7 +1508,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414725,
@@ -1349,7 +1522,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414718,
@@ -1362,7 +1536,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414711,
@@ -1375,7 +1550,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414704,
@@ -1388,7 +1564,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414697,
@@ -1401,7 +1578,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414690,
@@ -1414,7 +1592,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414682,
@@ -1427,7 +1606,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414675,
@@ -1440,7 +1620,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414668,
@@ -1453,7 +1634,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414661,
@@ -1466,7 +1648,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414654,
@@ -1479,7 +1662,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414647,
@@ -1492,7 +1676,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414640,
@@ -1505,7 +1690,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414633,
@@ -1518,7 +1704,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414626,
@@ -1531,7 +1718,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414619,
@@ -1544,7 +1732,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414612,
@@ -1557,7 +1746,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414605,
@@ -1570,7 +1760,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414598,
@@ -1583,7 +1774,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414591,
@@ -1596,7 +1788,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414584,
@@ -1609,7 +1802,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414577,
@@ -1622,7 +1816,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414570,
@@ -1635,7 +1830,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414563,
@@ -1648,7 +1844,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414495,
@@ -1661,7 +1858,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414488,
@@ -1674,7 +1872,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414481,
@@ -1687,7 +1886,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414474,
@@ -1700,7 +1900,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414467,
@@ -1713,7 +1914,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414460,
@@ -1726,7 +1928,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414453,
@@ -1739,7 +1942,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414446,
@@ -1752,7 +1956,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414439,
@@ -1765,7 +1970,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414432,
@@ -1778,7 +1984,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414425,
@@ -1791,7 +1998,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414418,
@@ -1804,7 +2012,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414411,
@@ -1817,7 +2026,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414404,
@@ -1830,7 +2040,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414397,
@@ -1843,7 +2054,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "553500",
-    "global_total": 1049926
+    "global_total": 1049926,
+    "total": 1.049926
   },
   {
     "contractId": 414390,
@@ -1856,7 +2068,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414383,
@@ -1869,7 +2082,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "553500",
-    "global_total": 1049926
+    "global_total": 1049926,
+    "total": 1.049926
   },
   {
     "contractId": 414375,
@@ -1882,7 +2096,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414368,
@@ -1895,7 +2110,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414361,
@@ -1908,7 +2124,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414354,
@@ -1921,7 +2138,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414347,
@@ -1934,7 +2152,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414340,
@@ -1947,7 +2166,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414333,
@@ -1960,7 +2180,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414326,
@@ -1973,7 +2194,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414319,
@@ -1986,7 +2208,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414312,
@@ -1999,7 +2222,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414305,
@@ -2012,7 +2236,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "553500",
-    "global_total": 1049926
+    "global_total": 1049926,
+    "total": 1.049926
   },
   {
     "contractId": 414298,
@@ -2025,7 +2250,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "553500",
-    "global_total": 1049926
+    "global_total": 1049926,
+    "total": 1.049926
   },
   {
     "contractId": 414291,
@@ -2038,7 +2264,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "553500",
-    "global_total": 1049926
+    "global_total": 1049926,
+    "total": 1.049926
   },
   {
     "contractId": 414284,
@@ -2051,7 +2278,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "553500",
-    "global_total": 1049926
+    "global_total": 1049926,
+    "total": 1.049926
   },
   {
     "contractId": 414277,
@@ -2064,7 +2292,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414270,
@@ -2077,7 +2306,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414263,
@@ -2090,7 +2320,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414256,
@@ -2103,7 +2334,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414249,
@@ -2116,7 +2348,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414242,
@@ -2129,7 +2362,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414235,
@@ -2142,7 +2376,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414228,
@@ -2155,7 +2390,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414221,
@@ -2168,7 +2404,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414214,
@@ -2181,7 +2418,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414207,
@@ -2194,7 +2432,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414199,
@@ -2207,7 +2446,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414192,
@@ -2220,7 +2460,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414185,
@@ -2233,7 +2474,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414178,
@@ -2246,7 +2488,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414171,
@@ -2259,7 +2502,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414164,
@@ -2272,7 +2516,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414157,
@@ -2285,7 +2530,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414150,
@@ -2298,7 +2544,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414143,
@@ -2311,7 +2558,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414136,
@@ -2324,7 +2572,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414129,
@@ -2337,7 +2586,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414122,
@@ -2350,7 +2600,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414115,
@@ -2363,7 +2614,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414108,
@@ -2376,7 +2628,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414101,
@@ -2389,7 +2642,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414094,
@@ -2402,7 +2656,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414087,
@@ -2415,7 +2670,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414080,
@@ -2428,7 +2684,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414073,
@@ -2441,7 +2698,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414066,
@@ -2454,7 +2712,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414058,
@@ -2467,7 +2726,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414051,
@@ -2480,7 +2740,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414044,
@@ -2493,7 +2754,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414037,
@@ -2506,7 +2768,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414030,
@@ -2519,7 +2782,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 414023,
@@ -2532,7 +2796,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414016,
@@ -2545,7 +2810,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414009,
@@ -2558,7 +2824,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 414002,
@@ -2571,7 +2838,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413995,
@@ -2584,7 +2852,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413988,
@@ -2597,7 +2866,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413981,
@@ -2610,7 +2880,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 413974,
@@ -2623,7 +2894,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 413967,
@@ -2636,7 +2908,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 413960,
@@ -2649,7 +2922,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 413953,
@@ -2662,7 +2936,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 413946,
@@ -2675,7 +2950,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413939,
@@ -2688,7 +2964,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413932,
@@ -2701,7 +2978,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413925,
@@ -2714,7 +2992,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413918,
@@ -2727,7 +3006,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413911,
@@ -2740,7 +3020,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413903,
@@ -2753,7 +3034,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413896,
@@ -2766,7 +3048,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 413889,
@@ -2779,7 +3062,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413882,
@@ -2792,7 +3076,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413875,
@@ -2805,7 +3090,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413868,
@@ -2818,7 +3104,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413861,
@@ -2831,7 +3118,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413854,
@@ -2844,7 +3132,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 413847,
@@ -2857,7 +3146,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 413840,
@@ -2870,7 +3160,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 413833,
@@ -2883,7 +3174,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 413825,
@@ -2896,7 +3188,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413818,
@@ -2909,7 +3202,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413811,
@@ -2922,7 +3216,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413804,
@@ -2935,7 +3230,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413797,
@@ -2948,7 +3244,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413790,
@@ -2961,7 +3258,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413782,
@@ -2974,7 +3272,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413775,
@@ -2987,7 +3286,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413768,
@@ -3000,7 +3300,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413761,
@@ -3013,7 +3314,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413754,
@@ -3026,7 +3328,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413646,
@@ -3039,7 +3342,8 @@
     "week": 2,
     "bonus": 0.8,
     "global_initial": "8800000000",
-    "global_total": 15840000000
+    "global_total": 15840000000,
+    "total": 15840
   },
   {
     "contractId": 413604,
@@ -3052,7 +3356,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "552500",
-    "global_total": 1048029
+    "global_total": 1048029,
+    "total": 1.048029
   },
   {
     "contractId": 413520,
@@ -3065,7 +3370,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "554500",
-    "global_total": 1051823
+    "global_total": 1051823,
+    "total": 1.051823
   },
   {
     "contractId": 412987,
@@ -3078,7 +3384,8 @@
     "week": 2,
     "bonus": 0.708650519031142,
     "global_initial": "3000000000",
-    "global_total": 5125951557
+    "global_total": 5125951557,
+    "total": 5125.951557
   },
   {
     "contractId": 412549,
@@ -3091,7 +3398,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "75000000",
-    "global_total": 142266436
+    "global_total": 142266436,
+    "total": 142.266436
   },
   {
     "contractId": 412463,
@@ -3104,7 +3412,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "985000000",
-    "global_total": 1868432526
+    "global_total": 1868432526,
+    "total": 1868.432526
   },
   {
     "contractId": 412286,
@@ -3117,7 +3426,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "1000000000",
-    "global_total": 1896885813
+    "global_total": 1896885813,
+    "total": 1896.885813
   },
   {
     "contractId": 412262,
@@ -3130,7 +3440,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "1711396734",
-    "global_total": 3246324185
+    "global_total": 3246324185,
+    "total": 3246.324185
   },
   {
     "contractId": 412238,
@@ -3143,7 +3454,8 @@
     "week": 2,
     "bonus": 0.0012456747404844292,
     "global_initial": "861383000",
-    "global_total": 862456003
+    "global_total": 862456003,
+    "total": 862.456003
   },
   {
     "contractId": 411556,
@@ -3156,7 +3468,8 @@
     "week": 2,
     "bonus": 0.0012456747404844292,
     "global_initial": "4500000000",
-    "global_total": 4505605536
+    "global_total": 4505605536,
+    "total": 4505.605536
   },
   {
     "contractId": 409797,
@@ -3169,7 +3482,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "22000000000",
-    "global_total": 41731487889
+    "global_total": 41731487889,
+    "total": 41731.487889
   },
   {
     "contractId": 409697,
@@ -3182,7 +3496,8 @@
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "3000000",
-    "global_total": 5690657
+    "global_total": 5690657,
+    "total": 5.690657
   },
   {
     "contractId": 409429,
@@ -3190,12 +3505,13 @@
     "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
     "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
     "global_funding": null,
-    "global_owner": "G3MSA75OZEJTCCENOJDLDJK7UD7E2K5DNC7FVHCNOV7E3I4DTXTOWDUIFQ",
+    "global_owner": "3S5QBFCYMWWVIKKRJZYTVS3UOQ2UWHRBH4TXG3VZA7VQMKN66D2DYJY3MQ",
     "global_period": 18,
     "week": 2,
     "bonus": 0.896885813148789,
     "global_initial": "2000000",
-    "global_total": 3793772
+    "global_total": 3793772,
+    "total": 3.793772
   },
   {
     "contractId": 409413,
@@ -3208,7 +3524,8 @@
     "week": 2,
     "bonus": 0.0012456747404844292,
     "global_initial": "554500",
-    "global_total": 555191
+    "global_total": 555191,
+    "total": 0.555191
   },
   {
     "contractId": 409381,
@@ -3221,7 +3538,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "11111111110",
-    "global_total": 23567858514
+    "global_total": 23567858514,
+    "total": 23567.858514
   },
   {
     "contractId": 409220,
@@ -3234,7 +3552,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "4150000000",
-    "global_total": 8802595156
+    "global_total": 8802595156,
+    "total": 8802.595156
   },
   {
     "contractId": 409139,
@@ -3247,7 +3566,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "60000000000",
-    "global_total": 127266435986
+    "global_total": 127266435986,
+    "total": 127266.435986
   },
   {
     "contractId": 409131,
@@ -3260,7 +3580,8 @@
     "week": 1,
     "bonus": 1,
     "global_initial": "167000000000",
-    "global_total": 334000000000
+    "global_total": 334000000000,
+    "total": 334000
   },
   {
     "contractId": 409063,
@@ -3273,7 +3594,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "21720000000",
-    "global_total": 46070449827
+    "global_total": 46070449827,
+    "total": 46070.449827
   },
   {
     "contractId": 408977,
@@ -3286,7 +3608,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "100000000",
-    "global_total": 212110727
+    "global_total": 212110727,
+    "total": 212.110727
   },
   {
     "contractId": 408884,
@@ -3299,7 +3622,8 @@
     "week": 1,
     "bonus": 0.07629757785467128,
     "global_initial": "14358004551",
-    "global_total": 15453485521
+    "global_total": 15453485521,
+    "total": 15453.485521
   },
   {
     "contractId": 408861,
@@ -3312,7 +3636,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "105470000000",
-    "global_total": 223713183391
+    "global_total": 223713183391,
+    "total": 223713.183391
   },
   {
     "contractId": 408847,
@@ -3325,7 +3650,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "50000000000",
-    "global_total": 106055363322
+    "global_total": 106055363322,
+    "total": 106055.363322
   },
   {
     "contractId": 408840,
@@ -3338,7 +3664,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "55425426500",
-    "global_total": 117563274894
+    "global_total": 117563274894,
+    "total": 117563.274894
   },
   {
     "contractId": 408826,
@@ -3351,7 +3678,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "554500",
-    "global_total": 555363
+    "global_total": 555363,
+    "total": 0.555363
   },
   {
     "contractId": 408673,
@@ -3364,7 +3692,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "25000000000",
-    "global_total": 53027681661
+    "global_total": 53027681661,
+    "total": 53027.681661
   },
   {
     "contractId": 408613,
@@ -3377,7 +3706,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "2450000000",
-    "global_total": 5196712803
+    "global_total": 5196712803,
+    "total": 5196.712803
   },
   {
     "contractId": 408445,
@@ -3390,7 +3720,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "5000000000",
-    "global_total": 10605536332
+    "global_total": 10605536332,
+    "total": 10605.536332
   },
   {
     "contractId": 408392,
@@ -3403,7 +3734,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "40500000000",
-    "global_total": 85904844291
+    "global_total": 85904844291,
+    "total": 85904.844291
   },
   {
     "contractId": 407923,
@@ -3416,7 +3748,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "500000",
-    "global_total": 1060554
+    "global_total": 1060554,
+    "total": 1.060554
   },
   {
     "contractId": 407896,
@@ -3429,7 +3762,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "13617678500",
-    "global_total": 28884556818
+    "global_total": 28884556818,
+    "total": 28884.556818
   },
   {
     "contractId": 407881,
@@ -3442,7 +3776,8 @@
     "week": 1,
     "bonus": 0.5847750865051903,
     "global_initial": "325000000",
-    "global_total": 515051903
+    "global_total": 515051903,
+    "total": 515.051903
   },
   {
     "contractId": 407662,
@@ -3455,7 +3790,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "5700000000",
-    "global_total": 12090311419
+    "global_total": 12090311419,
+    "total": 12090.311419
   },
   {
     "contractId": 407645,
@@ -3468,7 +3804,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "120000000",
-    "global_total": 254532872
+    "global_total": 254532872,
+    "total": 254.532872
   },
   {
     "contractId": 407583,
@@ -3481,7 +3818,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "3000654500",
-    "global_total": 6364710064
+    "global_total": 6364710064,
+    "total": 6364.710064
   },
   {
     "contractId": 407574,
@@ -3494,7 +3832,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "1999047500",
-    "global_total": 2002160204
+    "global_total": 2002160204,
+    "total": 2002.160204
   },
   {
     "contractId": 407547,
@@ -3507,7 +3846,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "168205504500",
-    "global_total": 356781917849
+    "global_total": 356781917849,
+    "total": 356781.917849
   },
   {
     "contractId": 407534,
@@ -3520,7 +3860,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "554500",
-    "global_total": 555363
+    "global_total": 555363,
+    "total": 0.555363
   },
   {
     "contractId": 407526,
@@ -3533,7 +3874,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "554500",
-    "global_total": 1176154
+    "global_total": 1176154,
+    "total": 1.176154
   },
   {
     "contractId": 407392,
@@ -3541,12 +3883,13 @@
     "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
     "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
     "global_funding": null,
-    "global_owner": "G3MSA75OZEJTCCENOJDLDJK7UD7E2K5DNC7FVHCNOV7E3I4DTXTOWDUIFQ",
+    "global_owner": "3S5QBFCYMWWVIKKRJZYTVS3UOQ2UWHRBH4TXG3VZA7VQMKN66D2DYJY3MQ",
     "global_period": 18,
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "50000000",
-    "global_total": 106055363
+    "global_total": 106055363,
+    "total": 106.055363
   },
   {
     "contractId": 407368,
@@ -3559,7 +3902,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "5050000000",
-    "global_total": 10711591696
+    "global_total": 10711591696,
+    "total": 10711.591696
   },
   {
     "contractId": 407226,
@@ -3572,7 +3916,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "5000000",
-    "global_total": 10605536
+    "global_total": 10605536,
+    "total": 10.605536
   },
   {
     "contractId": 407041,
@@ -3585,7 +3930,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "100000000000",
-    "global_total": 212110726644
+    "global_total": 212110726644,
+    "total": 212110.726644
   },
   {
     "contractId": 406945,
@@ -3598,7 +3944,8 @@
     "week": 1,
     "bonus": 0.18840830449826992,
     "global_initial": "3000000000",
-    "global_total": 3565224913
+    "global_total": 3565224913,
+    "total": 3565.224913
   },
   {
     "contractId": 406919,
@@ -3611,7 +3958,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1648500000000",
-    "global_total": 3496645328720
+    "global_total": 3496645328720,
+    "total": 3496645.32872
   },
   {
     "contractId": 406876,
@@ -3619,12 +3967,13 @@
     "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
     "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
     "global_funding": null,
-    "global_owner": "G3MSA75OZEJTCCENOJDLDJK7UD7E2K5DNC7FVHCNOV7E3I4DTXTOWDUIFQ",
+    "global_owner": "3S5QBFCYMWWVIKKRJZYTVS3UOQ2UWHRBH4TXG3VZA7VQMKN66D2DYJY3MQ",
     "global_period": 18,
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "150000000",
-    "global_total": 318166090
+    "global_total": 318166090,
+    "total": 318.16609
   },
   {
     "contractId": 406821,
@@ -3637,7 +3986,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "5229500",
-    "global_total": 11092330
+    "global_total": 11092330,
+    "total": 11.09233
   },
   {
     "contractId": 406777,
@@ -3650,7 +4000,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "500000",
-    "global_total": 500779
+    "global_total": 500779,
+    "total": 0.500779
   },
   {
     "contractId": 406750,
@@ -3663,7 +4014,8 @@
     "week": 1,
     "bonus": 0.22422145328719728,
     "global_initial": "777000000",
-    "global_total": 951220069
+    "global_total": 951220069,
+    "total": 951.220069
   },
   {
     "contractId": 406683,
@@ -3676,7 +4028,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1055670500",
-    "global_total": 2239190369
+    "global_total": 2239190369,
+    "total": 2239.190369
   },
   {
     "contractId": 406672,
@@ -3689,7 +4042,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "549500",
-    "global_total": 1165548
+    "global_total": 1165548,
+    "total": 1.165548
   },
   {
     "contractId": 406601,
@@ -3702,7 +4056,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "21273000000",
-    "global_total": 21306124048
+    "global_total": 21306124048,
+    "total": 21306.124048
   },
   {
     "contractId": 406579,
@@ -3715,7 +4070,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1300000000",
-    "global_total": 2757439446
+    "global_total": 2757439446,
+    "total": 2757.439446
   },
   {
     "contractId": 406363,
@@ -3728,7 +4084,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "500000000",
-    "global_total": 500778547
+    "global_total": 500778547,
+    "total": 500.778547
   },
   {
     "contractId": 406315,
@@ -3741,7 +4098,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "200000",
-    "global_total": 200311
+    "global_total": 200311,
+    "total": 0.200311
   },
   {
     "contractId": 406234,
@@ -3754,7 +4112,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "549500",
-    "global_total": 550356
+    "global_total": 550356,
+    "total": 0.550356
   },
   {
     "contractId": 406216,
@@ -3767,7 +4126,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "554500",
-    "global_total": 1176154
+    "global_total": 1176154,
+    "total": 1.176154
   },
   {
     "contractId": 406174,
@@ -3780,7 +4140,8 @@
     "week": 1,
     "bonus": 0.01401384083044983,
     "global_initial": "550500",
-    "global_total": 558215
+    "global_total": 558215,
+    "total": 0.558215
   },
   {
     "contractId": 406135,
@@ -3793,7 +4154,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "65000000000",
-    "global_total": 137871972318
+    "global_total": 137871972318,
+    "total": 137871.972318
   },
   {
     "contractId": 406125,
@@ -3806,7 +4168,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "425099900000",
-    "global_total": 901682486851
+    "global_total": 901682486851,
+    "total": 901682.486851
   },
   {
     "contractId": 406096,
@@ -3819,7 +4182,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "49500",
-    "global_total": 49577
+    "global_total": 49577,
+    "total": 0.049577
   },
   {
     "contractId": 406031,
@@ -3832,7 +4196,8 @@
     "week": 1,
     "bonus": 0.01401384083044983,
     "global_initial": "5310594500",
-    "global_total": 5385016326
+    "global_total": 5385016326,
+    "total": 5385.016326
   },
   {
     "contractId": 406007,
@@ -3845,7 +4210,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1553500",
-    "global_total": 3295140
+    "global_total": 3295140,
+    "total": 3.29514
   },
   {
     "contractId": 405985,
@@ -3858,7 +4224,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1699462500",
-    "global_total": 3604742258
+    "global_total": 3604742258,
+    "total": 3604.742258
   },
   {
     "contractId": 405969,
@@ -3871,7 +4238,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "104000000000",
-    "global_total": 220595155709
+    "global_total": 220595155709,
+    "total": 220595.155709
   },
   {
     "contractId": 405956,
@@ -3884,7 +4252,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "170765000000",
-    "global_total": 362210882353
+    "global_total": 362210882353,
+    "total": 362210.882353
   },
   {
     "contractId": 405944,
@@ -3897,7 +4266,8 @@
     "week": 1,
     "bonus": 0.22422145328719728,
     "global_initial": "1000000",
-    "global_total": 1224221
+    "global_total": 1224221,
+    "total": 1.224221
   },
   {
     "contractId": 405932,
@@ -3910,7 +4280,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "8552500",
-    "global_total": 18140770
+    "global_total": 18140770,
+    "total": 18.14077
   },
   {
     "contractId": 405903,
@@ -3918,12 +4289,13 @@
     "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
     "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
     "global_funding": null,
-    "global_owner": "G3MSA75OZEJTCCENOJDLDJK7UD7E2K5DNC7FVHCNOV7E3I4DTXTOWDUIFQ",
+    "global_owner": "3S5QBFCYMWWVIKKRJZYTVS3UOQ2UWHRBH4TXG3VZA7VQMKN66D2DYJY3MQ",
     "global_period": 18,
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "80000000",
-    "global_total": 169688581
+    "global_total": 169688581,
+    "total": 169.688581
   },
   {
     "contractId": 405481,
@@ -3936,7 +4308,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1542500",
-    "global_total": 3271808
+    "global_total": 3271808,
+    "total": 3.271808
   },
   {
     "contractId": 405462,
@@ -3944,12 +4317,13 @@
     "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
     "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
     "global_funding": null,
-    "global_owner": "G3MSA75OZEJTCCENOJDLDJK7UD7E2K5DNC7FVHCNOV7E3I4DTXTOWDUIFQ",
+    "global_owner": "3S5QBFCYMWWVIKKRJZYTVS3UOQ2UWHRBH4TXG3VZA7VQMKN66D2DYJY3MQ",
     "global_period": 18,
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "40000000",
-    "global_total": 84844291
+    "global_total": 84844291,
+    "total": 84.844291
   },
   {
     "contractId": 405371,
@@ -3962,7 +4336,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1554500",
-    "global_total": 3297261
+    "global_total": 3297261,
+    "total": 3.297261
   },
   {
     "contractId": 405299,
@@ -3975,7 +4350,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "10000000",
-    "global_total": 10015571
+    "global_total": 10015571,
+    "total": 10.015571
   },
   {
     "contractId": 405285,
@@ -3988,7 +4364,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "22000000000",
-    "global_total": 46664359862
+    "global_total": 46664359862,
+    "total": 46664.359862
   },
   {
     "contractId": 405174,
@@ -4001,7 +4378,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "1554500",
-    "global_total": 1556921
+    "global_total": 1556921,
+    "total": 1.556921
   },
   {
     "contractId": 405120,
@@ -4014,7 +4392,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "50000000",
-    "global_total": 106055363
+    "global_total": 106055363,
+    "total": 106.055363
   },
   {
     "contractId": 405111,
@@ -4027,7 +4406,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1554500",
-    "global_total": 3297261
+    "global_total": 3297261,
+    "total": 3.297261
   },
   {
     "contractId": 405067,
@@ -4040,7 +4420,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "121281490500",
-    "global_total": 257251050784
+    "global_total": 257251050784,
+    "total": 257251.050784
   },
   {
     "contractId": 405003,
@@ -4048,12 +4429,13 @@
     "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
     "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
     "global_funding": null,
-    "global_owner": "G3MSA75OZEJTCCENOJDLDJK7UD7E2K5DNC7FVHCNOV7E3I4DTXTOWDUIFQ",
+    "global_owner": "3S5QBFCYMWWVIKKRJZYTVS3UOQ2UWHRBH4TXG3VZA7VQMKN66D2DYJY3MQ",
     "global_period": 18,
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "10000000",
-    "global_total": 21211073
+    "global_total": 21211073,
+    "total": 21.211073
   },
   {
     "contractId": 404970,
@@ -4066,7 +4448,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1000000000",
-    "global_total": 2121107266
+    "global_total": 2121107266,
+    "total": 2121.107266
   },
   {
     "contractId": 404955,
@@ -4079,7 +4462,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "1000000",
-    "global_total": 1001557
+    "global_total": 1001557,
+    "total": 1.001557
   },
   {
     "contractId": 404898,
@@ -4092,7 +4476,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "33300000000",
-    "global_total": 70632871972
+    "global_total": 70632871972,
+    "total": 70632.871972
   },
   {
     "contractId": 404854,
@@ -4105,7 +4490,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "1553500",
-    "global_total": 1555919
+    "global_total": 1555919,
+    "total": 1.555919
   },
   {
     "contractId": 404757,
@@ -4118,7 +4504,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1000000",
-    "global_total": 2121107
+    "global_total": 2121107,
+    "total": 2.121107
   },
   {
     "contractId": 404749,
@@ -4131,7 +4518,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "2390000000",
-    "global_total": 5069446367
+    "global_total": 5069446367,
+    "total": 5069.446367
   },
   {
     "contractId": 404735,
@@ -4144,7 +4532,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "5000000000",
-    "global_total": 10605536332
+    "global_total": 10605536332,
+    "total": 10605.536332
   },
   {
     "contractId": 404704,
@@ -4157,7 +4546,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1000000",
-    "global_total": 2121107
+    "global_total": 2121107,
+    "total": 2.121107
   },
   {
     "contractId": 404663,
@@ -4170,7 +4560,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "38610210000",
-    "global_total": 81896396990
+    "global_total": 81896396990,
+    "total": 81896.39699
   },
   {
     "contractId": 404655,
@@ -4183,7 +4574,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "7000000",
-    "global_total": 14847751
+    "global_total": 14847751,
+    "total": 14.847751
   },
   {
     "contractId": 404641,
@@ -4196,7 +4588,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "200000",
-    "global_total": 200311
+    "global_total": 200311,
+    "total": 0.200311
   },
   {
     "contractId": 404628,
@@ -4209,7 +4602,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "1552500",
-    "global_total": 1554917
+    "global_total": 1554917,
+    "total": 1.554917
   },
   {
     "contractId": 404595,
@@ -4222,7 +4616,8 @@
     "week": 1,
     "bonus": 0.22422145328719728,
     "global_initial": "1000000",
-    "global_total": 1224221
+    "global_total": 1224221,
+    "total": 1.224221
   },
   {
     "contractId": 404464,
@@ -4235,7 +4630,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "81127583828",
-    "global_total": 172080307566
+    "global_total": 172080307566,
+    "total": 172080.307566
   },
   {
     "contractId": 404447,
@@ -4248,7 +4644,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "633900000000",
-    "global_total": 1344569896194
+    "global_total": 1344569896194,
+    "total": 1344569.896194
   },
   {
     "contractId": 404424,
@@ -4261,7 +4658,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "27000000000",
-    "global_total": 57269896194
+    "global_total": 57269896194,
+    "total": 57269.896194
   },
   {
     "contractId": 404232,
@@ -4274,7 +4672,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "44500",
-    "global_total": 94389
+    "global_total": 94389,
+    "total": 0.094389
   },
   {
     "contractId": 404210,
@@ -4287,7 +4686,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1548500",
-    "global_total": 3284535
+    "global_total": 3284535,
+    "total": 3.284535
   },
   {
     "contractId": 404201,
@@ -4300,7 +4700,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "548500",
-    "global_total": 549354
+    "global_total": 549354,
+    "total": 0.549354
   },
   {
     "contractId": 404169,
@@ -4313,7 +4714,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "517554500",
-    "global_total": 518360381
+    "global_total": 518360381,
+    "total": 518.360381
   },
   {
     "contractId": 404069,
@@ -4326,7 +4728,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "27830000000",
-    "global_total": 27873333910
+    "global_total": 27873333910,
+    "total": 27873.33391
   },
   {
     "contractId": 404057,
@@ -4339,7 +4742,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "10000000000",
-    "global_total": 21211072664
+    "global_total": 21211072664,
+    "total": 21211.072664
   },
   {
     "contractId": 404044,
@@ -4352,7 +4756,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "551500",
-    "global_total": 1169791
+    "global_total": 1169791,
+    "total": 1.169791
   },
   {
     "contractId": 404022,
@@ -4365,7 +4770,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "9134500",
-    "global_total": 19375254
+    "global_total": 19375254,
+    "total": 19.375254
   },
   {
     "contractId": 404015,
@@ -4378,7 +4784,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "151000000",
-    "global_total": 320287197
+    "global_total": 320287197,
+    "total": 320.287197
   },
   {
     "contractId": 403906,
@@ -4391,7 +4798,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1550500",
-    "global_total": 3288777
+    "global_total": 3288777,
+    "total": 3.288777
   },
   {
     "contractId": 403899,
@@ -4404,7 +4812,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1554500",
-    "global_total": 3297261
+    "global_total": 3297261,
+    "total": 3.297261
   },
   {
     "contractId": 403778,
@@ -4417,7 +4826,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1549500",
-    "global_total": 3286656
+    "global_total": 3286656,
+    "total": 3.286656
   },
   {
     "contractId": 403688,
@@ -4430,7 +4840,8 @@
     "week": 1,
     "bonus": 0.18840830449826992,
     "global_initial": "1541500",
-    "global_total": 1831931
+    "global_total": 1831931,
+    "total": 1.831931
   },
   {
     "contractId": 403642,
@@ -4443,7 +4854,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "8128108500",
-    "global_total": 17240590002
+    "global_total": 17240590002,
+    "total": 17240.590002
   },
   {
     "contractId": 403628,
@@ -4456,7 +4868,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "37389000000",
-    "global_total": 79306079585
+    "global_total": 79306079585,
+    "total": 79306.079585
   },
   {
     "contractId": 403607,
@@ -4469,7 +4882,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "7995000000",
-    "global_total": 8007448962
+    "global_total": 8007448962,
+    "total": 8007.448962
   },
   {
     "contractId": 403590,
@@ -4482,7 +4896,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "3000000",
-    "global_total": 3004671
+    "global_total": 3004671,
+    "total": 3.004671
   },
   {
     "contractId": 403508,
@@ -4495,7 +4910,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "500000000",
-    "global_total": 1060553633
+    "global_total": 1060553633,
+    "total": 1060.553633
   },
   {
     "contractId": 403472,
@@ -4508,7 +4924,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "7489679500",
-    "global_total": 7501341631
+    "global_total": 7501341631,
+    "total": 7501.341631
   },
   {
     "contractId": 403271,
@@ -4521,7 +4938,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "1554500",
-    "global_total": 1556921
+    "global_total": 1556921,
+    "total": 1.556921
   },
   {
     "contractId": 403252,
@@ -4534,7 +4952,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "64537023500",
-    "global_total": 136889949500
+    "global_total": 136889949500,
+    "total": 136889.9495
   },
   {
     "contractId": 403216,
@@ -4547,7 +4966,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1967255465",
-    "global_total": 4172759862
+    "global_total": 4172759862,
+    "total": 4172.759862
   },
   {
     "contractId": 403126,
@@ -4560,7 +4980,8 @@
     "week": 1,
     "bonus": 0.01401384083044983,
     "global_initial": "2940059500",
-    "global_total": 2981261026
+    "global_total": 2981261026,
+    "total": 2981.261026
   },
   {
     "contractId": 403119,
@@ -4573,7 +4994,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "2649536500",
-    "global_total": 5619951123
+    "global_total": 5619951123,
+    "total": 5619.951123
   },
   {
     "contractId": 403108,
@@ -4586,7 +5008,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "1538500",
-    "global_total": 1540896
+    "global_total": 1540896,
+    "total": 1.540896
   },
   {
     "contractId": 403074,
@@ -4599,7 +5022,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "4000000000",
-    "global_total": 8484429066
+    "global_total": 8484429066,
+    "total": 8484.429066
   },
   {
     "contractId": 403061,
@@ -4612,7 +5036,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "4000000000",
-    "global_total": 8484429066
+    "global_total": 8484429066,
+    "total": 8484.429066
   },
   {
     "contractId": 403049,
@@ -4625,7 +5050,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1550000",
-    "global_total": 3287716
+    "global_total": 3287716,
+    "total": 3.287716
   },
   {
     "contractId": 403031,
@@ -4638,7 +5064,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "8000000000",
-    "global_total": 16968858131
+    "global_total": 16968858131,
+    "total": 16968.858131
   },
   {
     "contractId": 402945,
@@ -4651,7 +5078,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "8449701000",
-    "global_total": 17922722190
+    "global_total": 17922722190,
+    "total": 17922.72219
   },
   {
     "contractId": 402858,
@@ -4664,7 +5092,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1541500",
-    "global_total": 3269687
+    "global_total": 3269687,
+    "total": 3.269687
   },
   {
     "contractId": 402822,
@@ -4677,7 +5106,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "8644500",
-    "global_total": 8657960
+    "global_total": 8657960,
+    "total": 8.65796
   },
   {
     "contractId": 402813,
@@ -4690,7 +5120,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1000000",
-    "global_total": 2121107
+    "global_total": 2121107,
+    "total": 2.121107
   },
   {
     "contractId": 402806,
@@ -4703,7 +5134,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "300000",
-    "global_total": 300467
+    "global_total": 300467,
+    "total": 0.300467
   },
   {
     "contractId": 402744,
@@ -4716,7 +5148,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "21953991500",
-    "global_total": 46566770898
+    "global_total": 46566770898,
+    "total": 46566.770898
   },
   {
     "contractId": 402679,
@@ -4729,7 +5162,8 @@
     "week": 1,
     "bonus": 0.5847750865051903,
     "global_initial": "1553500",
-    "global_total": 2461948
+    "global_total": 2461948,
+    "total": 2.461948
   },
   {
     "contractId": 402532,
@@ -4742,7 +5176,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "7424457744",
-    "global_total": 15748071270
+    "global_total": 15748071270,
+    "total": 15748.07127
   },
   {
     "contractId": 402502,
@@ -4755,7 +5190,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "9000000000",
-    "global_total": 19089965398
+    "global_total": 19089965398,
+    "total": 19089.965398
   },
   {
     "contractId": 402480,
@@ -4768,7 +5204,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "1000000",
-    "global_total": 1001557
+    "global_total": 1001557,
+    "total": 1.001557
   },
   {
     "contractId": 402447,
@@ -4781,7 +5218,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "150000000",
-    "global_total": 150233564
+    "global_total": 150233564,
+    "total": 150.233564
   },
   {
     "contractId": 402433,
@@ -4794,7 +5232,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "10350458500",
-    "global_total": 21954432735
+    "global_total": 21954432735,
+    "total": 21954.432735
   },
   {
     "contractId": 402426,
@@ -4807,7 +5246,8 @@
     "week": 1,
     "bonus": 0.5847750865051903,
     "global_initial": "74000000000",
-    "global_total": 117273356401
+    "global_total": 117273356401,
+    "total": 117273.356401
   },
   {
     "contractId": 402418,
@@ -4820,7 +5260,8 @@
     "week": 1,
     "bonus": 0.5847750865051903,
     "global_initial": "84400000",
-    "global_total": 133755017
+    "global_total": 133755017,
+    "total": 133.755017
   },
   {
     "contractId": 402411,
@@ -4833,7 +5274,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "13000000",
-    "global_total": 27574394
+    "global_total": 27574394,
+    "total": 27.574394
   },
   {
     "contractId": 402286,
@@ -4846,7 +5288,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "4000000",
-    "global_total": 4006228
+    "global_total": 4006228,
+    "total": 4.006228
   },
   {
     "contractId": 402212,
@@ -4859,7 +5302,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1541500",
-    "global_total": 3269687
+    "global_total": 3269687,
+    "total": 3.269687
   },
   {
     "contractId": 401473,
@@ -4872,7 +5316,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "2000000",
-    "global_total": 2003114
+    "global_total": 2003114,
+    "total": 2.003114
   },
   {
     "contractId": 401338,
@@ -4885,7 +5330,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "38679124500",
-    "global_total": 82042572036
+    "global_total": 82042572036,
+    "total": 82042.572036
   },
   {
     "contractId": 401233,
@@ -4898,7 +5344,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "110000000000",
-    "global_total": 110171280277
+    "global_total": 110171280277,
+    "total": 110171.280277
   },
   {
     "contractId": 401188,
@@ -4911,7 +5358,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "20000000",
-    "global_total": 42422145
+    "global_total": 42422145,
+    "total": 42.422145
   },
   {
     "contractId": 401178,
@@ -4924,7 +5372,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1545500",
-    "global_total": 3278171
+    "global_total": 3278171,
+    "total": 3.278171
   },
   {
     "contractId": 401154,
@@ -4937,7 +5386,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "500000000",
-    "global_total": 1060553633
+    "global_total": 1060553633,
+    "total": 1060.553633
   },
   {
     "contractId": 401126,
@@ -4950,7 +5400,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "429000000000",
-    "global_total": 909955017301
+    "global_total": 909955017301,
+    "total": 909955.017301
   },
   {
     "contractId": 401103,
@@ -4963,7 +5414,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "10000042069",
-    "global_total": 21211161897
+    "global_total": 21211161897,
+    "total": 21211.161897
   },
   {
     "contractId": 401093,
@@ -4976,7 +5428,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "5102430000",
-    "global_total": 10822801349
+    "global_total": 10822801349,
+    "total": 10822.801349
   },
   {
     "contractId": 401084,
@@ -4989,7 +5442,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "45000000000",
-    "global_total": 95449826990
+    "global_total": 95449826990,
+    "total": 95449.82699
   },
   {
     "contractId": 401070,
@@ -5002,7 +5456,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "8000000",
-    "global_total": 8012457
+    "global_total": 8012457,
+    "total": 8.012457
   },
   {
     "contractId": 401047,
@@ -5015,7 +5470,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "100000000",
-    "global_total": 212110727
+    "global_total": 212110727,
+    "total": 212.110727
   },
   {
     "contractId": 401020,
@@ -5028,7 +5484,8 @@
     "week": 1,
     "bonus": 0.006228373702422145,
     "global_initial": "150000000000",
-    "global_total": 150934256055
+    "global_total": 150934256055,
+    "total": 150934.256055
   },
   {
     "contractId": 400997,
@@ -5041,7 +5498,8 @@
     "week": 1,
     "bonus": 1,
     "global_initial": "184779000000",
-    "global_total": 369558000000
+    "global_total": 369558000000,
+    "total": 369558
   },
   {
     "contractId": 400920,
@@ -5054,7 +5512,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "74900000000",
-    "global_total": 158870934256
+    "global_total": 158870934256,
+    "total": 158870.934256
   },
   {
     "contractId": 400851,
@@ -5067,7 +5526,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1553500",
-    "global_total": 3295140
+    "global_total": 3295140,
+    "total": 3.29514
   },
   {
     "contractId": 400844,
@@ -5080,7 +5540,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "17334000000",
-    "global_total": 36767273356
+    "global_total": 36767273356,
+    "total": 36767.273356
   },
   {
     "contractId": 400791,
@@ -5093,7 +5554,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1999998554500",
-    "global_total": 4242211466811
+    "global_total": 4242211466811,
+    "total": 4242211.466811
   },
   {
     "contractId": 400782,
@@ -5106,7 +5568,8 @@
     "week": 1,
     "bonus": 0.05605536332179932,
     "global_initial": "39071786500",
-    "global_total": 41261969688
+    "global_total": 41261969688,
+    "total": 41261.969688
   },
   {
     "contractId": 400755,
@@ -5119,7 +5582,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "120004196720",
-    "global_total": 254541773666
+    "global_total": 254541773666,
+    "total": 254541.773666
   },
   {
     "contractId": 400743,
@@ -5132,7 +5596,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "4255000000",
-    "global_total": 9025311419
+    "global_total": 9025311419,
+    "total": 9025.311419
   },
   {
     "contractId": 400736,
@@ -5145,7 +5610,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "31359506500",
-    "global_total": 66516877109
+    "global_total": 66516877109,
+    "total": 66516.877109
   },
   {
     "contractId": 400702,
@@ -5158,7 +5624,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1000000",
-    "global_total": 2121107
+    "global_total": 2121107,
+    "total": 2.121107
   },
   {
     "contractId": 400657,
@@ -5171,7 +5638,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "50000000000",
-    "global_total": 106055363322
+    "global_total": 106055363322,
+    "total": 106055.363322
   },
   {
     "contractId": 400632,
@@ -5184,7 +5652,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1553500",
-    "global_total": 3295140
+    "global_total": 3295140,
+    "total": 3.29514
   },
   {
     "contractId": 400622,
@@ -5197,7 +5666,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1548500",
-    "global_total": 3284535
+    "global_total": 3284535,
+    "total": 3.284535
   },
   {
     "contractId": 400615,
@@ -5210,7 +5680,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "90000000000",
-    "global_total": 190899653979
+    "global_total": 190899653979,
+    "total": 190899.653979
   },
   {
     "contractId": 400608,
@@ -5223,7 +5694,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "2560000000",
-    "global_total": 5430034602
+    "global_total": 5430034602,
+    "total": 5430.034602
   },
   {
     "contractId": 400590,
@@ -5236,7 +5708,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "349000000",
-    "global_total": 740266436
+    "global_total": 740266436,
+    "total": 740.266436
   },
   {
     "contractId": 400562,
@@ -5249,7 +5722,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "530712500",
-    "global_total": 531538869
+    "global_total": 531538869,
+    "total": 531.538869
   },
   {
     "contractId": 400542,
@@ -5262,7 +5736,8 @@
     "week": 1,
     "bonus": 0.6782006920415224,
     "global_initial": "12530884500",
-    "global_total": 21029339040
+    "global_total": 21029339040,
+    "total": 21029.33904
   },
   {
     "contractId": 400534,
@@ -5275,7 +5750,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "12310000000",
-    "global_total": 26110830450
+    "global_total": 26110830450,
+    "total": 26110.83045
   },
   {
     "contractId": 400521,
@@ -5288,7 +5764,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "990000000",
-    "global_total": 2099896194
+    "global_total": 2099896194,
+    "total": 2099.896194
   },
   {
     "contractId": 400509,
@@ -5301,7 +5778,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "4742192000",
-    "global_total": 4749576036
+    "global_total": 4749576036,
+    "total": 4749.576036
   },
   {
     "contractId": 400499,
@@ -5314,7 +5792,8 @@
     "week": 1,
     "bonus": 0.0015570934256055363,
     "global_initial": "1000000000",
-    "global_total": 1001557093
+    "global_total": 1001557093,
+    "total": 1001.557093
   },
   {
     "contractId": 400491,
@@ -5327,7 +5806,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "40345554500",
-    "global_total": 85577248818
+    "global_total": 85577248818,
+    "total": 85577.248818
   },
   {
     "contractId": 400476,
@@ -5340,7 +5820,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "120000000000",
-    "global_total": 254532871972
+    "global_total": 254532871972,
+    "total": 254532.871972
   },
   {
     "contractId": 400466,
@@ -5353,7 +5834,8 @@
     "week": 1,
     "bonus": 0.7785467128027681,
     "global_initial": "5881054914",
-    "global_total": 10459730885
+    "global_total": 10459730885,
+    "total": 10459.730885
   },
   {
     "contractId": 400458,
@@ -5366,7 +5848,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "113022385500",
-    "global_total": 239732603154
+    "global_total": 239732603154,
+    "total": 239732.603154
   },
   {
     "contractId": 400451,
@@ -5379,7 +5862,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "72186293507",
-    "global_total": 153114871695
+    "global_total": 153114871695,
+    "total": 153114.871695
   },
   {
     "contractId": 400444,
@@ -5392,7 +5876,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1000000",
-    "global_total": 2121107
+    "global_total": 2121107,
+    "total": 2.121107
   },
   {
     "contractId": 400437,
@@ -5405,7 +5890,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "104177388274",
-    "global_total": 220971415266
+    "global_total": 220971415266,
+    "total": 220971.415266
   },
   {
     "contractId": 400429,
@@ -5418,7 +5904,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1000000000",
-    "global_total": 2121107266
+    "global_total": 2121107266,
+    "total": 2121.107266
   },
   {
     "contractId": 400422,
@@ -5431,7 +5918,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "80544000000",
-    "global_total": 170842463668
+    "global_total": 170842463668,
+    "total": 170842.463668
   },
   {
     "contractId": 400415,
@@ -5444,7 +5932,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "20676698500",
-    "global_total": 43857495434
+    "global_total": 43857495434,
+    "total": 43857.495434
   },
   {
     "contractId": 400404,
@@ -5457,7 +5946,8 @@
     "week": 1,
     "bonus": 0.02491349480968858,
     "global_initial": "340000",
-    "global_total": 348471
+    "global_total": 348471,
+    "total": 0.348471
   },
   {
     "contractId": 400397,
@@ -5470,7 +5960,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "24000000000",
-    "global_total": 50906574394
+    "global_total": 50906574394,
+    "total": 50906.574394
   },
   {
     "contractId": 400390,
@@ -5483,7 +5974,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "75705000000",
-    "global_total": 160578425606
+    "global_total": 160578425606,
+    "total": 160578.425606
   },
   {
     "contractId": 400382,
@@ -5496,7 +5988,8 @@
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "42769573500",
-    "global_total": 90718853133
+    "global_total": 90718853133,
+    "total": 90718.853133
   },
   {
     "contractId": 400364,
@@ -5504,11 +5997,12 @@
     "creator": "U3JFLNF55P4X2GTISLPD2DEBEXHJCG6EK7FX4EPCP4WBFRHEX3KUEMLYKE",
     "global_funder": "62TIVJSZOS4DRSSYYDDZELQAGFYQC5JWKCHRBPPYKTZN2OOOXTGLB5ZJ4E",
     "global_funding": null,
-    "global_owner": "G3MSA75OZEJTCCENOJDLDJK7UD7E2K5DNC7FVHCNOV7E3I4DTXTOWDUIFQ",
+    "global_owner": "3S5QBFCYMWWVIKKRJZYTVS3UOQ2UWHRBH4TXG3VZA7VQMKN66D2DYJY3MQ",
     "global_period": 18,
     "week": 1,
     "bonus": 1.1211072664359862,
     "global_initial": "1000000",
-    "global_total": 2121107
+    "global_total": 2121107,
+    "total": 2.121107
   }
 ]
