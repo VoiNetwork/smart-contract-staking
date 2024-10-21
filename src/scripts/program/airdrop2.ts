@@ -4,7 +4,10 @@ import csv from "csv-parser";
 import algosdk from "algosdk";
 import * as crypto from "crypto";
 import { APP_SPEC as AirdropFactorySpec } from "../clients/AirdropFactoryClient.js";
-import { APP_SPEC as AirdropSpec } from "../clients/AirdropClient.js";
+import {
+  AirdropClient,
+  APP_SPEC as AirdropSpec,
+} from "../clients/AirdropClient.js";
 import * as dotenv from "dotenv";
 import { CONTRACT, abi } from "ulujs";
 import moment from "moment";
@@ -228,7 +231,7 @@ program
         console.log("Deploying contracts ...");
         const funder = options.funder || addr; // funder is provided or defaults to deployer
         console.log(`Funder: "${funder}"`);
-        if(options.dryrun) {
+        if (options.dryrun) {
           console.log("=== DRY RUN ===");
         }
         for (const row of results) {
@@ -309,7 +312,11 @@ program
 program
   .command("check")
   .description("Check that all are set up")
-  .option("-f, --file <path>", "Path to the CSV file", "data/airdrop-itnp2.csv")
+  .option(
+    "-f, --file <path>",
+    "Path to the CSV file",
+    "data/airdrop-itnp2c.csv"
+  )
   .option(
     "-e, --error-log <path>",
     "Path to the error log file",
@@ -346,35 +353,29 @@ program
         const contracts = [];
         for (const row of results) {
           const initial = BigInt(
-            new BigNumber(row.MainnetP0)
+            new BigNumber(row.estimatedRewards)
               .multipliedBy(new BigNumber(10).pow(6))
               .toFixed(0)
           ).toString();
-          const account = accounts.find(
-            (d: any) =>
-              d.global_owner === row.Address && d.global_initial === initial
-          );
-          if (account) {
-            console.log(`FOUND ${row.Address} ${row.MainnetP0}`);
-            const contractId = account.contractId;
-            const period = Number(account.global_period || 0);
-            periodCounts[period] += 1;
-            const total = computeCompoundedInterest(
-              row.MainnetP0,
-              lookupRate(period),
-              period
-            ).toFixed(6);
-            periodTotals[period] += Number(total);
-            sum += Number(total);
-            const payload = {
-              ...row,
-              initial: account.global_initial,
-              contractId,
-              period,
-              total,
-            };
-            contracts.push(payload);
-          }
+          console.log(`FOUND ${row.global_owner} ${row.estimatedRewards}`);
+          const contractId = row.contractId;
+          const period = Number(row.global_period || 0);
+          periodCounts[period] += 1;
+          const total = computeCompoundedInterest(
+            row.estimatedRewards,
+            lookupRate(period),
+            period
+          ).toFixed(6);
+          periodTotals[period] += Number(total);
+          sum += Number(total);
+          const payload = {
+            ...row,
+            initial,
+            contractId,
+            period,
+            total,
+          };
+          contracts.push(payload);
         }
         console.log(`MISSING ${results.length - contracts.length} CONTRACTS`);
         console.log(`FOUND ${contracts.length} CONTRACTS`);
@@ -404,13 +405,14 @@ program
     "Path to the error log file",
     "tmp/error.log"
   )
-  .option("--dryrun <boolean>", "No dry run")
+  .option("--funder <address>", "Funder's address")
+  .option("--dryrun", "No dry run", false)
   .action(async (options) => {
     const parentOptions = program.opts();
     const { ALGO_SERVER, ALGO_INDEXER_SERVER } = networks(
       parentOptions.network
     );
-    const dryrun = (options.dryrun ?? "true") === "true";
+    const dryrun = options.dryrun;
     const funding = Number(options.funding);
     const infile = options.file;
 
@@ -460,14 +462,31 @@ program
         continue;
       }
 
-      const globalState = appInfo.application.params["global-state"];
+      const client = new AirdropClient(
+        {
+          resolveBy: "id",
+          id: ctcInfo,
+          sender: {
+            addr,
+            sk,
+          },
+        },
+        algodClient
+      );
 
-      const globalFunding =
-        globalState.find((d: any) => d.key === "ZnVuZGluZw==")?.value?.uint ||
-        0;
+      const gstate = await client.getGlobalState();
 
-      const globalTotal =
-        globalState.find((d: any) => d.key === "dG90YWw=")?.value?.uint || 0;
+      const globalFunding = gstate.funding?.asNumber() || 0;
+      const globalTotal = gstate.total?.asNumber() || 0;
+      const globalFunder = algosdk.encodeAddress(
+        gstate.funder?.asByteArray() || new Uint8Array(0)
+      );
+      if (globalFunder !== (options.funder || addr)) {
+        console.log(
+          `FUNDER MISMATCH ${ctcInfo} ${row.Address} ${globalFunder}`
+        );
+        continue;
+      }
 
       if (globalFunding !== 0) {
         console.log(
@@ -475,8 +494,27 @@ program
         );
         continue;
       }
+
+      const address = options.funder || addr;
+
+      const accInfo = await algodClient.accountInformation(address).do();
+      const amount = accInfo.amount;
+      const minBalance = accInfo["min-balance"];
+      const availableBalance = Math.max(amount - minBalance - 2000, 0);
+
+      const fillAmount = BigInt(
+        new BigNumber(row.total).multipliedBy(1e6).toFixed(0)
+      );
+
+      if (fillAmount > BigInt(availableBalance)) {
+        console.log(
+          `INSUFFICIENT BALANCE ${ctcInfo} ${address} ${row.period} ${row.total} ${fillAmount} ${availableBalance}`
+        );
+        continue;
+      }
+
       const ci = new CONTRACT(ctcInfo, algodClient, indexerClient, abi.custom, {
-        addr,
+        addr: options.funder || addr,
         sk: new Uint8Array(0),
       });
       const builder = {
@@ -491,7 +529,7 @@ program
             events: [],
           },
           {
-            addr,
+            addr: options.funder || addr,
             sk: new Uint8Array(0),
           },
           true,
@@ -502,9 +540,7 @@ program
       const buildN = [];
       buildN.push({
         ...(await builder.staker.fill())?.obj,
-        payment:
-          BigInt(new BigNumber(row.total).multipliedBy(1e6).toFixed(0)) /
-          100000000n, // remove later
+        payment: BigInt(new BigNumber(row.total).multipliedBy(1e6).toFixed(0)),
       });
       buildN.push({
         ...(await builder.staker.set_funding(funding))?.obj,
@@ -518,11 +554,11 @@ program
           //await signSendAndConfirm(customR.txns, sk);
         }
         console.log(
-          `SUCCESS ${ctcInfo} ${row.Address} ${row.period} ${row.total}`
+          `SUCCESS ${ctcInfo} ${row.global_owner} ${row.period} ${row.total}`
         );
       } else {
         console.log(
-          `FAILURE ${ctcInfo} ${row.Address} ${row.period} ${row.total} ${customR.error}`
+          `FAILURE ${ctcInfo} ${row.global_owner} ${row.period} ${row.total}`
         );
       }
     }

@@ -4,12 +4,17 @@ import fs from "fs";
 import csv from "csv-parser";
 import algosdk from "algosdk";
 import { APP_SPEC as AirdropFactorySpec } from "../clients/AirdropFactoryClient.js";
-import { APP_SPEC as AirdropSpec } from "../clients/AirdropClient.js";
+import {
+  AirdropClient,
+  APP_SPEC as AirdropSpec,
+} from "../clients/AirdropClient.js";
 import * as dotenv from "dotenv";
 import { CONTRACT, abi } from "ulujs";
 import moment from "moment";
 import BigNumber from "bignumber.js";
 import axios from "axios";
+import { parse } from "json2csv";
+import { airdropGetState } from "../command.js";
 dotenv.config({ path: "../.env" });
 
 // Usage: deploy-itnp1 [options] [command]
@@ -347,10 +352,12 @@ program
     "Path to the output file",
     "tmp/airdrop-itnp1-payload.json"
   )
+  .option("-a --apid <number>", "Application ID", "0")
   .action(async (options) => {
     const parentOptions = program.opts();
     const { ARC72_INDEXER_SERVER } = networks(parentOptions.network);
     const { CTC_INFO_FACTORY_AIRDROP } = process.env;
+    const apid = Number(options.apid || CTC_INFO_FACTORY_AIRDROP);
     const {
       data: { accounts },
     } = await axios.get(`${ARC72_INDEXER_SERVER}/v1/scs/accounts`, {
@@ -412,7 +419,17 @@ program
             }`
           );
         }
+        // Write the JSON to a file
         fs.writeFileSync(options.output, JSON.stringify(contracts, null, 2));
+        // Convert JSON to CSV
+        try {
+          const csv = parse(contracts);
+          // Write the CSV to a file
+          fs.writeFileSync(`${options.output}.csv`, csv);
+          console.log("CSV file successfully written!");
+        } catch (err) {
+          console.error(err);
+        }
       });
   });
 
@@ -420,6 +437,7 @@ program
   .command("fill")
   .description("Fill the contracts")
   .requiredOption("--funding <number>", "Funding timestamp")
+  .option("-g, --funder <address>", "Funder's address", "")
   .option(
     "-f, --file <path>",
     "Path to the JSON file",
@@ -430,13 +448,13 @@ program
     "Path to the error log file",
     "tmp/error.log"
   )
-  .option("--dryrun <boolean>", "No dry run")
+  .option("--dryrun", "No dry run", false)
   .action(async (options) => {
     const parentOptions = program.opts();
     const { ALGO_SERVER, ALGO_INDEXER_SERVER } = networks(
       parentOptions.network
     );
-    const dryrun = (options.dryrun ?? "true") === "true";
+    const dryrun = options.dryrun;
     const funding = Number(options.funding);
     const infile = options.file;
 
@@ -486,23 +504,64 @@ program
         continue;
       }
 
-      const globalState = appInfo.application.params["global-state"];
+      const client = new AirdropClient(
+        {
+          resolveBy: "id",
+          id: ctcInfo,
+          sender: {
+            addr,
+            sk,
+          },
+        },
+        algodClient
+      );
 
-      const globalFunding =
-        globalState.find((d: any) => d.key === "ZnVuZGluZw==")?.value?.uint ||
-        0;
+      const gstate = await client.getGlobalState();
 
-      const globalTotal =
-        globalState.find((d: any) => d.key === "dG90YWw=")?.value?.uint || 0;
+      const globalFunding = gstate.funding?.asNumber() || 0;
+      const globalTotal = gstate.total?.asNumber() || 0;
+      const globalFunder = algosdk.encodeAddress(
+        gstate.funder?.asByteArray() || new Uint8Array(0)
+      );
 
-      if (globalFunding !== 0) {
+      // funder mismatch
+
+      if (globalFunder !== (options.funder || addr)) {
         console.log(
-          `ALREADY FUNDED ${ctcInfo} ${row.Address} ${globalTotal} ${globalTotal}`
+          `FUNDER MISMATCH ${ctcInfo} ${row.Address} ${globalFunder}`
         );
         continue;
       }
+
+      // prevent double fill
+
+      if (globalFunding > 0 || globalTotal > 0) {
+        console.log(
+          `ALREADY FUNDED ${ctcInfo} ${row.Address} ${globalFunding}`
+        );
+        continue;
+      }
+
+      const address = options.funder || addr;
+
+      const accInfo = await algodClient.accountInformation(address).do();
+      const amount = accInfo.amount;
+      const minBalance = accInfo["min-balance"];
+      const availableBalance = Math.max(amount - minBalance - 2000, 0);
+
+      const fillAmount = BigInt(
+        new BigNumber(row.total).multipliedBy(1e6).toFixed(0)
+      );
+
+      if (fillAmount > BigInt(availableBalance)) {
+        console.log(
+          `INSUFFICIENT BALANCE ${ctcInfo} ${row.Address} ${row.period} ${row.total} ${fillAmount} ${availableBalance}`
+        );
+        continue;
+      }
+
       const ci = new CONTRACT(ctcInfo, algodClient, indexerClient, abi.custom, {
-        addr,
+        addr: address,
         sk: new Uint8Array(0),
       });
       const builder = {
@@ -517,7 +576,7 @@ program
             events: [],
           },
           {
-            addr,
+            addr: address,
             sk: new Uint8Array(0),
           },
           true,
@@ -528,9 +587,7 @@ program
       const buildN = [];
       buildN.push({
         ...(await builder.staker.fill())?.obj,
-        payment:
-          BigInt(new BigNumber(row.total).multipliedBy(1e6).toFixed(0)) /
-          100000000n, // remove later
+        payment: fillAmount,
       });
       buildN.push({
         ...(await builder.staker.set_funding(funding))?.obj,

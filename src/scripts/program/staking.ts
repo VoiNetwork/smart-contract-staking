@@ -3,7 +3,10 @@ import fs from "fs";
 import csv from "csv-parser";
 import algosdk from "algosdk";
 import { APP_SPEC as AirdropFactorySpec } from "../clients/AirdropFactoryClient.js";
-import { APP_SPEC as AirdropSpec } from "../clients/AirdropClient.js";
+import {
+  AirdropClient,
+  APP_SPEC as AirdropSpec,
+} from "../clients/AirdropClient.js";
 import * as dotenv from "dotenv";
 import { CONTRACT, abi } from "ulujs";
 import moment from "moment";
@@ -43,6 +46,53 @@ const lookupRate = (period: number) => {
       return "0.00";
   }
 };
+
+function computeLockupMultiplier(B2: number, R1: number) {
+  if (B2 <= 12) {
+    return 0.45 * Math.pow(B2 / R1, 2);
+  } else {
+    return Math.pow(B2 / R1, 2);
+  }
+}
+
+function computeTimingMultiplier(week: number) {
+  switch (week) {
+    case 1:
+      return 1;
+    case 2:
+      return 0.8;
+    case 3:
+      return 0.6;
+    case 4:
+      return 0.4;
+    default:
+      return 0;
+  }
+}
+
+const periodLimit = 17;
+
+const computeRate = (week: number) => (period: number) => {
+  const lockupMultiplier = computeLockupMultiplier(period, periodLimit);
+  const timingMultiplier = computeTimingMultiplier(week);
+  return lockupMultiplier * timingMultiplier;
+};
+
+function getWeeksFromTime(
+  startTime: Date,
+  currentUnixTime = moment().unix()
+): number {
+  const startUnixTime = moment(startTime).unix(); // Start time in Unix timestamp
+
+  const secondsPerWeek = 60 * 60 * 24 * 7;
+
+  const timeDifference = currentUnixTime - startUnixTime;
+  const weeksPassed = Math.floor(timeDifference / secondsPerWeek);
+
+  return weeksPassed;
+}
+
+const startTime = new Date("2024-09-30T00:00:00Z"); // start of week 1
 
 const networks = (networkName: string) => {
   switch (networkName) {
@@ -100,7 +150,6 @@ program
     program.help();
   });
 
-
 program
   .command("check")
   .description("Check that all are set up")
@@ -117,15 +166,45 @@ program
   .action(async (options) => {
     const parentOptions = program.opts();
     const { ARC72_INDEXER_SERVER } = networks(parentOptions.network);
-    const { CTC_INFO_FACTORY_STAKING } = process.env;
+    const ctcInfoFactoryStaking = 400350;
     const {
       data: { accounts },
     } = await axios.get(`${ARC72_INDEXER_SERVER}/v1/scs/accounts`, {
       params: {
-        parentId: CTC_INFO_FACTORY_STAKING,
+        parentId: ctcInfoFactoryStaking,
       },
     });
     console.log(`FOUND ${accounts.length} ACCOUNTS`);
+    const payload = [];
+    for (const account of accounts) {
+      const { global_owner, global_deadline, global_total, global_period } =
+        account;
+      const period = global_period + 1;
+      const week = getWeeksFromTime(startTime, global_deadline) + 1;
+      const rate = computeRate(week);
+      const bonus = rate(period);
+      const total = Math.round(
+        Number(global_total) + Number(global_total) * bonus
+      );
+      console.log(
+        `ACCOUNT ${global_owner} ${week} ${global_deadline} ${global_total} ${bonus} ${total}`
+      );
+      payload.push({
+        contractId: account.contractId,
+        contractAddress: account.contractAddress,
+        creator: account.creator,
+        global_funder: account.global_funder,
+        global_funding: account.global_funding,
+        global_owner: account.global_owner,
+        global_period: period,
+        week,
+        bonus,
+        global_initial: account.global_initial,
+        global_total: total,
+        total: total / 1e6,
+      });
+    }
+    fs.writeFileSync(options.output, JSON.stringify(payload, null, 2));
   });
 
 program
@@ -135,20 +214,21 @@ program
   .option(
     "-f, --file <path>",
     "Path to the JSON file",
-    "tmp/airdrop-itnp1-payload.json"
+    "tmp/staking-payload.json"
   )
   .option(
     "-e, --error-log <path>",
     "Path to the error log file",
     "tmp/error.log"
   )
-  .option("--dryrun <boolean>", "No dry run")
+  .option("--funder <address>", "Funder's address")
+  .option("--dryrun", "No dry run", false)
   .action(async (options) => {
     const parentOptions = program.opts();
     const { ALGO_SERVER, ALGO_INDEXER_SERVER } = networks(
       parentOptions.network
     );
-    const dryrun = (options.dryrun ?? "true") === "true";
+    const dryrun = options.dryrun;
     const funding = Number(options.funding);
     const infile = options.file;
 
@@ -198,14 +278,31 @@ program
         continue;
       }
 
-      const globalState = appInfo.application.params["global-state"];
+      const client = new AirdropClient(
+        {
+          resolveBy: "id",
+          id: ctcInfo,
+          sender: {
+            addr,
+            sk,
+          },
+        },
+        algodClient
+      );
 
-      const globalFunding =
-        globalState.find((d: any) => d.key === "ZnVuZGluZw==")?.value?.uint ||
-        0;
+      const gstate = await client.getGlobalState();
 
-      const globalTotal =
-        globalState.find((d: any) => d.key === "dG90YWw=")?.value?.uint || 0;
+      const globalFunding = gstate.funding?.asNumber() || 0;
+      const globalTotal = gstate.total?.asNumber() || 0;
+      const globalFunder = algosdk.encodeAddress(
+        gstate.funder?.asByteArray() || new Uint8Array(0)
+      );
+      if (globalFunder !== (options.funder || addr)) {
+        console.log(
+          `FUNDER MISMATCH ${ctcInfo} ${row.Address} ${globalFunder}`
+        );
+        continue;
+      }
 
       if (globalFunding !== 0) {
         console.log(
@@ -213,8 +310,26 @@ program
         );
         continue;
       }
+      const address = options.funder || addr;
+
+      const accInfo = await algodClient.accountInformation(address).do();
+      const amount = accInfo.amount;
+      const minBalance = accInfo["min-balance"];
+      const availableBalance = Math.max(amount - minBalance - 2000, 0);
+
+      const fillAmount = BigInt(
+        new BigNumber(row.total).multipliedBy(1e6).toFixed(0)
+      );
+
+      if (fillAmount > BigInt(availableBalance)) {
+        console.log(
+          `INSUFFICIENT BALANCE ${ctcInfo} ${address} ${row.period} ${row.total} ${fillAmount} ${availableBalance}`
+        );
+        continue;
+      }
+
       const ci = new CONTRACT(ctcInfo, algodClient, indexerClient, abi.custom, {
-        addr,
+        addr: options.funder || addr,
         sk: new Uint8Array(0),
       });
       const builder = {
@@ -229,7 +344,7 @@ program
             events: [],
           },
           {
-            addr,
+            addr: options.funder || addr,
             sk: new Uint8Array(0),
           },
           true,
@@ -240,9 +355,7 @@ program
       const buildN = [];
       buildN.push({
         ...(await builder.staker.fill())?.obj,
-        payment:
-          BigInt(new BigNumber(row.total).multipliedBy(1e6).toFixed(0)) /
-          100000000n, // remove later
+        payment: row.global_total,
       });
       buildN.push({
         ...(await builder.staker.set_funding(funding))?.obj,
@@ -256,11 +369,11 @@ program
           //await signSendAndConfirm(customR.txns, sk);
         }
         console.log(
-          `SUCCESS ${ctcInfo} ${row.Address} ${row.period} ${row.total}`
+          `SUCCESS ${ctcInfo} ${row.global_owner} ${row.week} ${row.bonus} ${row.global_period} ${row.global_initial} ${row.global_total}`
         );
       } else {
         console.log(
-          `FAILURE ${ctcInfo} ${row.Address} ${row.period} ${row.total} ${customR.error}`
+          `FAILURE ${ctcInfo} ${row.global_owner} ${row.week} ${row.bonus} ${row.global_period} ${row.global_initial} ${row.global_total}`
         );
       }
     }
