@@ -3,7 +3,10 @@ import fs from "fs";
 import csv from "csv-parser";
 import algosdk from "algosdk";
 import { APP_SPEC as AirdropFactorySpec } from "../clients/AirdropFactoryClient.js";
-import { APP_SPEC as AirdropSpec } from "../clients/AirdropClient.js";
+import {
+  AirdropClient,
+  APP_SPEC as AirdropSpec,
+} from "../clients/AirdropClient.js";
 import * as dotenv from "dotenv";
 import { CONTRACT, abi } from "ulujs";
 import moment from "moment";
@@ -275,14 +278,31 @@ program
         continue;
       }
 
-      const globalState = appInfo.application.params["global-state"];
+      const client = new AirdropClient(
+        {
+          resolveBy: "id",
+          id: ctcInfo,
+          sender: {
+            addr,
+            sk,
+          },
+        },
+        algodClient
+      );
 
-      const globalFunding =
-        globalState.find((d: any) => d.key === "ZnVuZGluZw==")?.value?.uint ||
-        0;
+      const gstate = await client.getGlobalState();
 
-      const globalTotal =
-        globalState.find((d: any) => d.key === "dG90YWw=")?.value?.uint || 0;
+      const globalFunding = gstate.funding?.asNumber() || 0;
+      const globalTotal = gstate.total?.asNumber() || 0;
+      const globalFunder = algosdk.encodeAddress(
+        gstate.funder?.asByteArray() || new Uint8Array(0)
+      );
+      if (globalFunder !== (options.funder || addr)) {
+        console.log(
+          `FUNDER MISMATCH ${ctcInfo} ${row.Address} ${globalFunder}`
+        );
+        continue;
+      }
 
       if (globalFunding !== 0) {
         console.log(
@@ -290,6 +310,24 @@ program
         );
         continue;
       }
+      const address = options.funder || addr;
+
+      const accInfo = await algodClient.accountInformation(address).do();
+      const amount = accInfo.amount;
+      const minBalance = accInfo["min-balance"];
+      const availableBalance = Math.max(amount - minBalance - 2000, 0);
+
+      const fillAmount = BigInt(
+        new BigNumber(row.total).multipliedBy(1e6).toFixed(0)
+      );
+
+      if (fillAmount > BigInt(availableBalance)) {
+        console.log(
+          `INSUFFICIENT BALANCE ${ctcInfo} ${address} ${row.period} ${row.total} ${fillAmount} ${availableBalance}`
+        );
+        continue;
+      }
+
       const ci = new CONTRACT(ctcInfo, algodClient, indexerClient, abi.custom, {
         addr: options.funder || addr,
         sk: new Uint8Array(0),
