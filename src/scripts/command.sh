@@ -2,7 +2,7 @@
 scs-cli() {
   echo ${1}
   case ${1} in 
-    airdrop|airdrop2|staking) {
+    airdrop|airdrop2|staking|compensation) {
       echo ${@}
       cd program
       node ${1}.js ${@:2}
