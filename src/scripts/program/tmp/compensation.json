@@ -1,0 +1,86 @@
+[
+  {
+    "contractId": "1",
+    "funding": "1730073600",
+    "address": "4GA6CVGDJHXKXEG4IX5LIHLVI547UK56X7TV5SDVLPXWRDWVLMOFAIKH7E",
+    "amount": "50000"
+  },
+  {
+    "contractId": "1",
+    "funding": "1730073600",
+    "address": "4GBLBF4UX25F2RQVYNJWSFE6SX4UOWPJTFZP5EDKIEUSDVKTQLGUZWBRIE",
+    "amount": "27208.75959"
+  },
+  {
+    "contractId": "1",
+    "funding": "1730073600",
+    "address": "ALGONAUTSPIUHDCX3SLFXOFDUKOE4VY36XV4JX2JHQTWJNKVBKPEBQACRY",
+    "amount": "31459.37248"
+  },
+  {
+    "contractId": "1",
+    "funding": "1730073600",
+    "address": "BLBIDUUDUJXHR424SXS2YRDSRLLNKIFLGAH25PSVIVBKDBMLCKP2V7MFR4",
+    "amount": "17542.09195"
+  },
+  {
+    "contractId": "1",
+    "funding": "1730073600",
+    "address": "CSPIHYASDA5OMAZ4BX6VMZ7IYEZFX3WXSWWK4RA2H4KLSHTISURHRVKD2I",
+    "amount": "40132.9204"
+  },
+  {
+    "contractId": "1",
+    "funding": "1730073600",
+    "address": "DLDOGORMUQ24SEMVU5DYEV57KCHIO3I4VUT3NHF32DDAYUEZ473F3W5FWE",
+    "amount": "19620.53886"
+  },
+  {
+    "contractId": "1",
+    "funding": "1730073600",
+    "address": "G7LZHA3IISOSMCYUGY36TAXNECVICXBJIOGDMPD4UHCQYTDSGZH5XMIGCY",
+    "amount": "604.639102"
+  },
+  {
+    "contractId": "1",
+    "funding": "1730073600",
+    "address": "M7AEXJL6CPLY5T6WWHEJRWRCMY76P5MZEQSUPXZQGX2JKZT4DYAQVOO6QY",
+    "amount": "604.639102"
+  },
+  {
+    "contractId": "1",
+    "funding": "1730073600",
+    "address": "NJ2ZL453WEYBOCJQQPEYWANE2WULO2ICOWHQZWOTNL63TXQOMWZYOGPA5Y",
+    "amount": "50000"
+  },
+  {
+    "contractId": "1",
+    "funding": "1730073600",
+    "address": "P6R326CBOUECOYPDDSMEACF4KCLWXQ5LNKJ3UONIGIZNNOKP5KVACD3TCI",
+    "amount": "8994.006643"
+  },
+  {
+    "contractId": "1",
+    "funding": "1730073600",
+    "address": "PW5CEC44ELLZBZ5KGJJ7WMTD54N2FJIZ2RBQC5IRPKFYZETAKQKKJQG3ZY",
+    "amount": "17874.64345"
+  },
+  {
+    "contractId": "1",
+    "funding": "1730073600",
+    "address": "WA5YEJ3HC5WSRJTMCDWA7PJBR2TJAOMS5XNW5QFWTFC7JZ3FRORJDN5LDI",
+    "amount": "83.137877"
+  },
+  {
+    "contractId": "1",
+    "funding": "1730073600",
+    "address": "WHNTB6IGOEH52PSQIFVHBKWVHFDCZG2DRTYQ3TVI2DGCECVZWL7MMTBDO4",
+    "amount": "50000"
+  },
+  {
+    "contractId": "1",
+    "funding": "1730073600",
+    "address": "XLPYIBUNNCKPSSFJCNDG5KEPJYOQZWBMPQUCOCHL3EUXKX4E6EHW75ILL4",
+    "amount": "13906.69935"
+  }
+]

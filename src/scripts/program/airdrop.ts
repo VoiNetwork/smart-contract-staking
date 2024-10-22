@@ -14,7 +14,6 @@ import moment from "moment";
 import BigNumber from "bignumber.js";
 import axios from "axios";
 import { parse } from "json2csv";
-import { airdropGetState } from "../command.js";
 dotenv.config({ path: "../.env" });
 
 // Usage: deploy-itnp1 [options] [command]
