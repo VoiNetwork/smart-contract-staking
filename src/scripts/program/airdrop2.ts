@@ -15,6 +15,15 @@ import BigNumber from "bignumber.js";
 import axios from "axios";
 dotenv.config({ path: "../.env" });
 
+const makeSpec = (methods: any) => {
+  return {
+    name: "",
+    desc: "",
+    methods,
+    events: [],
+  };
+};
+
 function generateSHA256Hash(filePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const hash = crypto.createHash("sha256");
@@ -307,6 +316,192 @@ program
       .on("error", (e) => {
         writeErrorToFile(e, options.errorLog);
       });
+  });
+
+program
+  .command("check-kill")
+  .description("Check that all are set up")
+  .option(
+    "-f, --file <path>",
+    "Path to the CSV file",
+    "data/airdrop-itnp2c.csv"
+  )
+  .option(
+    "-e, --error-log <path>",
+    "Path to the error log file",
+    "tmp/error.log"
+  )
+  .option(
+    "-o, --output <path>",
+    "Path to the output file",
+    "tmp/airdrop-itnp2-kill-payload.json"
+  )
+  .action(async (options) => {
+    const parentOptions = program.opts();
+    const { ARC72_INDEXER_SERVER } = networks(parentOptions.network);
+    const { CTC_INFO_FACTORY_AIRDROP } = process.env;
+    const {
+      data: { accounts },
+    } = await axios.get(`${ARC72_INDEXER_SERVER}/v1/scs/accounts`, {
+      params: {
+        parentId: CTC_INFO_FACTORY_AIRDROP,
+      },
+    });
+    const phase2Accounts = new Set(
+      accounts
+        .filter((d: any) => d.global_initial === "0")
+        .map((d: any) => d.contractId)
+        .map(Number)
+    );
+    console.log(`FOUND ${phase2Accounts.size} ACCOUNTS`);
+    fs.createReadStream(options.file)
+      .pipe(csv())
+      .on("data", (row) => {
+        const { contractId } = row;
+        if (phase2Accounts.has(Number(contractId))) {
+          phase2Accounts.delete(Number(contractId));
+        }
+      })
+      .on("end", async () => {
+        console.log("CSV file successfully processed");
+        console.log(phase2Accounts.size);
+        const killAccounts = [];
+        for (const contractId of phase2Accounts) {
+          const account = accounts.find(
+            (d: any) => Number(d.contractId) === contractId
+          );
+          killAccounts.push(account);
+        }
+        fs.writeFileSync(options.output, JSON.stringify(killAccounts, null, 2));
+      });
+  });
+
+program
+  .command("kill")
+  .description("Kill the contracts")
+  .option(
+    "-f, --file <path>",
+    "Path to the CSV file",
+    "tmp/airdrop-itnp2-kill-payload.json"
+  )
+  .option(
+    "-e, --error-log <path>",
+    "Path to the error log file",
+    "tmp/error.log"
+  )
+  .option("--dryrun", "No dry run", false)
+  .option("--update", "Update the contract", false)
+  .option("--delete", "Delete the contract", false)
+  .option("--debug", "Debug the deployment", false)
+  .option("--sender", "Sender's address")
+  .action(async (options) => {
+    const parentOptions = program.opts();
+    const { ALGO_SERVER, ALGO_INDEXER_SERVER } = networks(
+      parentOptions.network
+    );
+
+    const { MN } = process.env;
+
+    const mnemonic = MN || "";
+    const { addr, sk } = algosdk.mnemonicToSecretKey(mnemonic);
+
+    const dryrun = options.dryrun;
+    const infile = options.file;
+    const sender = options.sender || addr;
+    const update = options.update;
+
+    const algodClient = new algosdk.Algodv2(
+      process.env.ALGOD_TOKEN || "",
+      process.env.ALGOD_SERVER || ALGO_SERVER,
+      process.env.ALGOD_PORT || ""
+    );
+
+    const indexerClient = new algosdk.Indexer(
+      process.env.INDEXER_TOKEN || "",
+      process.env.INDEXER_SERVER || ALGO_INDEXER_SERVER,
+      process.env.INDEXER_PORT || ""
+    );
+
+    const makeCi = (ctcInfo: number, addr: string) => {
+      return new CONTRACT(
+        ctcInfo,
+        algodClient,
+        indexerClient,
+        makeSpec(AirdropSpec.contract.methods),
+        {
+          addr: sender,
+          sk: new Uint8Array(0),
+        }
+      );
+    };
+
+    const signSendAndConfirm = async (txns: string[], sk: any) => {
+      const stxns = txns
+        .map((t) => new Uint8Array(Buffer.from(t, "base64")))
+        .map(algosdk.decodeUnsignedTransaction)
+        .map((t: any) => algosdk.signTransaction(t, sk));
+      await algodClient
+        .sendRawTransaction(stxns.map((txn: any) => txn.blob))
+        .do();
+      return await Promise.all(
+        stxns.map((res: any) =>
+          algosdk.waitForConfirmation(algodClient, res.txID, 4)
+        )
+      );
+    };
+
+    const contracts = JSON.parse(fs.readFileSync(infile, "utf8"));
+    if (dryrun) {
+      console.log("=== DRY RUN ===");
+    }
+
+    for (const row of contracts) {
+      try {
+        const ctcInfo = Number(row.contractId);
+
+        console.log(`KILLING ${ctcInfo}`);
+
+        // get app info using algod
+
+        const appInfo = await indexerClient.lookupApplications(ctcInfo).do();
+
+        if (!appInfo.application) {
+          console.log(`MISSING ${ctcInfo}`);
+          continue;
+        }
+
+        if (update) {
+          await new AirdropClient(
+            {
+              resolveBy: "id",
+              id: ctcInfo,
+              sender: {
+                addr: sender,
+                sk,
+              },
+            },
+            algodClient
+          ).appClient.update();
+        }
+
+        const ci = makeCi(ctcInfo, sender);
+        ci.setFee(3000);
+        if (options.delete) {
+          ci.setOnComplete(5); // deleteApplicationOC
+        }
+        const killR = await ci.kill();
+        if (options.debug) {
+          console.log(killR);
+        }
+        if (killR.success) {
+          if (!dryrun) {
+            //await signSendAndConfirm(killR.txns, sk);
+          }
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    }
   });
 
 program
