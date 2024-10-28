@@ -321,6 +321,7 @@ interface DeployCompensationOptions {
   owner: string;
   amount: number;
   extraPayment?: number;
+  debug?: boolean;
 }
 export const deployCompensation: any = async (
   options: DeployCompensationOptions
@@ -342,12 +343,17 @@ export const deployCompensation: any = async (
     }
   );
   const stakeAmount = Number(options.amount) * 1e6;
+  console.log({ stakeAmount });
   const paymentAmount =
     stakeAmount + 1234500 + 1e5 + (options.extraPayment || 0);
+  console.log({ paymentAmount });
   const owner = options.owner || addr2;
   ci.setFee(10000);
   ci.setPaymentAmount(paymentAmount);
   const createR = await ci.create(owner);
+  if (options.debug) {
+    console.log(createR);
+  }
   if (createR.success) {
     const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk2);
     const apid = appCallTxn["inner-txns"][0]["application-index"];
