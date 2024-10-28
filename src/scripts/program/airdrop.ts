@@ -447,13 +447,12 @@ program
     "Path to the error log file",
     "tmp/error.log"
   )
-  .option("--dryrun", "No dry run", false)
+  .option("--nodryrun", "No dry run", false)
   .action(async (options) => {
     const parentOptions = program.opts();
     const { ALGO_SERVER, ALGO_INDEXER_SERVER } = networks(
       parentOptions.network
     );
-    const dryrun = options.dryrun;
     const funding = Number(options.funding);
     const infile = options.file;
 
@@ -487,7 +486,7 @@ program
     };
     const contracts = JSON.parse(fs.readFileSync(infile, "utf8"));
 
-    if (dryrun) {
+    if (!options.nodryrun) {
       console.log("=== DRY RUN ===");
     }
 
@@ -596,8 +595,8 @@ program
       ci.setExtraTxns(buildN);
       const customR = await ci.custom();
       if (customR.success) {
-        if (!dryrun) {
-          //await signSendAndConfirm(customR.txns, sk);
+        if (options.nodryrun) {
+          await signSendAndConfirm(customR.txns, sk);
         }
         console.log(
           `SUCCESS ${ctcInfo} ${row.Address} ${row.period} ${row.total}`
