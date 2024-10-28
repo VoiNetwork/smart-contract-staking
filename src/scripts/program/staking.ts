@@ -12,6 +12,7 @@ import { CONTRACT, abi } from "ulujs";
 import moment from "moment";
 import BigNumber from "bignumber.js";
 import axios from "axios";
+import { parse } from "json2csv";
 dotenv.config({ path: "../.env" });
 
 // Usage: deploy-itnp1 [options] [command]
@@ -163,6 +164,7 @@ program
     "Path to the output file",
     "tmp/staking-payload.json"
   )
+  .option("--funding <number>", "Funding timestamp")
   .action(async (options) => {
     const parentOptions = program.opts();
     const { ARC72_INDEXER_SERVER } = networks(parentOptions.network);
@@ -186,6 +188,7 @@ program
       const total = Math.round(
         Number(global_total) + Number(global_total) * bonus
       );
+      const initial = Number(global_total);
       console.log(
         `ACCOUNT ${global_owner} ${week} ${global_deadline} ${global_total} ${bonus} ${total}`
       );
@@ -194,23 +197,33 @@ program
         contractAddress: account.contractAddress,
         creator: account.creator,
         global_funder: account.global_funder,
-        global_funding: account.global_funding,
+        global_funding: Number(options.funding),
         global_owner: account.global_owner,
         global_period: period,
         week,
-        bonus,
-        global_initial: account.global_initial,
+        bonus_rate: bonus,
+        bonus_amount: total - initial,
+        global_initial: initial,
         global_total: total,
+        initial: initial / 1e6,
         total: total / 1e6,
       });
     }
     fs.writeFileSync(options.output, JSON.stringify(payload, null, 2));
+    // Convert JSON to CSV
+    try {
+      const csv = parse(payload);
+      // Write the CSV to a file
+      fs.writeFileSync(`${options.output}.csv`, csv);
+      console.log("CSV file successfully written!");
+    } catch (err) {
+      console.error(err);
+    }
   });
 
 program
   .command("fill")
   .description("Fill the contracts")
-  .requiredOption("--funding <number>", "Funding timestamp")
   .option(
     "-f, --file <path>",
     "Path to the JSON file",
@@ -222,14 +235,13 @@ program
     "tmp/error.log"
   )
   .option("--funder <address>", "Funder's address")
-  .option("--dryrun", "No dry run", false)
+  .option("--nodryrun", "No dry run", false)
+  .option("--debug", "Debug", false)
   .action(async (options) => {
     const parentOptions = program.opts();
     const { ALGO_SERVER, ALGO_INDEXER_SERVER } = networks(
       parentOptions.network
     );
-    const dryrun = options.dryrun;
-    const funding = Number(options.funding);
     const infile = options.file;
 
     const { MN } = process.env;
@@ -262,12 +274,29 @@ program
     };
     const contracts = JSON.parse(fs.readFileSync(infile, "utf8"));
 
-    if (dryrun) {
+    if (!options.nodryrun) {
       console.log("=== DRY RUN ===");
     }
 
     for (const row of contracts) {
       const ctcInfo = Number(row.contractId);
+      const funding = Number(row.global_funding);
+      const bonusAmount = Number(row.bonus_amount);
+
+      if (!ctcInfo) {
+        console.log(`MISSING ${ctcInfo}`);
+        continue;
+      }
+
+      if (!funding) {
+        console.log(`MISSING ${funding}`);
+        continue;
+      }
+
+      if (!bonusAmount) {
+        console.log(`MISSING ${bonusAmount}`);
+        continue;
+      }
 
       // get app info using algod
 
@@ -293,33 +322,31 @@ program
       const gstate = await client.getGlobalState();
 
       const globalFunding = gstate.funding?.asNumber() || 0;
+
       const globalTotal = gstate.total?.asNumber() || 0;
+
       const globalFunder = algosdk.encodeAddress(
         gstate.funder?.asByteArray() || new Uint8Array(0)
       );
-      if (globalFunder !== (options.funder || addr)) {
-        console.log(
-          `FUNDER MISMATCH ${ctcInfo} ${row.Address} ${globalFunder}`
-        );
+
+      const address = options.funder || addr;
+
+      if (globalFunder !== address) {
+        console.log(`FUNDER MISMATCH ${ctcInfo} ${globalFunder} ${address}`);
         continue;
       }
 
       if (globalFunding !== 0) {
-        console.log(
-          `ALREADY FUNDED ${ctcInfo} ${row.Address} ${globalTotal} ${globalTotal}`
-        );
+        console.log(`ALREADY FUNDED ${ctcInfo} ${globalTotal}`);
         continue;
       }
-      const address = options.funder || addr;
 
       const accInfo = await algodClient.accountInformation(address).do();
       const amount = accInfo.amount;
       const minBalance = accInfo["min-balance"];
       const availableBalance = Math.max(amount - minBalance - 2000, 0);
 
-      const fillAmount = BigInt(
-        new BigNumber(row.total).multipliedBy(1e6).toFixed(0)
-      );
+      const fillAmount = BigInt(bonusAmount);
 
       if (fillAmount > BigInt(availableBalance)) {
         console.log(
@@ -355,7 +382,7 @@ program
       const buildN = [];
       buildN.push({
         ...(await builder.staker.fill())?.obj,
-        payment: row.global_total,
+        payment: fillAmount,
       });
       buildN.push({
         ...(await builder.staker.set_funding(funding))?.obj,
@@ -365,15 +392,18 @@ program
       ci.setExtraTxns(buildN);
       const customR = await ci.custom();
       if (customR.success) {
-        if (!dryrun) {
-          //await signSendAndConfirm(customR.txns, sk);
+        if (options.nodryrun) {
+          const res = await signSendAndConfirm(customR.txns, sk);
+          if (options.debug) {
+            console.log(res);
+          }
         }
         console.log(
-          `SUCCESS ${ctcInfo} ${row.global_owner} ${row.week} ${row.bonus} ${row.global_period} ${row.global_initial} ${row.global_total}`
+          `SUCCESS ${ctcInfo} ${row.week} ${row.bonus_rate} ${row.global_period} ${row.global_initial} ${row.global_total} ${bonusAmount}`
         );
       } else {
         console.log(
-          `FAILURE ${ctcInfo} ${row.global_owner} ${row.week} ${row.bonus} ${row.global_period} ${row.global_initial} ${row.global_total}`
+          `FAILURE ${ctcInfo} ${row.week} ${row.bonus_rate} ${row.global_period} ${row.global_initial} ${row.global_total} ${bonusAmount}`
         );
       }
     }
