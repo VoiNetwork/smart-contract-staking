@@ -319,6 +319,7 @@ const factory = new Command("factory").description("Manage factory operations");
 interface DeployCompensationOptions {
   apid: number;
   owner: string;
+  funder: string;
   amount: number;
   extraPayment?: number;
   debug?: boolean;
@@ -338,7 +339,7 @@ export const deployCompensation: any = async (
       events: [],
     },
     {
-      addr: options.owner || addr2,
+      addr: options.funder || addr2,
       sk: new Uint8Array(0),
     }
   );

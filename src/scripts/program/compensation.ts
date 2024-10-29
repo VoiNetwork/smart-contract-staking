@@ -251,14 +251,16 @@ program
       console.log("amount", Number(amount));
       console.log("apid", Number(apid));
 
+      const opts = {
+        apid: Number(apid),
+        owner,
+        funder: options.funder || addr,
+        amount: Number(amount),
+        debug: true,
+      };
+      console.log("opts", opts);
+
       if (nodryrun) {
-        const opts = {
-          apid: Number(apid),
-          owner,
-          amount: Number(amount),
-          debug: true,
-        };
-        console.log("opts", opts);
         const mapid = await deployCompensation(opts);
         console.log("apid", mapid);
       }
