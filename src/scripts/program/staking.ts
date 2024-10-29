@@ -74,7 +74,7 @@ function computeTimingMultiplier(week: number) {
 const periodLimit = 17;
 
 const computeRate = (week: number) => (period: number) => {
-  const lockupMultiplier = computeLockupMultiplier(period, periodLimit);
+  const lockupMultiplier = computeLockupMultiplier(period, periodLimit + 1);
   const timingMultiplier = computeTimingMultiplier(week);
   return lockupMultiplier * timingMultiplier;
 };
@@ -235,14 +235,18 @@ program
     "tmp/error.log"
   )
   .option("--funder <address>", "Funder's address")
-  .option("--nodryrun", "No dry run", false)
   .option("--debug", "Debug", false)
+  .option("--nodryrun", "No dry run", false)
+  .option("--noconfirm", "Do Confirmation", false)
+  .option("--delay <number>", "Delay ms")
   .action(async (options) => {
     const parentOptions = program.opts();
     const { ALGO_SERVER, ALGO_INDEXER_SERVER } = networks(
       parentOptions.network
     );
     const infile = options.file;
+    const delay = Number(options.delay) || 0;
+    const noconfirm = options.noconfirm;
 
     const { MN } = process.env;
     const mnemonic = MN || "";
@@ -260,17 +264,23 @@ program
       process.env.INDEXER_PORT || ""
     );
 
-    const signSendAndConfirm = async (txns: string[], sk: any) => {
+    const signSendAndConfirm = async (
+      txns: string[],
+      sk: any,
+      noconfirm: boolean
+    ) => {
       const stxns = txns
         .map((t) => new Uint8Array(Buffer.from(t, "base64")))
         .map(algosdk.decodeUnsignedTransaction)
         .map((t) => algosdk.signTransaction(t, sk));
       await algodClient.sendRawTransaction(stxns.map((txn) => txn.blob)).do();
-      return await Promise.all(
-        stxns.map((res) =>
-          algosdk.waitForConfirmation(algodClient, res.txID, 4)
-        )
-      );
+      if (noconfirm) {
+        return await Promise.all(
+          stxns.map((res) =>
+            algosdk.waitForConfirmation(algodClient, res.txID, 4)
+          )
+        );
+      }
     };
     const contracts = JSON.parse(fs.readFileSync(infile, "utf8"));
 
@@ -393,7 +403,7 @@ program
       const customR = await ci.custom();
       if (customR.success) {
         if (options.nodryrun) {
-          const res = await signSendAndConfirm(customR.txns, sk);
+          const res = await signSendAndConfirm(customR.txns, sk, noconfirm);
           if (options.debug) {
             console.log(res);
           }
@@ -401,6 +411,7 @@ program
         console.log(
           `SUCCESS ${ctcInfo} ${row.week} ${row.bonus_rate} ${row.global_period} ${row.global_initial} ${row.global_total} ${bonusAmount}`
         );
+        await new Promise((resolve) => setTimeout(resolve, delay));
       } else {
         console.log(
           `FAILURE ${ctcInfo} ${row.week} ${row.bonus_rate} ${row.global_period} ${row.global_initial} ${row.global_total} ${bonusAmount}`
