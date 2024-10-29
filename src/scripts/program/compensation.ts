@@ -171,7 +171,7 @@ program
     "tmp/error.log"
   )
   .option("--funder <address>", "Funder's address")
-  .option("--dryrun", "No dry run", false)
+  .option("--nodryrun", "No dry run", false)
   .option("--debug", "Debug", false)
   .action(async (options) => {
     const parentOptions = program.opts();
@@ -179,7 +179,7 @@ program
       parentOptions.network
     );
 
-    const dryrun = options.dryrun;
+    const nodryrun = options.nodryrun;
     const infile = options.file;
 
     const { MN, CTC_INFO_FACTORY_COMPENSATION, ARC72_INDEXER_SERVER } =
@@ -234,7 +234,7 @@ program
 
     const contracts = JSON.parse(fs.readFileSync(infile, "utf8"));
 
-    if (dryrun) {
+    if (!nodryrun) {
       console.log("=== DRY RUN ===");
     }
 
@@ -243,18 +243,25 @@ program
 
       const account = accounts.find((a) => a.global_owner === owner);
 
-      if(!!account) {
+      if (!!account) {
         console.log("Already paid", owner);
         continue;
       }
 
-      const amountBi = BigInt(new BigNumber(amount).times(1e6).toFixed());
-      const mapid = await deployCompensation({
-        apid: Number(apid),
-        owner,
-        amount: amountBi,
-      });
-      console.log("apid", mapid);
+      console.log("amount", Number(amount));
+      console.log("apid", Number(apid));
+
+      if (nodryrun) {
+        const opts = {
+          apid: Number(apid),
+          owner,
+          amount: Number(amount),
+          debug: true,
+        };
+        console.log("opts", opts);
+        const mapid = await deployCompensation(opts);
+        console.log("apid", mapid);
+      }
     }
   });
 

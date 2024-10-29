@@ -4,6 +4,7 @@ scs-cli() {
   case ${1} in 
     airdrop|airdrop2|staking|compensation) {
       echo ${@}
+      cp -v .env ./program
       cd program
       node ${1}.js ${@:2}
     }
