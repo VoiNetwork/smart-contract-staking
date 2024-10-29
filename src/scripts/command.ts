@@ -344,9 +344,8 @@ export const deployCompensation: any = async (
       sk: new Uint8Array(0),
     }
   );
-  const stakeAmount = Number(new BigNumber(options.amount).times(1e6).toFixed(6))
-  const paymentAmount =
-    stakeAmount + 1234500 + 1e5 + (options.extraPayment || 0);
+  const paymentAmount = Number(BigInt(new BigNumber(options.amount).multipliedBy(1e6).plus(1234500).plus(1e5).plus(options.extraPayment || 0).toFixed(0)))
+  console.log("paymentAmount", paymentAmount);
   const owner = options.owner || addr2;
   ci.setFee(10000);
   ci.setPaymentAmount(paymentAmount);
