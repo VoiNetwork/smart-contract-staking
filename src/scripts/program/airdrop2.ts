@@ -217,15 +217,15 @@ program
         .map((t) => new Uint8Array(Buffer.from(t, "base64")))
         .map(algosdk.decodeUnsignedTransaction)
         .map((t) => algosdk.signTransaction(t, sk));
-      const { txID } = await algodClient
+      const { txId } = await algodClient
         .sendRawTransaction(stxns.map((txn) => txn.blob))
         .do();
       if (!noconfirm) {
         return Promise.all(
-          stxns.map((res) => algosdk.waitForConfirmation(algodClient, txID, 4))
+          stxns.map((res) => algosdk.waitForConfirmation(algodClient, txId, 4))
         );
       }
-      return txID;
+      return txId;
     };
 
     const results: any[] = [];
@@ -445,7 +445,7 @@ program
         .do();
       return await Promise.all(
         stxns.map((res: any) =>
-          algosdk.waitForConfirmation(algodClient, res.txID, 4)
+          algosdk.waitForConfirmation(algodClient, res.txId, 4)
         )
       );
     };
@@ -595,7 +595,7 @@ program
       });
   });
 
-  program
+program
   .command("update-json")
   .description("Update the JSON file")
   .option(
@@ -668,18 +668,23 @@ program
       process.env.INDEXER_PORT || ""
     );
 
-    const signSendAndConfirm = async (txns: string[], sk: any, noconfirm: boolean) => {
+    const signSendAndConfirm = async (
+      txns: string[],
+      sk: any,
+      noconfirm: boolean
+    ) => {
       const stxns = txns
         .map((t) => new Uint8Array(Buffer.from(t, "base64")))
         .map(algosdk.decodeUnsignedTransaction)
         .map((t) => algosdk.signTransaction(t, sk));
-      const { txID } = await algodClient.sendRawTransaction(stxns.map((txn) => txn.blob)).do();
+      const { txId } = await algodClient
+        .sendRawTransaction(stxns.map((txn) => txn.blob))
+        .do();
+      console.log({ txId });
       await Promise.all(
-        stxns.map((res) =>
-          algosdk.waitForConfirmation(algodClient, txID, 4)
-        )
+        stxns.map((res) => algosdk.waitForConfirmation(algodClient, txId, 4))
       );
-      return txID;
+      return txId;
     };
     const contracts = JSON.parse(fs.readFileSync(infile, "utf8"));
 

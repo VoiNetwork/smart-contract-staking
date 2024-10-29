@@ -519,15 +519,16 @@ program
         .map((t) => new Uint8Array(Buffer.from(t, "base64")))
         .map(algosdk.decodeUnsignedTransaction)
         .map((t) => algosdk.signTransaction(t, sk));
-      const { txID } = await algodClient
+      const { txId } = await algodClient
         .sendRawTransaction(stxns.map((txn) => txn.blob))
         .do();
+      console.log({ txId });
       if (!noconfirm) {
         await Promise.all(
-          stxns.map((res) => algosdk.waitForConfirmation(algodClient, txID, 4))
+          stxns.map((res) => algosdk.waitForConfirmation(algodClient, txId, 4))
         );
       }
-      return txID;
+      return txId;
     };
     const contracts = JSON.parse(fs.readFileSync(infile, "utf8"));
 
