@@ -513,23 +513,22 @@ program
     const signSendAndConfirm = async (
       txns: string[],
       sk: any,
-      noconfirm: boolean
+      noconfirm: boolean 
     ) => {
       const stxns = txns
         .map((t) => new Uint8Array(Buffer.from(t, "base64")))
         .map(algosdk.decodeUnsignedTransaction)
         .map((t) => algosdk.signTransaction(t, sk));
-      const { txId } = await algodClient
-        .sendRawTransaction(stxns.map((txn) => txn.blob))
-        .do();
-      console.log({ txId });
+      await algodClient.sendRawTransaction(stxns.map((txn) => txn.blob)).do();
       if (!noconfirm) {
-        await Promise.all(
-          stxns.map((res) => algosdk.waitForConfirmation(algodClient, txId, 4))
+        return await Promise.all(
+          stxns.map((res) =>
+            algosdk.waitForConfirmation(algodClient, res.txID, 4)
+          )
         );
       }
-      return txId;
     };
+
     const contracts = JSON.parse(fs.readFileSync(infile, "utf8"));
 
     if (!options.nodryrun) {

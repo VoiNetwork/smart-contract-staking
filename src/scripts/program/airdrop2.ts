@@ -677,15 +677,16 @@ program
         .map((t) => new Uint8Array(Buffer.from(t, "base64")))
         .map(algosdk.decodeUnsignedTransaction)
         .map((t) => algosdk.signTransaction(t, sk));
-      const { txId } = await algodClient
-        .sendRawTransaction(stxns.map((txn) => txn.blob))
-        .do();
-      console.log({ txId });
-      await Promise.all(
-        stxns.map((res) => algosdk.waitForConfirmation(algodClient, txId, 4))
-      );
-      return txId;
+      await algodClient.sendRawTransaction(stxns.map((txn) => txn.blob)).do();
+      if (!noconfirm) {
+        return await Promise.all(
+          stxns.map((res) =>
+            algosdk.waitForConfirmation(algodClient, res.txID, 4)
+          )
+        );
+      }
     };
+
     const contracts = JSON.parse(fs.readFileSync(infile, "utf8"));
 
     if (!nodryrun) {
