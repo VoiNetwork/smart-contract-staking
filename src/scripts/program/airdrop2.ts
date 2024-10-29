@@ -13,6 +13,7 @@ import { CONTRACT, abi } from "ulujs";
 import moment from "moment";
 import BigNumber from "bignumber.js";
 import axios from "axios";
+import { parse } from "json2csv";
 dotenv.config({ path: "../.env" });
 
 const makeSpec = (methods: any) => {
@@ -210,22 +211,21 @@ program
     const signSendAndConfirm = async (
       txns: string[],
       sk: any,
-      confirm = true
+      noconfirm: boolean
     ) => {
       const stxns = txns
         .map((t) => new Uint8Array(Buffer.from(t, "base64")))
         .map(algosdk.decodeUnsignedTransaction)
         .map((t) => algosdk.signTransaction(t, sk));
-      if (confirm) {
-        await algodClient.sendRawTransaction(stxns.map((txn) => txn.blob)).do();
+      const { txID } = await algodClient
+        .sendRawTransaction(stxns.map((txn) => txn.blob))
+        .do();
+      if (!noconfirm) {
         return Promise.all(
-          stxns.map((res) =>
-            algosdk.waitForConfirmation(algodClient, res.txID, 4)
-          )
+          stxns.map((res) => algosdk.waitForConfirmation(algodClient, txID, 4))
         );
-      } else {
-        await algodClient.sendRawTransaction(stxns.map((txn) => txn.blob)).do();
       }
+      return txID;
     };
 
     const results: any[] = [];
@@ -583,6 +583,15 @@ program
           );
         }
         fs.writeFileSync(options.output, JSON.stringify(contracts, null, 2));
+        // Convert JSON to CSV
+        try {
+          const csv = parse(contracts);
+          // Write the CSV to a file
+          fs.writeFileSync(`${options.output}.csv`, csv);
+          console.log("CSV file successfully written!");
+        } catch (err) {
+          console.error(err);
+        }
       });
   });
 
@@ -601,13 +610,17 @@ program
     "tmp/error.log"
   )
   .option("--funder <address>", "Funder's address")
-  .option("--dryrun", "No dry run", false)
+  .option("--nodryrun", "No dry run", false)
+  .option("--noconfirm", "No confirmation", false)
+  .option("--delay <number>", "Delay in seconds", "0")
   .action(async (options) => {
     const parentOptions = program.opts();
     const { ALGO_SERVER, ALGO_INDEXER_SERVER } = networks(
       parentOptions.network
     );
-    const dryrun = options.dryrun;
+    const nodryrun = options.nodryrun;
+    const delay = Number(options.delay);
+    const noconfirm = options.noconfirm;
     const funding = Number(options.funding);
     const infile = options.file;
 
@@ -627,21 +640,22 @@ program
       process.env.INDEXER_PORT || ""
     );
 
-    const signSendAndConfirm = async (txns: string[], sk: any) => {
+    const signSendAndConfirm = async (txns: string[], sk: any, noconfirm: boolean) => {
       const stxns = txns
         .map((t) => new Uint8Array(Buffer.from(t, "base64")))
         .map(algosdk.decodeUnsignedTransaction)
         .map((t) => algosdk.signTransaction(t, sk));
-      await algodClient.sendRawTransaction(stxns.map((txn) => txn.blob)).do();
-      return await Promise.all(
+      const { txID } = await algodClient.sendRawTransaction(stxns.map((txn) => txn.blob)).do();
+      await Promise.all(
         stxns.map((res) =>
-          algosdk.waitForConfirmation(algodClient, res.txID, 4)
+          algosdk.waitForConfirmation(algodClient, txID, 4)
         )
       );
+      return txID;
     };
     const contracts = JSON.parse(fs.readFileSync(infile, "utf8"));
 
-    if (dryrun) {
+    if (!nodryrun) {
       console.log("=== DRY RUN ===");
     }
 
@@ -745,8 +759,8 @@ program
       ci.setExtraTxns(buildN);
       const customR = await ci.custom();
       if (customR.success) {
-        if (!dryrun) {
-          //await signSendAndConfirm(customR.txns, sk);
+        if (nodryrun) {
+          await signSendAndConfirm(customR.txns, sk, noconfirm);
         }
         console.log(
           `SUCCESS ${ctcInfo} ${row.global_owner} ${row.period} ${row.total}`
@@ -756,6 +770,7 @@ program
           `FAILURE ${ctcInfo} ${row.global_owner} ${row.period} ${row.total}`
         );
       }
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   });
 
