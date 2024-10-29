@@ -24,6 +24,7 @@ import algosdk, { waitForConfirmation } from "algosdk";
 import { CONTRACT, abi } from "ulujs";
 import moment from "moment";
 import * as dotenv from "dotenv";
+import BigNumber from "bignumber.js";
 dotenv.config({ path: ".env" });
 
 export const program = new Command();
@@ -343,11 +344,9 @@ export const deployCompensation: any = async (
       sk: new Uint8Array(0),
     }
   );
-  const stakeAmount = Number(options.amount) * 1e6;
-  console.log({ stakeAmount });
+  const stakeAmount = Number(new BigNumber(options.amount).times(1e6).toFixed(6))
   const paymentAmount =
     stakeAmount + 1234500 + 1e5 + (options.extraPayment || 0);
-  console.log({ paymentAmount });
   const owner = options.owner || addr2;
   ci.setFee(10000);
   ci.setPaymentAmount(paymentAmount);
