@@ -357,6 +357,7 @@ program
     const { ARC72_INDEXER_SERVER } = networks(parentOptions.network);
     const { CTC_INFO_FACTORY_AIRDROP } = process.env;
     const apid = Number(options.apid || CTC_INFO_FACTORY_AIRDROP);
+    console.log({ CTC_INFO_FACTORY_AIRDROP });
     const {
       data: { accounts },
     } = await axios.get(`${ARC72_INDEXER_SERVER}/v1/scs/accounts`, {
@@ -364,6 +365,7 @@ program
         parentId: CTC_INFO_FACTORY_AIRDROP,
       },
     });
+    console.log(`FOUND ${accounts.length} ACCOUNTS`);
     const results: any[] = [];
     fs.createReadStream(options.file)
       .pipe(csv())
@@ -377,6 +379,7 @@ program
         const periodTotals = [0, 0, 0, 0, 0, 0];
         const contracts = [];
         for (const row of results) {
+          //console.log({ row });
           const initial = BigInt(
             new BigNumber(row.MainnetP0)
               .multipliedBy(new BigNumber(10).pow(6))
@@ -384,15 +387,16 @@ program
           ).toString();
           const account = accounts.find(
             (d: any) =>
-              d.global_owner === row.Address && d.global_initial === initial
+              d.global_owner === row.Address &&
+              Math.round(d.global_initial) === Math.round(Number(initial))
           );
           if (account) {
-            console.log(`FOUND ${row.Address} ${row.MainnetP0}`);
+            //console.log(`FOUND ${row.Address} ${row.MainnetP0}`);
             const contractId = account.contractId;
             const period = Number(account.global_period || 0);
             periodCounts[period] += 1;
             const total = computeCompoundedInterest(
-              row.MainnetP0,
+              row.MainnetP1,
               lookupRate(period),
               period
             ).toFixed(6);
@@ -406,6 +410,8 @@ program
               total,
             };
             contracts.push(payload);
+          } else {
+            console.log(`MISSING ${row.Address} ${row.MainnetP0}`);
           }
         }
         console.log(`MISSING ${results.length - contracts.length} CONTRACTS`);
@@ -448,6 +454,8 @@ program
     "tmp/error.log"
   )
   .option("--nodryrun", "No dry run", false)
+  .option("--noconfirm", "No confirmation", false)
+  .option("--delay <number>", "Verbose output", "0")
   .action(async (options) => {
     const parentOptions = program.opts();
     const { ALGO_SERVER, ALGO_INDEXER_SERVER } = networks(
@@ -455,6 +463,8 @@ program
     );
     const funding = Number(options.funding);
     const infile = options.file;
+    const noconfirm = options.noconfirm;
+    const delay = Number(options.delay);
 
     const { MN } = process.env;
     const mnemonic = MN || "";
@@ -472,17 +482,24 @@ program
       process.env.INDEXER_PORT || ""
     );
 
-    const signSendAndConfirm = async (txns: string[], sk: any) => {
+    const signSendAndConfirm = async (
+      txns: string[],
+      sk: any,
+      noconfirm: boolean
+    ) => {
       const stxns = txns
         .map((t) => new Uint8Array(Buffer.from(t, "base64")))
         .map(algosdk.decodeUnsignedTransaction)
         .map((t) => algosdk.signTransaction(t, sk));
-      await algodClient.sendRawTransaction(stxns.map((txn) => txn.blob)).do();
-      return await Promise.all(
-        stxns.map((res) =>
-          algosdk.waitForConfirmation(algodClient, res.txID, 4)
-        )
-      );
+      const { txID } = await algodClient
+        .sendRawTransaction(stxns.map((txn) => txn.blob))
+        .do();
+      if (!noconfirm) {
+        await Promise.all(
+          stxns.map((res) => algosdk.waitForConfirmation(algodClient, txID, 4))
+        );
+      }
+      return txID;
     };
     const contracts = JSON.parse(fs.readFileSync(infile, "utf8"));
 
@@ -596,7 +613,7 @@ program
       const customR = await ci.custom();
       if (customR.success) {
         if (options.nodryrun) {
-          await signSendAndConfirm(customR.txns, sk);
+          await signSendAndConfirm(customR.txns, sk, noconfirm);
         }
         console.log(
           `SUCCESS ${ctcInfo} ${row.Address} ${row.period} ${row.total}`
@@ -606,6 +623,7 @@ program
           `FAILURE ${ctcInfo} ${row.Address} ${row.period} ${row.total} ${customR.error}`
         );
       }
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   });
 
