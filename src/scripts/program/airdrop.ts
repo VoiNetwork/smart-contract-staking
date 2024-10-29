@@ -439,6 +439,34 @@ program
   });
 
 program
+  .command("update-json")
+  .description("Update the JSON file")
+  .option(
+    "-f, --file <path>",
+    "Path to the JSON file",
+    "tmp/airdrop-itnp1-payload.json.csv"
+  )
+  .option(
+    "-o, --output <path>",
+    "Path to the output file",
+    "tmp/airdrop-itnp1-payload.json"
+  )
+  .action(async (options) => {
+    const results: any[] = [];
+    fs.createReadStream(options.file)
+      .pipe(csv())
+      .on("data", (row) => {
+        results.push(row);
+      })
+      .on("end", async () => {
+        console.log("CSV file successfully processed");
+        console.log(results);
+        // write the JSON to a file
+        fs.writeFileSync(options.output, JSON.stringify(results, null, 2));
+      });
+  });
+
+program
   .command("fill")
   .description("Fill the contracts")
   .requiredOption("--funding <number>", "Funding timestamp")
