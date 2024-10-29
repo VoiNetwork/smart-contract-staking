@@ -48,11 +48,11 @@ const lookupRate = (period: number) => {
   }
 };
 
-function computeLockupMultiplier(B2: number, R1: number) {
-  if (B2 <= 12) {
-    return 0.45 * Math.pow(B2 / R1, 2);
+function computeLockupMultiplier(lockupPeriod: number, maxLockupPeriod: number) {
+  if (lockupPeriod <= 12) {
+    return 0.45 * Math.pow(lockupPeriod / maxLockupPeriod, 2);
   } else {
-    return Math.pow(B2 / R1, 2);
+    return Math.pow(lockupPeriod / maxLockupPeriod, 2);
   }
 }
 
