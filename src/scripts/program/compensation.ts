@@ -15,7 +15,6 @@ import BigNumber from "bignumber.js";
 import axios from "axios";
 import { parse } from "json2csv";
 import { deployCompensation, makeCi } from "../command.js";
-import { sign } from "crypto";
 dotenv.config({ path: "../.env" });
 
 // Usage: deploy-itnp1 [options] [command]
@@ -290,8 +289,7 @@ program
     const nodryrun = options.nodryrun;
     const debug = options.debug;
 
-    const { MN } = 
-      process.env;
+    const { MN } = process.env;
     const mnemonic = MN || "";
 
     const { addr, sk } = algosdk.mnemonicToSecretKey(mnemonic);
@@ -341,7 +339,7 @@ program
         console.log(killR);
       }
       if (killR.success) {
-        if(nodryrun) {
+        if (nodryrun) {
           await signSendAndConfirm(killR.txns, sk, nodryrun);
         }
         console.log(`Killed ${apid}`);
