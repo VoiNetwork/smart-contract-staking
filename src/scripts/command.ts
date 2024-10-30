@@ -626,7 +626,7 @@ factory
     console.log(apid);
   });
 
-const makeCi = (ctcInfo: number, addr: string) => {
+export const makeCi = (ctcInfo: number, addr: string) => {
   return new CONTRACT(
     ctcInfo,
     algodClient,

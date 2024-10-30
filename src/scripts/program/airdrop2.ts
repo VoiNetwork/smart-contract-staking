@@ -14,6 +14,7 @@ import moment from "moment";
 import BigNumber from "bignumber.js";
 import axios from "axios";
 import { parse } from "json2csv";
+import { airdropAbortFunding } from "../command.js";
 dotenv.config({ path: "../.env" });
 
 const makeSpec = (methods: any) => {
@@ -807,5 +808,51 @@ program
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   });
+
+
+  program
+  .command("execute-abort")
+  .description("Fill the contracts")
+  .option(
+    "-f, --file <path>",
+    "Path to the JSON file",
+    "data/itnp2-abort.json"
+  )
+  .option("--sender <address>", "Sender address")
+  .option("--nodryrun", "No dry run", false)
+  .option("--delay <number>", "Delay in seconds", "0")
+  .option("--debug", "Debug the deployment", false)
+  .action(async (options) => {
+    const parentOptions = program.opts();
+
+    const infile = options.file;
+    const nodryrun = options.nodryrun;
+    const sender = options.sender;
+    const debug = options.debug;
+
+    const contracts = JSON.parse(fs.readFileSync(infile, "utf8"));
+
+    if (!nodryrun) {
+      console.log("=== DRY RUN ===");
+    }
+
+    for (const row of contracts) {
+      const { contractId: apid } = row;
+      const success = await airdropAbortFunding({
+        apid,
+        simulate: !options.nodryrun,
+        sender,
+        debug,
+      })
+      if(success) {
+        console.log(`SUCCESS ${apid}`);
+      } else {
+        console.log(`FAILURE ${apid}`);
+      }
+    }
+
+  });
+
+
 
 program.parse(process.argv);
