@@ -14,7 +14,8 @@ import moment from "moment";
 import BigNumber from "bignumber.js";
 import axios from "axios";
 import { parse } from "json2csv";
-import { deployCompensation } from "../command.js";
+import { deployCompensation, makeCi } from "../command.js";
+import { sign } from "crypto";
 dotenv.config({ path: "../.env" });
 
 // Usage: deploy-itnp1 [options] [command]
@@ -263,6 +264,89 @@ program
       if (nodryrun) {
         const mapid = await deployCompensation(opts);
         console.log("apid", mapid);
+      }
+    }
+  });
+
+program
+  .command("execute-kill")
+  .description("Fill the contracts")
+  .option(
+    "-f, --file <path>",
+    "Path to the JSON file",
+    "tmp/compensation-kill.json"
+  )
+  .option("--sender <address>", "Sender address")
+  .option("--nodryrun", "No dry run", false)
+  .option("--delay <number>", "Delay in seconds", "0")
+  .option("--debug", "Debug the deployment", false)
+  .action(async (options) => {
+    const parentOptions = program.opts();
+    const { ALGO_SERVER, ALGO_INDEXER_SERVER } = networks(
+      parentOptions.network
+    );
+
+    const infile = options.file;
+    const nodryrun = options.nodryrun;
+    const debug = options.debug;
+
+    const { MN } = 
+      process.env;
+    const mnemonic = MN || "";
+
+    const { addr, sk } = algosdk.mnemonicToSecretKey(mnemonic);
+
+    const sender = options.sender || addr;
+
+    const algodClient = new algosdk.Algodv2(
+      process.env.ALGOD_TOKEN || "",
+      process.env.ALGOD_SERVER || ALGO_SERVER,
+      process.env.ALGOD_PORT || ""
+    );
+
+    const signSendAndConfirm = async (
+      txns: string[],
+      sk: any,
+      noconfirm: boolean
+    ) => {
+      const stxns = txns
+        .map((t) => new Uint8Array(Buffer.from(t, "base64")))
+        .map(algosdk.decodeUnsignedTransaction)
+        .map((t) => algosdk.signTransaction(t, sk));
+      const { txId } = await algodClient
+        .sendRawTransaction(stxns.map((txn) => txn.blob))
+        .do();
+      if (!noconfirm) {
+        return Promise.all(
+          stxns.map((res) => algosdk.waitForConfirmation(algodClient, txId, 4))
+        );
+      }
+      return txId;
+    };
+
+    const contracts = JSON.parse(fs.readFileSync(infile, "utf8"));
+
+    if (!nodryrun) {
+      console.log("=== DRY RUN ===");
+    }
+
+    for (const row of contracts) {
+      console.log(row);
+      const { contract_id: apid } = row;
+      const ci = makeCi(apid, sender);
+      ci.setFee(3000);
+      ci.setOnComplete(5); // deleteApplicationOC
+      const killR = await ci.kill();
+      if (debug) {
+        console.log(killR);
+      }
+      if (killR.success) {
+        if(nodryrun) {
+          await signSendAndConfirm(killR.txns, sk, nodryrun);
+        }
+        console.log(`Killed ${apid}`);
+      } else {
+        console.log(`Failed to kill ${apid}`);
       }
     }
   });
