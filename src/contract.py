@@ -1074,6 +1074,7 @@ class Airdrop(
         arc4.emit(Closed(arc4.Address(self.upgrader), arc4.Address(self.funder)))
         close_offline_on_delete(self.funder)
 
+    # override reduce_total method
     @arc4.abimethod
     def reduce_total(self, adjustment: arc4.UInt64) -> None:
         #########################################
