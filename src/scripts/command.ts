@@ -324,6 +324,7 @@ interface DeployCompensationOptions {
   amount: number;
   extraPayment?: number;
   debug?: boolean;
+  simulate?: boolean;
 }
 export const deployCompensation: any = async (
   options: DeployCompensationOptions
@@ -344,8 +345,16 @@ export const deployCompensation: any = async (
       sk: new Uint8Array(0),
     }
   );
-  const paymentAmount = Number(BigInt(new BigNumber(options.amount).multipliedBy(1e6).plus(1234500).plus(1e5).plus(options.extraPayment || 0).toFixed(0)))
-  console.log("paymentAmount", paymentAmount);
+  const paymentAmount = Number(
+    BigInt(
+      new BigNumber(options.amount)
+        .multipliedBy(1e6)
+        .plus(1234500)
+        .plus(1e5)
+        .plus(options.extraPayment || 0)
+        .toFixed(0)
+    )
+  );
   const owner = options.owner || addr2;
   ci.setFee(10000);
   ci.setPaymentAmount(paymentAmount);
@@ -354,9 +363,13 @@ export const deployCompensation: any = async (
     console.log(createR);
   }
   if (createR.success) {
-    const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk2);
-    const apid = appCallTxn["inner-txns"][0]["application-index"];
-    return apid;
+    if (!options.simulate) {
+      const [, appCallTxn] = await signSendAndConfirm(createR.txns, sk2);
+      const apid = appCallTxn["inner-txns"][0]["application-index"];
+      return apid;
+    } else {
+      return createR.returnValue;
+    }
   }
 };
 factory

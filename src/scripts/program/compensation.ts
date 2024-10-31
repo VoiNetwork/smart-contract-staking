@@ -14,7 +14,8 @@ import moment from "moment";
 import BigNumber from "bignumber.js";
 import axios from "axios";
 import { parse } from "json2csv";
-import { deployCompensation, makeCi } from "../command.js";
+import { airdropFill, deployCompensation, makeCi } from "../command.js";
+import { debug } from "console";
 dotenv.config({ path: "../.env" });
 
 // Usage: deploy-itnp1 [options] [command]
@@ -264,6 +265,263 @@ program
         const mapid = await deployCompensation(opts);
         console.log("apid", mapid);
       }
+    }
+  });
+
+program
+  .command("prepare-fill")
+  .description("Fill the contracts")
+  .option("-f, --file <path>", "Path to the JSON file", "tmp/fill-003.csv")
+  .option(
+    "-o, --file2 <path>",
+    "Path to the error log file",
+    "tmp/fill-003.csv.json"
+  )
+  .option("--apid <number>", "Application ID")
+  .option("--sender <address>", "Sender address")
+  .option("--nodryrun", "No dry run", false)
+  .option("--delay <number>", "Delay in seconds", "0")
+  .option("--debug", "Debug the deployment", false)
+  .action(async (options) => {
+    const sender = options.sender;
+    const contractId = options.apid;
+    const results: any[] = [];
+    fs.createReadStream(options.file)
+      .pipe(csv())
+      .on("data", (row) => {
+        results.push(row);
+      })
+      .on("end", async () => {
+        console.log("CSV file successfully processed");
+        console.log(`TOTAL ${results.length}`);
+        const payload = [];
+        let sum = 0;
+        for (const row of results) {
+          const { Address } = row;
+          const Amount = Number(row.Amount);
+          sum += Amount;
+          if (options.debug) {
+            console.log(Address, Amount, sum);
+          }
+          const job = {
+            contractId: Number(contractId),
+            target: Number(row.App),
+            sender,
+            address: Address,
+            amount: Amount,
+          };
+          console.log(job);
+          payload.push(job);
+        }
+        console.log(`TOTAL ${Number(sum).toLocaleString()}`);
+        // Write the JSON to a file
+        fs.writeFileSync(options.file2, JSON.stringify(payload, null, 2));
+      });
+  });
+
+program
+  .command("execute-fill")
+  .description("Execute the fill")
+  .option("-f, --file <path>", "Path to the JSON file", "tmp/fill-003.csv.json")
+  .option("--sender <address>", "Sender address")
+  .option("--nodryrun", "No dry run", false)
+  .option("--delay <number>", "Delay in seconds", "0")
+  .option("--debug", "Debug the deployment", false)
+  .action(async (options) => {
+    const { MN } = process.env;
+    const { addr, sk } = algosdk.mnemonicToSecretKey(MN || "");
+    const payments = JSON.parse(fs.readFileSync(options.file, "utf8"));
+    const sender = options.sender || addr;
+
+    if (payments.length === 0) {
+      console.log("No payments to execute");
+      return;
+    }
+
+    for (const payment of payments) {
+      if (payment.sender !== sender) {
+        console.log("Sender mismatch", payment.sender, addr);
+        continue;
+      }
+      const amount = Math.round(Number(payment.amount));
+      const opts = {
+        apid: payment.target,
+        amount,
+        simulate: true,
+        sender: payment.sender,
+        sk: sk,
+        debug: options.debug,
+      };
+      const success = await airdropFill(opts);
+      if (success) {
+        console.log("Success", "fill", payment.target, payment.amount);
+      } else {
+        console.log("Failed", "fill", payment.target, payment.amount);
+        console.log("opts", opts);
+        await airdropFill({ ...opts, debug: true });
+      }
+    }
+  });
+
+program
+  .command("prepare-pay")
+  .description("Fill the contracts")
+  .option(
+    "-f, --file <path>",
+    "Path to the JSON file",
+    "tmp/compensation-004.csv"
+  )
+  .option(
+    "-o, --file2 <path>",
+    "Path to the error log file",
+    "tmp/compensation-004.csv.json"
+  )
+  .option("--apid <number>", "Application ID")
+  .option("--sender <address>", "Sender address")
+  .option("--nodryrun", "No dry run", false)
+  .option("--delay <number>", "Delay in seconds", "0")
+  .option("--debug", "Debug the deployment", false)
+  .action(async (options) => {
+    const sender = options.sender;
+    const contractId = options.apid;
+    const results: any[] = [];
+    fs.createReadStream(options.file)
+      .pipe(csv())
+      .on("data", (row) => {
+        results.push(row);
+      })
+      .on("end", async () => {
+        console.log("CSV file successfully processed");
+        console.log(`TOTAL ${results.length}`);
+        const payload = [];
+        let sum = 0;
+        for (const row of results) {
+          const { Address } = row;
+          const Amount = Number(row.Amount);
+          console.log({ Address, Amount });
+          sum += Amount;
+          if (options.debug) {
+            console.log(Address, Amount, sum);
+          }
+          const job = {
+            contractId,
+            sender,
+            address: Address,
+            amount: Amount,
+          };
+          payload.push(job);
+        }
+        console.log(`TOTAL ${Number(sum).toLocaleString()}`);
+        // Write the JSON to a file
+        fs.writeFileSync(options.file2, JSON.stringify(payload, null, 2));
+      });
+  });
+
+program
+  .command("execute-pay")
+  .description("Fill the contracts")
+  .option("--payid <number>", "Payment ID")
+  .option(
+    "-f, --file <path>",
+    "Path to the JSON file",
+    "tmp/compensation-003.csv.json"
+  )
+  .option("--sender <address>", "Sender address")
+  .option("--nodryrun", "No dry run", false)
+  .option("--delay <number>", "Delay in seconds", "0")
+  .option("--debug", "Debug the deployment", false)
+  .action(async (options) => {
+    const payments = JSON.parse(
+      fs.readFileSync(`tmp/compensation/${options.payid}.json`, "utf8")
+    );
+
+    if (payments.length === 0) {
+      console.log("No payments to execute");
+      return;
+    }
+
+    const contractId = Number(payments[0].contractId);
+
+    const parentOptions = program.opts();
+    const { ALGO_SERVER } = networks(parentOptions.network);
+
+    const nodryrun = options.nodryrun;
+
+    const { MN, CTC_INFO_FACTORY_COMPENSATION, ARC72_INDEXER_SERVER } =
+      process.env;
+    const mnemonic = MN || "";
+    const { addr } = algosdk.mnemonicToSecretKey(mnemonic);
+
+    const algodClient = new algosdk.Algodv2(
+      process.env.ALGOD_TOKEN || "",
+      process.env.ALGOD_SERVER || ALGO_SERVER,
+      process.env.ALGOD_PORT || ""
+    );
+
+    const { ["last-round"]: lastRound } = await algodClient.status().do();
+
+    console.log(`lastRound: ${lastRound}`);
+
+    console.log("Requesting accounts and catching up...");
+
+    let accounts: any[] = [];
+    let currentRound = 0;
+    do {
+      const {
+        data: { accounts: contractAcounts, ["current-round"]: round },
+      } = await axios.get(`${ARC72_INDEXER_SERVER}/v1/scs/accounts`, {
+        params: {
+          parentId: contractId,
+          funder: options.sender || addr,
+        },
+      });
+      if (!round) {
+        await new Promise((resolve) => setTimeout(resolve, 30_000));
+        continue;
+      }
+      accounts = contractAcounts;
+      currentRound = round;
+      console.log(
+        `currentRound: ${currentRound} roundsBehind: ${
+          lastRound - currentRound
+        }`
+      );
+      await new Promise((resolve) => setTimeout(resolve, 10_000));
+    } while (currentRound <= lastRound);
+
+    console.log("Accounts received ...");
+
+    if (!nodryrun) {
+      console.log("=== DRY RUN ===");
+    }
+
+    // preflight
+
+    // check if it exists to prevent double spending
+    // for (const payment of payments) {
+    //   const owner = payment.address;
+    //   const account = accounts.find((a) => a.global_owner === owner);
+    //   if (!!account) {
+    //     console.log("Already paid", owner);
+    //     throw new Error("Already paid");
+    //   }
+    // }
+
+    for (const payment of payments) {
+      const apid = Number(payment.contractId);
+      const sender = payment.sender;
+      const owner = payment.address;
+      const amount = payment.amount;
+      const opts = {
+        apid,
+        owner,
+        funder: sender,
+        amount,
+        debug: options.debug,
+        simulate: !options.nodryrun,
+      };
+      const mapid = await deployCompensation(opts);
+      console.log("pay", owner, amount, "apid", mapid);
     }
   });
 
