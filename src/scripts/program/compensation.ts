@@ -347,7 +347,7 @@ program
       const opts = {
         apid: payment.target,
         amount,
-        simulate: true,
+        simulate: !options.nodryrun,
         sender: payment.sender,
         sk: sk,
         debug: options.debug,
