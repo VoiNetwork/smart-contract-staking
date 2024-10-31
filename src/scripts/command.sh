@@ -9,8 +9,9 @@ scs-cli() {
       node ${1}.js ${@:2}
     }
       ;;
-    main)
+    main) {
       node main.js ${@:2}
+    }
       ;;
     *)
       echo "Command not found"

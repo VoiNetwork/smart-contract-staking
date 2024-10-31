@@ -751,7 +751,6 @@ class Lockable(
         arc4.emit(Configured(arc4.UInt64(self.period), period))
         self.period = period.native
 
-
     @arc4.abimethod
     def set_deadline(self, deadline: arc4.UInt64) -> None:
         """
@@ -1058,11 +1057,12 @@ class Airdrop(
 
     # update method
     #  only callable by upgrader
-    #  sets deadline
+    #  does nothing
     @arc4.abimethod
     def update(self) -> None:
         assert Txn.sender == self.upgrader, "must be upgrader"
         assert self.updatable == UInt64(1), "not approved"
+        self.deployment_version = UInt64(1)
 
     # kill method
     #  only callable by upgrader
@@ -1073,6 +1073,18 @@ class Airdrop(
         assert self.updatable == UInt64(1), "not approved"
         arc4.emit(Closed(arc4.Address(self.upgrader), arc4.Address(self.funder)))
         close_offline_on_delete(self.funder)
+
+    @arc4.abimethod
+    def reduce_total(self, adjustment: arc4.UInt64) -> None:
+        #########################################
+        assert Txn.sender == self.funder, "must be funder"
+        #########################################
+        assert adjustment <= self.total, "adjustment accurate"
+        #########################################
+        total = self.total - adjustment.native
+        itxn.Payment(receiver=self.funder, amount=adjustment.native, fee=0).submit()
+        arc4.emit(TotalReduced(adjustment, arc4.UInt64(total)))
+        self.total = total
 
 
 ##################################################
@@ -1307,6 +1319,7 @@ class StakingFactory(BaseFactory):
         assert self.updatable == UInt64(1), "not approved"
         available_balance = get_available_balance()
         itxn.Payment(receiver=Txn.sender, amount=available_balance, fee=0).submit()
+
 
 ##################################################
 # CompensationFactory
