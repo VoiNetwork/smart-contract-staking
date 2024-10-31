@@ -873,22 +873,42 @@ interface AirdropReduceTotalOptions {
   amount: number;
   simulate?: boolean;
   sender?: string;
+  debug?: boolean;
 }
 export const airdropReduceTotal: any = async (
   options: AirdropReduceTotalOptions
 ) => {
+  if (options.debug) {
+    console.log(options);
+  }
   const ci = makeCi(Number(options.apid), options.sender || addr);
   const reduceR = await ci.reduce_total(Number(options.amount) * 1e6);
+  if (options.debug) {
+    console.log(reduceR);
+  }
   if (reduceR.success) {
-    await signSendAndConfirm(reduceR.txns, sk);
+    if (!options.simulate) {
+      await signSendAndConfirm(reduceR.txns, sk);
+    }
     return true;
   }
   return false;
 };
+
 airdrop
-  .command("reduce-total <amount>")
-  .requiredOption("-a, --amount <number>", "Specify the amount to reduce")
-  .action(airdropReduceTotal);
+  .command("reduce-total")
+  .option("-a, --apid <number>", "Specify the application ID")
+  .option("-b, --amount <number>", "Specify the amount to reduce", "0")
+  .option("-s, --simulate", "Simulate the reduce", false)
+  .option("-t, --sender <string>", "Specify the sender address")
+  .option("--debug", "Debug the deployment", false)
+  .action(async (options: AirdropReduceTotalOptions) => {
+    if (options.debug) {
+      console.log(options);
+    }
+    const res = await airdropReduceTotal(options);
+    console.log(res);
+  });
 
 interface AirdropAbortFundingOptions {
   apid: number;
@@ -1257,6 +1277,69 @@ airdrop
   .option("-d --debug", "Debug the close")
   .option("t --sender <string>", "Specify the sender")
   .action(airdropClose);
+
+// update all airdrop contracts
+
+interface FactoryUpdateAirdropOptions {
+  apid: number;
+  debug?: boolean;
+  allow?: boolean;
+}
+airdrop
+  .command("upgrade")
+  .description("Update all airdrop contracts")
+  .option("-a, --apid <number>", "Specify the application ID of factory")
+  .option("--debug", "Debug the deployment", false)
+  .option("-b --allow", "Allow the update", false)
+  .action(async (options: FactoryUpdateAirdropOptions) => {
+    if (!options.allow) {
+      console.log("Please add --allow to proceed");
+      return;
+    }
+    if (options.debug) {
+      console.log(options);
+    }
+    const apid = options.apid;
+    const url = `${arc72IndexerURL}/v1/scs/accounts?contractId=${apid}&deleted=0`;
+    const {
+      data: { accounts },
+    } = await axios.get(url);
+    if (accounts.length === 0) {
+      console.log("No airdrop contract found");
+      return;
+    }
+    const [account] = accounts;
+
+    console.log(account);
+
+    try {
+      const { contractId } = account;
+      console.log(`[${contractId}] updating...`);
+      const apid = Number(contractId);
+      await new AirdropClient(
+        {
+          resolveBy: "id",
+          id: apid,
+          sender: {
+            addr,
+            sk,
+          },
+        },
+        algodClient
+      ).appClient.update();
+      const ci = makeCi(apid, addr);
+      ci.setFee(3000);
+      const updateR = await ci.update();
+      if (options.debug) {
+        console.log(updateR);
+      }
+      if (updateR.success) {
+        await signSendAndConfirm(updateR.txns, sk);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
 const app = new Command("app").description("Manage app operations");
 
