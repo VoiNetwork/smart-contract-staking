@@ -1057,7 +1057,7 @@ class Airdrop(
 
     # update method
     #  only callable by upgrader
-    #  does nothing
+    #  bumps up deployment version
     @arc4.abimethod
     def update(self) -> None:
         assert Txn.sender == self.upgrader, "must be upgrader"
