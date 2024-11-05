@@ -51,6 +51,11 @@ export const APP_SPEC: AppSpec = {
         "delete_application": "CALL"
       }
     },
+    "reduce_total(uint64)void": {
+      "call_config": {
+        "no_op": "CALL"
+      }
+    },
     "setup(address,address,address,uint64)void": {
       "call_config": {
         "no_op": "CALL"
@@ -92,11 +97,6 @@ export const APP_SPEC: AppSpec = {
       }
     },
     "set_funding(uint64)void": {
-      "call_config": {
-        "no_op": "CALL"
-      }
-    },
-    "reduce_total(uint64)void": {
       "call_config": {
         "no_op": "CALL"
       }
@@ -326,6 +326,19 @@ export const APP_SPEC: AppSpec = {
         }
       },
       {
+        "name": "reduce_total",
+        "args": [
+          {
+            "type": "uint64",
+            "name": "adjustment"
+          }
+        ],
+        "readonly": false,
+        "returns": {
+          "type": "void"
+        }
+      },
+      {
         "name": "setup",
         "args": [
           {
@@ -439,19 +452,6 @@ export const APP_SPEC: AppSpec = {
           {
             "type": "uint64",
             "name": "funding"
-          }
-        ],
-        "readonly": false,
-        "returns": {
-          "type": "void"
-        }
-      },
-      {
-        "name": "reduce_total",
-        "args": [
-          {
-            "type": "uint64",
-            "name": "adjustment"
           }
         ],
         "readonly": false,
@@ -663,6 +663,13 @@ export type Airdrop = {
       argsTuple: []
       returns: void
     }>
+    & Record<'reduce_total(uint64)void' | 'reduce_total', {
+      argsObj: {
+        adjustment: bigint | number
+      }
+      argsTuple: [adjustment: bigint | number]
+      returns: void
+    }>
     & Record<'setup(address,address,address,uint64)void' | 'setup', {
       argsObj: {
         deployer: string
@@ -725,13 +732,6 @@ export type Airdrop = {
         funding: bigint | number
       }
       argsTuple: [funding: bigint | number]
-      returns: void
-    }>
-    & Record<'reduce_total(uint64)void' | 'reduce_total', {
-      argsObj: {
-        adjustment: bigint | number
-      }
-      argsTuple: [adjustment: bigint | number]
       returns: void
     }>
     & Record<'set_delegate(address)void' | 'set_delegate', {
@@ -1005,6 +1005,20 @@ export abstract class AirdropCallFactory {
     }
   }
   /**
+   * Constructs a no op call for the reduce_total(uint64)void ABI method
+   *
+   * @param args Any args for the contract call
+   * @param params Any additional parameters for the call
+   * @returns A TypedCallParams object for the call
+   */
+  static reduceTotal(args: MethodArgs<'reduce_total(uint64)void'>, params: AppClientCallCoreParams & CoreAppCallArgs) {
+    return {
+      method: 'reduce_total(uint64)void' as const,
+      methodArgs: Array.isArray(args) ? args : [args.adjustment],
+      ...params,
+    }
+  }
+  /**
    * Constructs a no op call for the setup(address,address,address,uint64)void ABI method
    *
    * @param args Any args for the contract call
@@ -1117,20 +1131,6 @@ export abstract class AirdropCallFactory {
     return {
       method: 'set_funding(uint64)void' as const,
       methodArgs: Array.isArray(args) ? args : [args.funding],
-      ...params,
-    }
-  }
-  /**
-   * Constructs a no op call for the reduce_total(uint64)void ABI method
-   *
-   * @param args Any args for the contract call
-   * @param params Any additional parameters for the call
-   * @returns A TypedCallParams object for the call
-   */
-  static reduceTotal(args: MethodArgs<'reduce_total(uint64)void'>, params: AppClientCallCoreParams & CoreAppCallArgs) {
-    return {
-      method: 'reduce_total(uint64)void' as const,
-      methodArgs: Array.isArray(args) ? args : [args.adjustment],
       ...params,
     }
   }
@@ -1388,6 +1388,17 @@ export class AirdropClient {
   }
 
   /**
+   * Calls the reduce_total(uint64)void ABI method.
+   *
+   * @param args The arguments for the contract call
+   * @param params Any additional parameters for the call
+   * @returns The result of the call
+   */
+  public reduceTotal(args: MethodArgs<'reduce_total(uint64)void'>, params: AppClientCallCoreParams & CoreAppCallArgs = {}) {
+    return this.call(AirdropCallFactory.reduceTotal(args, params))
+  }
+
+  /**
    * Calls the setup(address,address,address,uint64)void ABI method.
    *
    * @param args The arguments for the contract call
@@ -1477,17 +1488,6 @@ export class AirdropClient {
    */
   public setFunding(args: MethodArgs<'set_funding(uint64)void'>, params: AppClientCallCoreParams & CoreAppCallArgs = {}) {
     return this.call(AirdropCallFactory.setFunding(args, params))
-  }
-
-  /**
-   * Calls the reduce_total(uint64)void ABI method.
-   *
-   * @param args The arguments for the contract call
-   * @param params Any additional parameters for the call
-   * @returns The result of the call
-   */
-  public reduceTotal(args: MethodArgs<'reduce_total(uint64)void'>, params: AppClientCallCoreParams & CoreAppCallArgs = {}) {
-    return this.call(AirdropCallFactory.reduceTotal(args, params))
   }
 
   /**
@@ -1680,6 +1680,11 @@ export class AirdropClient {
         resultMappers.push(undefined)
         return this
       },
+      reduceTotal(args: MethodArgs<'reduce_total(uint64)void'>, params?: AppClientComposeCallCoreParams & CoreAppCallArgs) {
+        promiseChain = promiseChain.then(() => client.reduceTotal(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
+        resultMappers.push(undefined)
+        return this
+      },
       setup(args: MethodArgs<'setup(address,address,address,uint64)void'>, params?: AppClientComposeCallCoreParams & CoreAppCallArgs) {
         promiseChain = promiseChain.then(() => client.setup(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
         resultMappers.push(undefined)
@@ -1717,11 +1722,6 @@ export class AirdropClient {
       },
       setFunding(args: MethodArgs<'set_funding(uint64)void'>, params?: AppClientComposeCallCoreParams & CoreAppCallArgs) {
         promiseChain = promiseChain.then(() => client.setFunding(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
-        resultMappers.push(undefined)
-        return this
-      },
-      reduceTotal(args: MethodArgs<'reduce_total(uint64)void'>, params?: AppClientComposeCallCoreParams & CoreAppCallArgs) {
-        promiseChain = promiseChain.then(() => client.reduceTotal(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
         resultMappers.push(undefined)
         return this
       },
@@ -1834,6 +1834,15 @@ export type AirdropComposer<TReturns extends [...any[]] = []> = {
   update(args: MethodArgs<'update()void'>, params?: AppClientComposeCallCoreParams & CoreAppCallArgs): AirdropComposer<[...TReturns, MethodReturn<'update()void'>]>
 
   /**
+   * Calls the reduce_total(uint64)void ABI method.
+   *
+   * @param args The arguments for the contract call
+   * @param params Any additional parameters for the call
+   * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
+   */
+  reduceTotal(args: MethodArgs<'reduce_total(uint64)void'>, params?: AppClientComposeCallCoreParams & CoreAppCallArgs): AirdropComposer<[...TReturns, MethodReturn<'reduce_total(uint64)void'>]>
+
+  /**
    * Calls the setup(address,address,address,uint64)void ABI method.
    *
    * @param args The arguments for the contract call
@@ -1908,15 +1917,6 @@ export type AirdropComposer<TReturns extends [...any[]] = []> = {
    * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
    */
   setFunding(args: MethodArgs<'set_funding(uint64)void'>, params?: AppClientComposeCallCoreParams & CoreAppCallArgs): AirdropComposer<[...TReturns, MethodReturn<'set_funding(uint64)void'>]>
-
-  /**
-   * Calls the reduce_total(uint64)void ABI method.
-   *
-   * @param args The arguments for the contract call
-   * @param params Any additional parameters for the call
-   * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
-   */
-  reduceTotal(args: MethodArgs<'reduce_total(uint64)void'>, params?: AppClientComposeCallCoreParams & CoreAppCallArgs): AirdropComposer<[...TReturns, MethodReturn<'reduce_total(uint64)void'>]>
 
   /**
    * Calls the set_delegate(address)void ABI method.

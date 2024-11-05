@@ -1064,6 +1064,7 @@ class Airdrop(
         assert self.updatable == UInt64(1), "not approved"
         self.deployment_version = UInt64(2)
 
+
     # kill method
     #  only callable by upgrader
     #  closes contract offline to funder
