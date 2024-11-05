@@ -1062,7 +1062,8 @@ class Airdrop(
     def update(self) -> None:
         assert Txn.sender == self.upgrader, "must be upgrader"
         assert self.updatable == UInt64(1), "not approved"
-        self.deployment_version = UInt64(1)
+        self.deployment_version = UInt64(2)
+
 
     # kill method
     #  only callable by upgrader
@@ -1075,17 +1076,17 @@ class Airdrop(
         close_offline_on_delete(self.funder)
 
     # override reduce_total method
-    @arc4.abimethod
-    def reduce_total(self, adjustment: arc4.UInt64) -> None:
-        #########################################
-        assert Txn.sender == self.funder, "must be funder"
-        #########################################
-        assert adjustment <= self.total, "adjustment accurate"
-        #########################################
-        total = self.total - adjustment.native
-        itxn.Payment(receiver=self.funder, amount=adjustment.native, fee=0).submit()
-        arc4.emit(TotalReduced(adjustment, arc4.UInt64(total)))
-        self.total = total
+    # @arc4.abimethod
+    # def reduce_total(self, adjustment: arc4.UInt64) -> None:
+    #     #########################################
+    #     assert Txn.sender == self.funder, "must be funder"
+    #     #########################################
+    #     assert adjustment <= self.total, "adjustment accurate"
+    #     #########################################
+    #     total = self.total - adjustment.native
+    #     itxn.Payment(receiver=self.funder, amount=adjustment.native, fee=0).submit()
+    #     arc4.emit(TotalReduced(adjustment, arc4.UInt64(total)))
+    #     self.total = total
 
 
 ##################################################
