@@ -271,11 +271,11 @@ program
 program
   .command("prepare-fill")
   .description("Fill the contracts")
-  .option("-f, --file <path>", "Path to the JSON file", "tmp/fill-100.csv")
+  .option("-f, --file <path>", "Path to the JSON file", "tmp/fill-101.csv")
   .option(
     "-o, --file2 <path>",
     "Path to the error log file",
-    "tmp/fill-100.csv.json"
+    "tmp/fill-101.csv.json"
   )
   .option("--apid <number>", "Application ID")
   .option("--sender <address>", "Sender address")
@@ -322,7 +322,7 @@ program
 program
   .command("execute-fill")
   .description("Execute the fill")
-  .option("-f, --file <path>", "Path to the JSON file", "tmp/fill-100.csv.json")
+  .option("-f, --file <path>", "Path to the JSON file", "tmp/fill-101.csv.json")
   .option("--sender <address>", "Sender address")
   .option("--nodryrun", "No dry run", false)
   .option("--delay <number>", "Delay in seconds", "0")
@@ -357,8 +357,6 @@ program
         console.log("Success", "fill", payment.target, payment.amount);
       } else {
         console.log("Failed", "fill", payment.target, payment.amount);
-        console.log("opts", opts);
-        await airdropFill({ ...opts, debug: true });
       }
     }
   });
@@ -369,12 +367,12 @@ program
   .option(
     "-f, --file <path>",
     "Path to the JSON file",
-    "tmp/compensation-100.csv"
+    "tmp/compensation-101.csv"
   )
   .option(
     "-o, --file2 <path>",
     "Path to the error log file",
-    "tmp/compensation-100.csv.json"
+    "tmp/compensation-101.csv.json"
   )
   .option("--apid <number>", "Application ID")
   .option("--sender <address>", "Sender address")
@@ -421,11 +419,6 @@ program
   .command("execute-pay")
   .description("Fill the contracts")
   .option("--payid <number>", "Payment ID")
-  .option(
-    "-f, --file <path>",
-    "Path to the JSON file",
-    "tmp/compensation-003.csv.json"
-  )
   .option("--sender <address>", "Sender address")
   .option("--nodryrun", "No dry run", false)
   .option("--delay <number>", "Delay in seconds", "0")
