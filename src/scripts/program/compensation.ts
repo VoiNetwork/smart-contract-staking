@@ -367,12 +367,12 @@ program
   .option(
     "-f, --file <path>",
     "Path to the JSON file",
-    "tmp/compensation-102.csv"
+    "tmp/compensation-103.csv"
   )
   .option(
     "-o, --file2 <path>",
     "Path to the error log file",
-    "tmp/compensation-102.csv.json"
+    "tmp/compensation-103.csv.json"
   )
   .option("--apid <number>", "Application ID")
   .option("--sender <address>", "Sender address")
@@ -418,7 +418,8 @@ program
 program
   .command("execute-pay")
   .description("Fill the contracts")
-  .option("--payid <number>", "Payment ID")
+  .requiredOption("--payid <number>", "Payment ID")
+  .requiredOption("--funding <number>", "Funding timestamp")
   .option("--sender <address>", "Sender address")
   .option("--nodryrun", "No dry run", false)
   .option("--delay <number>", "Delay in seconds", "0")
