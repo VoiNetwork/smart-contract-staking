@@ -367,12 +367,12 @@ program
   .option(
     "-f, --file <path>",
     "Path to the JSON file",
-    "tmp/compensation-105.csv"
+    "tmp/compensation-106.csv"
   )
   .option(
     "-o, --file2 <path>",
     "Path to the error log file",
-    "tmp/compensation-105.csv.json"
+    "tmp/compensation-106.csv.json"
   )
   .option("--apid <number>", "Application ID")
   .option("--sender <address>", "Sender address")
